@@ -1,6 +1,6 @@
 # InterACt
 InterACt is an integration testing tool that integrates components based on their unit-tests. It observes the unit-test execution analyzes the observed data and generates new tests that validate if the expectations of a component towards its entvironment are fulfilled.
-An example project that utilizes InterACt can be found here:
+An example project that utilizes InterACt can be found here: [InteractionTestExample](https://github.com/NilsWild/InteractionTestExample)
 ## How to use the project
 ### Installing InterACt
 1. run ```mvn install``` to add InterACt to your local maven repo.
