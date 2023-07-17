@@ -16,6 +16,12 @@ open class Neo4jBaseTest {
         fun initializeNeo4j() {
             neo4jContainer = Neo4jContainer("neo4j:5.7-community")
                 .withAdminPassword("somePassword")
+                .withEnv(
+                    mapOf(
+                        "NEO4JLABS_PLUGINS" to "[\"apoc\"]",
+                        "NEO4J_dbms_security_procedures_unrestricted" to "apoc.*,algo.*"
+                    )
+                )
             neo4jContainer!!.start()
         }
 

@@ -1,8 +1,11 @@
 package de.rwth.swc.interact.controller.persistence
 
-import de.rwth.swc.interact.controller.persistence.domain.ConcreteTestCase
-import de.rwth.swc.interact.controller.persistence.domain.component
+import de.rwth.swc.interact.controller.persistence.domain.componentEntity
 import de.rwth.swc.interact.controller.persistence.repository.ComponentRepository
+import de.rwth.swc.interact.controller.persistence.service.ComponentDao
+import de.rwth.swc.interact.controller.persistence.service.ComponentDaoImpl
+import de.rwth.swc.interact.domain.TestMode
+import de.rwth.swc.interact.domain.TestResult
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,21 +24,21 @@ import org.springframework.transaction.annotation.Transactional
 class BasicPersistenceTest : Neo4jBaseTest() {
 
     @Autowired
-    lateinit var componentRepository: ComponentRepository
+    internal lateinit var componentRepository: ComponentRepository
 
     @Autowired
     lateinit var neo4jClient: Neo4jClient
 
     @Test
     fun `can persist and get component`() {
-        val comp = component(name = "test", version = "1.0.0") {
+        val comp = componentEntity(name = "test", version = "1.0.0") {
             val ii = incomingInterface(protocol = "REST", protocolData = mapOf(Pair("url", "/test")))
             val oi = outgoingInterface(protocol = "REST", protocolData = mapOf(Pair("url", "/test")))
-            abstractTestCase(name = "test", src = "org.example.TestCaseTest") {
+            abstractTestCase(name = "test", source = "org.example.TestCaseTest") {
                 concreteTestCase(
                     name = "test1",
-                    result = ConcreteTestCase.TestResult.SUCCESS,
-                    source = ConcreteTestCase.DataSource.UNIT
+                    result = TestResult.SUCCESS,
+                    mode = TestMode.UNIT
                 ) {
                     message(payload = "test", isParameter = false, receivedBy = ii)
                     message(payload = "test", isParameter = false, sentBy = oi)
@@ -46,12 +49,14 @@ class BasicPersistenceTest : Neo4jBaseTest() {
 
         componentRepository.save(comp)
         val test = componentRepository.findAll()
-        assertThat(test).hasSize(1)
-        assertThat(test.first().providedInterfaces).hasSize(1)
-        assertThat(test.first().requiredInterfaces).hasSize(1)
+        assertThat(test).withFailMessage("Expected 1 component, got ${test.size}").hasSize(1)
+        assertThat(test.first().providedInterfaces).withFailMessage("Expected 1 provided interface, got ${test.first().providedInterfaces.size}").hasSize(1)
+        assertThat(test.first().requiredInterfaces).withFailMessage("Expected 1 required interface, got ${test.first().requiredInterfaces.size}").hasSize(1)
 
         componentRepository.deleteById(comp.id)
-        assertThat(neo4jClient.query("MATCH (n) RETURN n").fetch().all()).hasSize(0)
+        val nodes = neo4jClient.query("MATCH (n) RETURN n").fetch().all()
+        assertThat(nodes)
+            .withFailMessage("Expected no nodes in db but got ${nodes.size}").hasSize(0)
 
     }
 }

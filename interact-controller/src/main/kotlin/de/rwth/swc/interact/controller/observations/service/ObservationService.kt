@@ -2,156 +2,157 @@ package de.rwth.swc.interact.controller.observations.service
 
 import de.rwth.swc.interact.controller.integrations.service.IntegrationService
 import de.rwth.swc.interact.controller.observations.repository.ObservationRepository
-import de.rwth.swc.interact.controller.persistence.domain.*
-import de.rwth.swc.interact.controller.persistence.repository.*
-import de.rwth.swc.interact.observer.domain.AbstractTestCaseInfo
-import de.rwth.swc.interact.observer.domain.ComponentInfo
-import de.rwth.swc.interact.observer.domain.ConcreteTestCaseInfo
-import de.rwth.swc.interact.observer.domain.ObservedMessage
+import de.rwth.swc.interact.controller.persistence.service.*
+import de.rwth.swc.interact.domain.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.*
 
 @Service
 @Transactional
 class ObservationService(
-    private val componentRepository: ComponentRepository,
-    private val abstractTestCaseRepository: AbstractTestCaseRepository,
-    private val concreteTestCaseRepository: ConcreteTestCaseRepository,
-    private val incomingInterfaceRepository: IncomingInterfaceRepository,
-    private val outgoingInterfaceRepository: OutgoingInterfaceRepository,
-    private val messageRepository: MessageRepository,
+    private val componentDao: ComponentDao,
+    private val abstractTestCaseDao: AbstractTestCaseDao,
+    private val concreteTestCaseDao: ConcreteTestCaseDao,
+    private val incomingInterfaceDao: IncomingInterfaceDao,
+    private val outgoingInterfaceDao: OutgoingInterfaceDao,
+    private val messageDao: MessageDao,
     private val observationRepository: ObservationRepository,
     private val integrationService: IntegrationService
 ) {
-    fun storeObservation(componentInfo: ComponentInfo) {
+    fun storeObservation(component: Component) {
 
-        var componentId = createComponentIfItDoesNotExist(componentInfo)
-        val abstractTestCaseId =
-            createAbstractTestCaseIfItDoesNotExist(componentId, componentInfo.abstractTestCaseInfo!!)
-        if (!concreteTestCaseDoesExist(
-                abstractTestCaseId,
-                componentInfo.abstractTestCaseInfo!!.concreteTestCaseInfo!!
-            )
-        ) {
-            val concreteTestCaseId =
-                createConcreteTestCase(abstractTestCaseId, componentInfo.abstractTestCaseInfo!!.concreteTestCaseInfo!!)
-            val messageIds = componentInfo.abstractTestCaseInfo!!.concreteTestCaseInfo!!.observedMessages.reversed()
-                .runningFold(null) { next: UUID?, m: ObservedMessage ->
-                    saveMessage(componentId, m, next)
-                }.filterNotNull()
-            addMessagesToTestCase(concreteTestCaseId, messageIds)
-            componentInfo.abstractTestCaseInfo!!.concreteTestCaseInfo!!.interactionExpectationId?.let {
-                integrationService.updateInterfaceExpectationInfo(it, concreteTestCaseId, ConcreteTestCase.TestResult.valueOf(componentInfo.abstractTestCaseInfo!!.concreteTestCaseInfo!!.result.name))
+        val componentId = createComponentIfItDoesNotExist(component)
+        val abstractTestCases = createAbstractTestCasesIfTheyDoNotExist(componentId, component.abstractTestCases)
+        abstractTestCases.forEach { abstractTestCase ->
+            val concreteTestCases = createConcreteTestCasesIfTheyDoNotExist(abstractTestCase.id!!, abstractTestCase.concreteTestCases)
+            concreteTestCases.forEach { concreteTestCase ->
+                storeMessagesIfTheyDoNotExist(componentId,concreteTestCase, concreteTestCase.observedMessages)
             }
         }
     }
 
-    private fun createComponentIfItDoesNotExist(componentInfo: ComponentInfo): UUID {
-        return componentRepository.findIdByNameAndVersion(componentInfo.name, componentInfo.version)
-            ?: componentRepository.save(component(name = componentInfo.name, version = componentInfo.version)).id
-    }
-
-    private fun createAbstractTestCaseIfItDoesNotExist(
-        componentId: UUID,
-        abstractTestCaseInfo: AbstractTestCaseInfo
-    ): UUID {
-        var id = abstractTestCaseRepository.findIdByComponentIdSourceAndName(
-            componentId,
-            abstractTestCaseInfo.source,
-            abstractTestCaseInfo.name
-        )
-        return if (id == null) {
-            id = abstractTestCaseRepository.save(
-                AbstractTestCase(
-                    source = abstractTestCaseInfo.source,
-                    name = abstractTestCaseInfo.name
-                )
-            ).id
-            componentRepository.addAbstractTestCase(componentId, id)
-            id
-        } else {
-            id
+    private fun storeMessagesIfTheyDoNotExist(componentId: ComponentId, concreteTestCase: ConcreteTestCase, messages: List<Message>) {
+        val messageIds = messages.reversed()
+            .runningFold(null) { next: MessageId?, m: Message ->
+                saveMessage(componentId, m, next)
+            }.filterNotNull()
+        addMessagesToTestCase(concreteTestCase.id!!, messageIds)
+        concreteTestCase.interactionExpectationId?.let {
+            integrationService.updateInteractionExpectationInfo(
+                it,
+                concreteTestCase.id!!,
+                concreteTestCase.result
+            )
         }
     }
 
-    private fun concreteTestCaseDoesExist(
-        abstractTestCaseId: UUID,
-        concreteTestCaseInfo: ConcreteTestCaseInfo
-    ): Boolean {
-        return concreteTestCaseRepository.findIdByAbstractTestCaseIdAndNameAndSource(
-            abstractTestCaseId,
-            concreteTestCaseInfo.fullName,
-            ConcreteTestCase.DataSource.valueOf(concreteTestCaseInfo.mode.name)
-        ) != null
+    private fun createConcreteTestCasesIfTheyDoNotExist(
+        abstractTestCaseId: AbstractTestCaseId,
+        concreteTestCases: List<ConcreteTestCase>
+    ): List<ConcreteTestCase> {
+        return concreteTestCases.map {
+            it.apply {
+                val id = concreteTestCaseDao.findIdByAbstractTestCaseIdAndNameAndMode(
+                    abstractTestCaseId,
+                    this.name,
+                    this.mode
+                )
+                if (id == null) {
+                    concreteTestCaseDao.save(
+                        this
+                    ).let { newId ->
+                        this.id = newId
+                        abstractTestCaseDao.addConcreteTestCase(abstractTestCaseId, newId)
+                    }
+                } else {
+                    this.id = id
+                }
+            }
+        }
     }
 
-    private fun createConcreteTestCase(abstractTestCaseId: UUID, concreteTestCaseInfo: ConcreteTestCaseInfo): UUID {
-        val id = concreteTestCaseRepository.save(
-            ConcreteTestCase(
-                name = concreteTestCaseInfo.fullName,
-                result = ConcreteTestCase.TestResult.valueOf(concreteTestCaseInfo.result.name),
-                source = ConcreteTestCase.DataSource.valueOf(concreteTestCaseInfo.mode.name)
-            )
-        ).id
-        abstractTestCaseRepository.addConcreteTestCase(abstractTestCaseId, id)
-        return id
+    private fun createComponentIfItDoesNotExist(component: Component): ComponentId {
+        return componentDao.findIdByNameAndVersion(component.name, component.version)
+            ?: componentDao.save(component)
     }
 
-    private fun saveMessage(componentId: UUID, m: ObservedMessage, next: UUID?): UUID {
-        var messageId: UUID
-        val labels = mutableListOf(m.type.name)
-        if (m.type == ObservedMessage.Type.STIMULUS || m.type == ObservedMessage.Type.ENVIRONMENT_RESPONSE) {
-            var interfaceId =
-                observationRepository.findIncomingInterfaceIdByComponentIdAndProtocolAndName(
+    private fun createAbstractTestCasesIfTheyDoNotExist(
+        componentId: ComponentId,
+        abstractTestCases: Set<AbstractTestCase>
+    ): List<AbstractTestCase> {
+        return abstractTestCases.map {
+            it.apply {
+                val id = abstractTestCaseDao.findIdByComponentIdSourceAndName(
                     componentId,
-                    m.protocol,
-                    m.protocolData
+                    this.source,
+                    this.name
                 )
-            if (interfaceId == null) {
-                interfaceId =
-                    incomingInterfaceRepository.save(
-                        IncomingInterface(
-                            protocol = m.protocol,
-                            protocolData = m.protocolData
-                        )
-                    ).id
-                componentRepository.addProvidedInterface(componentId, interfaceId)
+                if (id == null) {
+                    abstractTestCaseDao.save(
+                        this
+                    ).let { newId ->
+                        this.id = newId
+                        componentDao.addAbstractTestCase(componentId, newId)
+                    }
+                } else {
+                    this.id = id
+                }
             }
-            messageId =
-                messageRepository.save(Message(payload = m.value, isParameter = m.isParameter, labels = labels)).id
-            messageRepository.setReceivedBy(messageId, interfaceId)
-        } else {
-            var interfaceId =
-                observationRepository.findOutgoingInterfaceIdByComponentIdAndProtocolAndName(
-                    componentId,
-                    m.protocol,
-                    m.protocolData
-                )
-            if (interfaceId == null) {
-                interfaceId =
-                    outgoingInterfaceRepository.save(
-                        OutgoingInterface(
-                            protocol = m.protocol,
-                            protocolData = m.protocolData
+        }
+    }
+
+    private fun saveMessage(componentId: ComponentId, m: Message, next: MessageId?): MessageId {
+        val messageId: MessageId
+        when (m) {
+            is ReceivedMessage -> {
+                var interfaceId =
+                    observationRepository.findIncomingInterfaceIdByComponentIdAndProtocolAndName(
+                        componentId,
+                        m.receivedBy.protocol,
+                        m.receivedBy.protocolData
+                    )
+                if (interfaceId == null) {
+                    interfaceId =
+                        incomingInterfaceDao.save(
+                            m.receivedBy
                         )
-                    ).id
-                componentRepository.addRequiredInterface(componentId, interfaceId)
+                    componentDao.addProvidedInterface(componentId, interfaceId)
+                }
+                messageId =
+                    messageDao.save(
+                        m
+                    )
+                messageDao.setReceivedBy(messageId, interfaceId)
             }
-            messageId =
-                messageRepository.save(Message(payload = m.value, isParameter = m.isParameter, labels = labels)).id
-            messageRepository.setSentBy(messageId, interfaceId)
+            is SentMessage -> {
+                var interfaceId =
+                    observationRepository.findOutgoingInterfaceIdByComponentIdAndProtocolAndName(
+                        componentId,
+                        m.sentBy.protocol,
+                        m.sentBy.protocolData
+                    )
+                if (interfaceId == null) {
+                    interfaceId =
+                        outgoingInterfaceDao.save(
+                            m.sentBy
+                        )
+                    componentDao.addRequiredInterface(componentId, interfaceId)
+                }
+                messageId =
+                    messageDao.save(m)
+                messageDao.setSentBy(messageId, interfaceId)
+            }
         }
         if (next != null) {
-            messageRepository.setNext(messageId, next)
+            messageDao.setNext(messageId, next)
         }
         if (m.originalMessageId != null) {
-            messageRepository.setCopyOf(messageId, m.originalMessageId!!)
+            messageDao.setCopyOf(messageId, m.originalMessageId!!)
         }
         return messageId
     }
 
-    private fun addMessagesToTestCase(concreteTestCaseId: UUID, messageIds: Collection<UUID>) {
-        concreteTestCaseRepository.addMessages(concreteTestCaseId, messageIds)
+    private fun addMessagesToTestCase(concreteTestCaseId: ConcreteTestCaseId, messageIds: Collection<MessageId>) {
+        concreteTestCaseDao.addMessages(concreteTestCaseId, messageIds)
     }
 }

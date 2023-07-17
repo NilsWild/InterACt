@@ -1,18 +1,21 @@
 package de.rwth.swc.interact.junit.jupiter
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import de.rwth.swc.interact.domain.*
 import de.rwth.swc.interact.integrator.Integrator
-import de.rwth.swc.interact.integrator.domain.TestCaseReference
 import de.rwth.swc.interact.observer.TestObserver
-import de.rwth.swc.interact.observer.domain.ObservedTestResult
 import de.rwth.swc.interact.test.ExITConfiguration
-import de.rwth.swc.interact.utils.TestMode
+import de.rwth.swc.interact.test.annotation.ComponentInformationLoader
 import org.junit.jupiter.api.extension.*
 import java.lang.reflect.Method
 import java.util.*
 import kotlin.reflect.full.createInstance
 
 
+/**
+ * The InterACt junit extension is used to observe the test execution and record the observed messages
+ * as well as to manipulate the unit tests to use the messages of test executions of other components.
+ */
 class InterACt : InvocationInterceptor, AfterTestExecutionCallback, BeforeTestExecutionCallback {
 
     private val props = Properties()
@@ -27,7 +30,7 @@ class InterACt : InvocationInterceptor, AfterTestExecutionCallback, BeforeTestEx
         extensionContext: ExtensionContext
     ) {
         observeTest(extensionContext, argumentsFrom(invocationContext))
-        integrate(extensionContext, argumentsFrom(invocationContext))
+        integrate(extensionContext)
         if (!skipInvocationIfNeeded(invocation)) {
             super.interceptTestMethod(invocation, invocationContext, extensionContext)
         }
@@ -39,7 +42,7 @@ class InterACt : InvocationInterceptor, AfterTestExecutionCallback, BeforeTestEx
         extensionContext: ExtensionContext
     ) {
         observeTest(extensionContext, argumentsFrom(invocationContext))
-        integrate(extensionContext, argumentsFrom(invocationContext))
+        integrate(extensionContext)
         if (!skipInvocationIfNeeded(invocation)) {
             super.interceptTestTemplateMethod(invocation, invocationContext, extensionContext)
         }
@@ -51,17 +54,17 @@ class InterACt : InvocationInterceptor, AfterTestExecutionCallback, BeforeTestEx
         extensionContext: ExtensionContext
     ) {
         observeTest(extensionContext, listOf())
-        integrate(extensionContext, listOf())
+        integrate(extensionContext)
         if (!skipInvocationIfNeeded(invocation)) {
             super.interceptDynamicTest(invocation, invocationContext, extensionContext)
         }
     }
 
-    private fun integrate(context: ExtensionContext, arguments: List<String>) {
+    private fun integrate(context: ExtensionContext) {
         val c = getContextWithRequiredTestClass(context)
         val interactionExpectationId = Integrator.startTestCase(
-            TestCaseReference(
-                c.requiredTestClass.canonicalName, c.requiredTestMethod.name, context.displayName, arguments
+            AbstractTestCase(
+                AbstractTestCaseSource(c.requiredTestClass.canonicalName), AbstractTestCaseName(c.requiredTestMethod.name)
             )
         )
         interactionExpectationId?.let { TestObserver.setTestedInteractionExpectation(it) }
@@ -78,12 +81,12 @@ class InterACt : InvocationInterceptor, AfterTestExecutionCallback, BeforeTestEx
         return false
     }
 
-    private fun observeTest(context: ExtensionContext, arguments: List<String>) {
+    private fun observeTest(context: ExtensionContext, arguments: List<TestCaseParameter>) {
         val c = getContextWithRequiredTestClass(context)
         val annotation = c.requiredTestClass.getAnnotation(ComponentInformationLoader::class.java)
         val observer = TestObserver
         observer.componentInformationLoader = annotation?.value?.createInstance() ?: observer.componentInformationLoader
-        observer.startObservation(c.requiredTestClass, c.requiredTestMethod.name, context.displayName, arguments)
+        observer.startObservation(c.requiredTestClass, AbstractTestCaseName(c.requiredTestMethod.name), ConcreteTestCaseName(context.displayName), arguments)
     }
 
     private fun getContextWithRequiredTestClass(context: ExtensionContext): ExtensionContext {
@@ -94,12 +97,12 @@ class InterACt : InvocationInterceptor, AfterTestExecutionCallback, BeforeTestEx
         }
     }
 
-    private fun argumentsFrom(context: ReflectiveInvocationContext<Method>): List<String> {
-        return context.arguments.map { ObjectMapper().writeValueAsString(it) }
+    private fun argumentsFrom(context: ReflectiveInvocationContext<Method>): List<TestCaseParameter> {
+        return context.arguments.map { TestCaseParameter(ObjectMapper().writeValueAsString(it)) }
     }
 
     override fun afterTestExecution(context: ExtensionContext) {
-        TestObserver.setTestResult(if (context.executionException.isEmpty) ObservedTestResult.SUCCESS else ObservedTestResult.FAILED)
+        TestObserver.setTestResult(if (context.executionException.isEmpty) TestResult.SUCCESS else TestResult.FAILED)
         TestObserver.pushObservations()
     }
 

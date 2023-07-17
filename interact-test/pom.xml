@@ -26,12 +26,13 @@
             <artifactId>kotlin-stdlib</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.module</groupId>
-            <artifactId>jackson-module-kotlin</artifactId>
+            <groupId>de.rwth.swc.interact</groupId>
+            <artifactId>interact-utils</artifactId>
+            <version>${revision}</version>
         </dependency>
         <dependency>
             <groupId>de.rwth.swc.interact</groupId>
-            <artifactId>interact-utils</artifactId>
+            <artifactId>interact-domain</artifactId>
             <version>${revision}</version>
         </dependency>
     </dependencies>

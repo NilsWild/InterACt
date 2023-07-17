@@ -29,10 +29,6 @@
             <artifactId>kotlin-stdlib</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.module</groupId>
-            <artifactId>jackson-module-kotlin</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
@@ -54,18 +50,13 @@
         </dependency>
         <dependency>
             <groupId>de.rwth.swc.interact</groupId>
-            <artifactId>interact-observer-domain</artifactId>
+            <artifactId>interact-domain</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>4.10.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.moshi</groupId>
-            <artifactId>moshi-kotlin</artifactId>
-            <version>1.14.0</version>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web-client</artifactId>
+            <version>4.4.4</version>
         </dependency>
 
     </dependencies>
@@ -75,30 +66,6 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.openapitools</groupId>
-                <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>${openapi.generator.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <inputSpec>${project.basedir}/../interact-controller/target/openapi.json</inputSpec>
-                            <generatorName>kotlin</generatorName>
-                            <packageName>de.rwth.swc.interact.controller.client</packageName>
-                            <apiPackage>de.rwth.swc.interact.controller.client.api</apiPackage>
-                            <generateModels>false</generateModels>
-                            <modelPackage>de.rwth.swc.interact.observer.domain</modelPackage>
-                            <apisToGenerate>ObservationController</apisToGenerate>
-                            <configOptions>
-                                <sourceFolder>src/gen/kotlin/main</sourceFolder>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

@@ -6,6 +6,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
+/**
+ * Configuration class to provide the necessary beans for the Spring Rest InterACT Observer.
+ */
 @Configuration
 class SpringRestInterACtConfiguration {
 

@@ -1,7 +1,7 @@
 package de.rwth.swc.interact.junit.jupiter
 
+import de.rwth.swc.interact.domain.*
 import de.rwth.swc.interact.observer.TestObserver
-import de.rwth.swc.interact.observer.domain.ObservedMessage
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
@@ -19,23 +19,24 @@ internal class InterACtTestCases {
     fun `does load component information from property file`() {
         val observation = TestObserver.getObservations().last()
         TestObserver.recordMessage(
-            ObservedMessage(
-                "REST",
-                mapOf(),
-                ObservedMessage.Type.STIMULUS,
-                "{result:\"success\"}",
-                false
+            ReceivedMessage(
+                MessageType.Received.STIMULUS,
+                MessageValue("{result:\"success\"}"),
+                IncomingInterface(
+                    Protocol("REST"),
+                    ProtocolData(mapOf()),
+                )
             )
         )
-        assertThat(observation.name).isEqualTo("interact-junit")
-        assertThat(observation.version).isEqualTo("1.0.0")
+        assertThat(observation.name.name).isEqualTo("interact-junit")
+        assertThat(observation.version.version).isEqualTo("1.0.0")
     }
 
     @Test
     fun `should fail`() {
         val observation = TestObserver.getObservations().last()
-        assertThat(observation.name).isEqualTo("interact-junit")
-        assertThat(observation.version).isEqualTo("1.0.0")
+        assertThat(observation.name.name).isEqualTo("interact-junit")
+        assertThat(observation.version.version).isEqualTo("1.0.0")
         assertThat(true).isEqualTo(false)
     }
 
@@ -43,26 +44,26 @@ internal class InterACtTestCases {
     @DisplayName("changedTestName")
     fun `display name is used as test name`() {
         val observation = TestObserver.getObservations().last()
-        assertThat(observation.abstractTestCaseInfo?.concreteTestCaseInfo?.name).isEqualTo("changedTestName")
-        assertThat(observation.abstractTestCaseInfo?.concreteTestCaseInfo?.parameters).hasSize(0)
+        assertThat(observation.abstractTestCases.first().concreteTestCases.first().name.name).isEqualTo("changedTestName")
+        assertThat(observation.abstractTestCases.first().concreteTestCases.first().parameters).hasSize(0)
     }
 
     @ParameterizedTest(name = "changedTestName{0}")
     @CsvSource("Test")
     fun `display name is used with parameterized test and parameters are set`(name: String) {
         val observation = TestObserver.getObservations().last()
-        assertThat(observation.abstractTestCaseInfo?.concreteTestCaseInfo?.name).isEqualTo("changedTestNameTest")
-        assertThat(observation.abstractTestCaseInfo?.concreteTestCaseInfo?.parameters).hasSize(1)
-        assertThat(observation.abstractTestCaseInfo?.concreteTestCaseInfo?.parameters?.get(0)).isEqualTo("\"Test\"")
+        assertThat(observation.abstractTestCases.first().concreteTestCases.first().name.name).isEqualTo("changedTestNameTest")
+        assertThat(observation.abstractTestCases.first().concreteTestCases.first().parameters).hasSize(1)
+        assertThat(observation.abstractTestCases.first().concreteTestCases.first().parameters[0].value).isEqualTo("\"Test\"")
     }
 
     @RepeatedTest(value = 1, name = "changedTestName" + RepeatedTest.CURRENT_REPETITION_PLACEHOLDER)
     @ExtendWith(TestStringParameterResolver::class)
     fun `display name is used with parameter resolver and parameters are set`(name: String) {
         val observation = TestObserver.getObservations().last()
-        assertThat(observation.abstractTestCaseInfo?.concreteTestCaseInfo?.name).isEqualTo("changedTestName1")
-        assertThat(observation.abstractTestCaseInfo?.concreteTestCaseInfo?.parameters).hasSize(1)
-        assertThat(observation.abstractTestCaseInfo?.concreteTestCaseInfo?.parameters?.get(0)).isEqualTo("\"Test\"")
+        assertThat(observation.abstractTestCases.first().concreteTestCases.first().name.name).isEqualTo("changedTestName1")
+        assertThat(observation.abstractTestCases.first().concreteTestCases.first().parameters).hasSize(1)
+        assertThat(observation.abstractTestCases.first().concreteTestCases.first().parameters[0].value).isEqualTo("\"Test\"")
     }
 
 
@@ -71,8 +72,8 @@ internal class InterACtTestCases {
         return listOf(
             DynamicTest.dynamicTest("testName") {
                 val observation = TestObserver.getObservations().last()
-                assertThat(observation.abstractTestCaseInfo?.concreteTestCaseInfo?.name).isEqualTo("testName")
-                assertThat(observation.abstractTestCaseInfo?.concreteTestCaseInfo?.parameters).hasSize(0)
+                assertThat(observation.abstractTestCases.first().concreteTestCases.first().name.name).isEqualTo("testName")
+                assertThat(observation.abstractTestCases.first().concreteTestCases.first().parameters).hasSize(0)
             }
         )
     }

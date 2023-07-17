@@ -2,11 +2,8 @@ package de.rwth.swc.interact.controller.service
 
 import de.rwth.swc.interact.controller.Neo4jBaseTest
 import de.rwth.swc.interact.controller.observations.service.ObservationService
-import de.rwth.swc.interact.controller.persistence.repository.ComponentRepository
-import de.rwth.swc.interact.observer.domain.ObservedMessage
-import de.rwth.swc.interact.observer.domain.ObservedTestResult
-import de.rwth.swc.interact.observer.domain.componentInfo
-import de.rwth.swc.interact.utils.TestMode
+import de.rwth.swc.interact.controller.persistence.service.ComponentDao
+import de.rwth.swc.interact.domain.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,50 +19,58 @@ internal class ObservationServiceTest : Neo4jBaseTest() {
     lateinit var service: ObservationService
 
     @Autowired
-    lateinit var componentRepository: ComponentRepository
+    lateinit var componentDao: ComponentDao
 
     @Test
     fun `can store observation`() {
         val observations = listOf(
-            componentInfo("test", "1.0.0") {
-                abstractTestCaseInfo("de.rwth.swc.test.TestCase", "should be successfull") {
-                    concreteTestCaseInfo("should be successfull 1", TestMode.UNIT, listOf("1")) {
-                        observedMessage(
-                            "REST",
-                            ObservedMessage.Type.STIMULUS,
-                            mapOf(Pair("url", "/api/test")),
-                            "{value: test}",
-                            false
+            component(ComponentName("test"), ComponentVersion("1.0.0")) {
+                abstractTestCase(
+                    AbstractTestCaseSource("de.rwth.swc.test.TestCase"),
+                    AbstractTestCaseName("should be successfull")) {
+                    concreteTestCase(ConcreteTestCaseName("should be successfull 1"), TestMode.UNIT) {
+                        receivedMessage(
+                            MessageType.Received.STIMULUS,
+                            MessageValue("{value: test}"),
+                            receivedBy(
+                                Protocol("REST"),
+                                ProtocolData(mapOf(Pair("url", "/api/test")))
+                            )
                         )
-                        observedMessage(
-                            "REST",
-                            ObservedMessage.Type.COMPONENT_RESPONSE,
-                            mapOf(Pair("url", "/api/test")),
-                            "{succees: true}",
-                            false
+                        sentMessage(
+                            MessageType.Sent.COMPONENT_RESPONSE,
+                            MessageValue("{succees: true}"),
+                            sentBy(
+                                Protocol("REST"),
+                                ProtocolData(mapOf(Pair("url", "/api/test")))
+                            )
                         )
-                        result = ObservedTestResult.SUCCESS
+                        result = TestResult.SUCCESS
                     }
                 }
             },
-            componentInfo("test", "1.0.0") {
-                abstractTestCaseInfo("de.rwth.swc.test.TestCase", "should be successfull") {
-                    concreteTestCaseInfo("should be successfull 2", TestMode.UNIT, listOf("2")) {
-                        observedMessage(
-                            "REST",
-                            ObservedMessage.Type.STIMULUS,
-                            mapOf(Pair("url", "/api/test")),
-                            "{value: test}",
-                            false
+            component(ComponentName("test"), ComponentVersion("1.0.0")) {
+                abstractTestCase(
+                    AbstractTestCaseSource("de.rwth.swc.test.TestCase"),
+                    AbstractTestCaseName("should be successfull")) {
+                    concreteTestCase(ConcreteTestCaseName("should be successfull 1"), TestMode.UNIT) {
+                        receivedMessage(
+                            MessageType.Received.STIMULUS,
+                            MessageValue("{value: test}"),
+                            receivedBy(
+                                Protocol("REST"),
+                                ProtocolData(mapOf(Pair("url", "/api/test")))
+                            )
                         )
-                        observedMessage(
-                            "REST",
-                            ObservedMessage.Type.COMPONENT_RESPONSE,
-                            mapOf(Pair("url", "/api/test")),
-                            "{succees: true}",
-                            false
+                        sentMessage(
+                            MessageType.Sent.COMPONENT_RESPONSE,
+                            MessageValue("{succees: true}"),
+                            sentBy(
+                                Protocol("REST"),
+                                ProtocolData(mapOf(Pair("url", "/api/test")))
+                            )
                         )
-                        result = ObservedTestResult.SUCCESS
+                        result = TestResult.SUCCESS
                     }
                 }
             }
@@ -73,7 +78,7 @@ internal class ObservationServiceTest : Neo4jBaseTest() {
 
         observations.forEach { service.storeObservation(it) }
 
-        val c = componentRepository.findAll()
+        val c = componentDao.findAll()
         assertThat(c).hasSize(1)
     }
 }
