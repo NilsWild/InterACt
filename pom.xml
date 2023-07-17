@@ -11,7 +11,7 @@
 
     <modules>
         <module>interact-utils</module>
-        <module>interact-observer-domain</module>
+        <module>interact-domain</module>
         <module>interact-controller</module>
         <module>interact-controller-persistence</module>
         <module>interact-observer</module>
@@ -20,7 +20,6 @@
         <module>interact-binder-rest</module>
         <module>interact-observer-spring-rest</module>
         <module>interact-integrator</module>
-        <module>interact-integrator-domain</module>
         <module>interact-integrator-spring-rest</module>
         <module>interact-test</module>
     </modules>
@@ -30,13 +29,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
-        <kotlin.version>1.8.10</kotlin.version>
+        <kotlin.version>1.8.20</kotlin.version>
         <testcontainers.version>1.17.6</testcontainers.version>
         <surefire.version>2.22.2</surefire.version>
-        <spring.version>3.0.5</spring.version>
-        <openapi.generator.version>6.3.0</openapi.generator.version>
+        <spring.version>3.1.1</spring.version>
         <openapi.springdoc.version>1.4</openapi.springdoc.version>
         <failsafe.version>2.22.2</failsafe.version>
+        <jackson.kogera.version>2.15.2-beta0</jackson.kogera.version>
     </properties>
 
     <dependencyManagement>
@@ -64,6 +63,11 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
                 <version>2.1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.ProjectMapK</groupId>
+                <artifactId>jackson-module-kogera</artifactId>
+                <version>${jackson.kogera.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -151,4 +155,11 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <repositories>
+        <repository>
+            <id>jitpack</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 </project>

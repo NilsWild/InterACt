@@ -1,7 +1,8 @@
 package de.rwth.swc.interact.junit.jupiter
 
+import de.rwth.swc.interact.domain.AbstractTestCaseName
+import de.rwth.swc.interact.domain.TestResult
 import de.rwth.swc.interact.observer.TestObserver
-import de.rwth.swc.interact.observer.domain.ObservedTestResult
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.platform.engine.discovery.DiscoverySelectors
@@ -18,10 +19,10 @@ class InterACtTest {
         assertThat(TestObserver.getObservations()).hasSize(6)
         assertThat(
             TestObserver.getObservations()
-                .first { it.abstractTestCaseInfo?.name == "should fail" }.abstractTestCaseInfo?.concreteTestCaseInfo?.result
-        ).isEqualTo(ObservedTestResult.FAILED)
-        TestObserver.getObservations().filter { it.abstractTestCaseInfo?.name != "should fail" }.forEach {
-            assertThat(it.abstractTestCaseInfo?.concreteTestCaseInfo?.result).isEqualTo(ObservedTestResult.SUCCESS)
+                .first { it.abstractTestCases.first().name == AbstractTestCaseName("should fail") }.abstractTestCases.first().concreteTestCases.first().result
+        ).isEqualTo(TestResult.FAILED)
+        TestObserver.getObservations().filter { it.abstractTestCases.first().name != AbstractTestCaseName("should fail") }.forEach {
+            assertThat(it.abstractTestCases.first().concreteTestCases.first().result).isEqualTo(TestResult.SUCCESS)
         }
         Thread.sleep(5000)
     }

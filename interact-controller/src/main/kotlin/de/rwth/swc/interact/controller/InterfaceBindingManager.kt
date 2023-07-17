@@ -1,6 +1,6 @@
 package de.rwth.swc.interact.controller
 
-import de.rwth.swc.interact.tccii.InterfaceBinder
+import de.rwth.swc.interact.utbi.InterfaceBinder
 import jakarta.annotation.PostConstruct
 import org.springframework.data.neo4j.core.Neo4jClient
 import org.springframework.scheduling.annotation.Scheduled

@@ -2,8 +2,9 @@ package de.rwth.swc.interact.controller.integrations.repository
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.rwth.swc.interact.controller.integrations.dto.*
-import de.rwth.swc.interact.controller.persistence.domain.ConcreteTestCase
-import de.rwth.swc.interact.integrator.domain.*
+import de.rwth.swc.interact.controller.persistence.domain.COMPONENT_NODE_LABEL
+import de.rwth.swc.interact.controller.persistence.domain.INTERACTION_EXPECTATION_NODE_LABEL
+import de.rwth.swc.interact.domain.*
 import org.neo4j.driver.Value
 import org.springframework.data.neo4j.core.Neo4jClient
 import org.springframework.stereotype.Component
@@ -12,16 +13,16 @@ import java.util.*
 @Component
 class IntegrationRepository(private val neo4jClient: Neo4jClient, private val objectMapper: ObjectMapper) {
 
-    fun findReplacementsForComponent(name: String, version: String): List<InteractionTestCases> {
+    fun findReplacementsForComponent(name: ComponentName, version: ComponentVersion): List<TestInvocationsDescriptor> {
 
         val ies = neo4jClient.query(
-            "MATCH (c:Component{name:\"$name\",version:\"$version\"})-[:TESTED_BY]->(atc)-[:USED_TO_DERIVE]->(ctc) " +
+            "MATCH (c:$COMPONENT_NODE_LABEL{name:\"$name\",version:\"$version\"})-[:TESTED_BY]->(atc)-[:USED_TO_DERIVE]->(ctc) " +
                     "WITH atc,collect(ctc.id) as testCases " +
-                    "MATCH (ie:InteractionExpectation) WHERE ie.nextTest IN testCases " +
+                    "MATCH (ie:$INTERACTION_EXPECTATION_NODE_LABEL) WHERE ie.nextTest IN testCases " +
                     "RETURN ie.interactionPathInfo as pathInfo, ie.id as id, ie.testedPath as testedPath"
         ).fetchAs(Triple::class.java).mappedBy { _, record ->
             Triple(
-                UUID.fromString(record.get("id").asString()),
+                InteractionExpectationId(UUID.fromString(record.get("id").asString())),
                 objectMapper.readValue(record.get("pathInfo").asString(), InteractionPathInfo::class.java),
                 if (record.get("testedPath").isNull) listOf() else record.get("testedPath").asList()
                     .map { UUID.fromString(it.toString()) }
@@ -31,37 +32,37 @@ class IntegrationRepository(private val neo4jClient: Neo4jClient, private val ob
         return ies.map { ie ->
             val replacements =
                 (ie.second as InteractionPathInfo).interactionTests[(ie.third as List<*>).size].replacements.map { replacement ->
+                    @Suppress("UNCHECKED_CAST")
                     neo4jClient.query(
                         "MATCH (ctc)-[:TRIGGERED]->(m)-[:SENT_BY]->(oi{id:\"${replacement.value}\"}) WHERE ctc.id IN \$testCases " +
-                                "MATCH (om{id:\"${replacement.key}\"})" +
-                                "RETURN om,m,oi"
+                                "MATCH (om{id:\"${replacement.key}\"}) " +
+                                "WITH om,m,oi,labels(om) as omlabels, labels(m) as mlabels " +
+                                "RETURN om{.*, labels:omlabels},m{.*,labels:mlabels},oi"
                     ).bind((ie.third as List<*>).map { it.toString() }).to("testCases")
-                        .fetchAs(MessageReplacement::class.java)
+                        .fetchAs(Pair::class.java)
                         .mappedBy { _, record ->
-                            MessageReplacement(
-                                mapToMessage(record.get("om"), record.get("oi")),
-                                mapToMessage(record.get("m"), record.get("oi"))
+                            Pair(
+                                mapToReceivedMessage(record.get("om"), record.get("oi")),
+                                mapToSentMessage(record.get("m"), record.get("oi"))
                             )
-                        }.first().orElseGet { throw RuntimeException() }
-                }
-            val ieId = ie.first as UUID
+                        }.first().orElseGet { throw RuntimeException() } as Pair<ReceivedMessage, SentMessage>
+                }.toMap()
+            val ieId = ie.first as InteractionExpectationId
             val tr = neo4jClient.query(
                 "MATCH (ie{id:\"$ieId\"}) " +
                         "MATCH (atc)-[:USED_TO_DERIVE]->(ctc) WHERE ctc.id = ie.nextTest " +
                         "RETURN atc,ctc"
-            ).fetchAs(TestCaseReference::class.java).mappedBy { _, record ->
-                TestCaseReference(
-                    record.get("atc").get("source").asString(),
-                    record.get("atc").get("name").asString(),
-                    record.get("ctc").get("name").asString(),
-                    listOf(),
+            ).fetchAs(AbstractTestCase::class.java).mappedBy { _, record ->
+                AbstractTestCase(
+                    source = AbstractTestCaseSource(record.get("atc").get("source").asString()),
+                    name = AbstractTestCaseName(record.get("atc").get("name").asString())
                 )
             }.first().orElseGet { throw RuntimeException() }
-            InteractionTestCases(
-                ie.first as UUID,
+            TestInvocationsDescriptor(
                 tr,
                 listOf(
-                    TestCase(
+                    TestInvocationDescriptor(
+                        ie.first as InteractionExpectationId,
                         replacements
                     )
                 )
@@ -69,31 +70,50 @@ class IntegrationRepository(private val neo4jClient: Neo4jClient, private val ob
         }
     }
 
-    private fun mapToMessage(value: Value, _interface: Value): MessageData {
-        return MessageData(
-            _interface.get("protocol").asString(),
-            _interface.keys().filter { it.startsWith("protocolData") }
-                .associate { Pair(it.replaceFirst("protocolData.", ""), _interface.get(it).asString()) },
-            value.get("payload").asString()
-        ).also { it.id = UUID.fromString(value.get("id").asString()) }
+    private fun mapToReceivedMessage(value: Value, _interface: Value): ReceivedMessage {
+        return ReceivedMessage(
+            if(value.get("labels").asList().contains(MessageType.Received.STIMULUS.name)) MessageType.Received.STIMULUS else MessageType.Received.ENVIRONMENT_RESPONSE,
+            MessageValue(value.get("payload").asString()),
+            IncomingInterface(
+                Protocol(_interface.get("protocol").asString()),
+                ProtocolData(_interface.keys().filter { it.startsWith("protocolData") }
+                    .associate { Pair(it.replaceFirst("protocolData.", ""), _interface.get(it).asString()) })
+            )
+        ).also { it ->
+            it.id = MessageId(UUID.fromString(value.get("id").asString()))
+        }
+    }
+
+    private fun mapToSentMessage(value: Value, _interface: Value): SentMessage {
+        return SentMessage(
+            MessageType.Sent.COMPONENT_RESPONSE,
+            MessageValue(value.get("payload").asString()),
+            OutgoingInterface(
+                Protocol(_interface.get("protocol").asString()),
+                ProtocolData(_interface.keys().filter { it.startsWith("protocolData") }
+                    .associate { Pair(it.replaceFirst("protocolData.", ""), _interface.get(it).asString()) })
+            )
+        ).also { m ->
+            m.id = MessageId(UUID.fromString(value.get("id").asString()))
+        }
     }
 
     fun deriveInteractionExpectations() {
         neo4jClient.query(
-            "MATCH (cmp_res:COMPONENT_RESPONSE)<-[:TRIGGERED]-(:UNITTest) " +
+            "MATCH (cmp_res:${MessageType.Sent.COMPONENT_RESPONSE})<-[:TRIGGERED]-(:UNITTest) " +
                     "WHERE NOT (cmp_res)<-[:EXPECT_FROM]-() " +
-                    "CALL apoc.path.expand(cmp_res,\"NEXT>\",\"ENVIRONMENT_RESPONSE\",1,-1) " +
+                    "CALL apoc.path.expand(cmp_res,\"NEXT>\",\"${MessageType.Received.ENVIRONMENT_RESPONSE}\",1,-1) " +
                     "YIELD path as paths " +
                     "UNWIND paths as path " +
                     "WITH apoc.path.elements(path) as elems " +
                     "WITH head(elems) as h, last(elems) as l " +
-                    "MERGE (h)<-[:EXPECT_FROM]-(:InteractionExpectation{id:randomUUID(),validated:false})-[:EXPECT_TO]->(l)"
+                    "MERGE (h)<-[:EXPECT_FROM]-(:$INTERACTION_EXPECTATION_NODE_LABEL{id:randomUUID(),validated:false})-[:EXPECT_TO]->(l)"
         ).run()
     }
 
     fun findUnvalidatedInteractionExpectationsWithoutPathCandidate(): Collection<InteractionExpectationInfo> {
         return neo4jClient.query(
-            "MATCH (ie:InteractionExpectation{validated:false}) " +
+            "MATCH (ie:$INTERACTION_EXPECTATION_NODE_LABEL{validated:false}) " +
                     "WHERE ie.interactionPathInfo IS NULL " +
                     "Match (ie)-[:EXPECT_FROM]->(from)<-[:TRIGGERED]-(ctc)" +
                     "MATCH (ie)-[:EXPECT_TO]->(to) " +
@@ -101,10 +121,10 @@ class IntegrationRepository(private val neo4jClient: Neo4jClient, private val ob
         ).fetchAs(InteractionExpectationInfo::class.java)
             .mappedBy { _, record ->
                 InteractionExpectationInfo(
-                    UUID.fromString(record.get("id").asString()),
-                    UUID.fromString(record.get("fromId").asString()),
-                    UUID.fromString(record.get("toId").asString()),
-                    UUID.fromString(record.get("baseTest").asString()),
+                    InteractionExpectationId(UUID.fromString(record.get("id").asString())),
+                    MessageId(UUID.fromString(record.get("fromId").asString())),
+                    MessageId(UUID.fromString(record.get("toId").asString())),
+                    ConcreteTestCaseId(UUID.fromString(record.get("baseTest").asString())),
                     if(!record.get("queue").isNull)
                         objectMapper.readerForListOf(InteractionPathInfo::class.java).readValue(record.get("queue").asString())
                     else
@@ -122,7 +142,10 @@ class IntegrationRepository(private val neo4jClient: Neo4jClient, private val ob
             ie.queue.forEach { queue.offer(it) }
         } else {
             val currentInteractionPath = mutableListOf<InteractionTestInfo>()
-            currentInteractionPath.add(InteractionTestInfo(ie.baseTest, ie.fromId, mapOf<UUID, UUID>()))
+            currentInteractionPath.add(InteractionTestInfo(
+                ie.baseTest,
+                ie.fromId,
+                mapOf()))
             queue.offer(InteractionPathInfo(currentInteractionPath))
         }
         while (!queue.isEmpty()) {
@@ -131,11 +154,15 @@ class IntegrationRepository(private val neo4jClient: Neo4jClient, private val ob
             if (terminalNodes.contains(pathEnd)) {
                 //füge den basis case mit der finalen ersetzung zu der liste der integrationstests hinzu
                 var replacementMessageInterfaceId = neo4jClient.query(
-                    "MATCH (m:COMPONENT_RESPONSE {id:\"$pathEnd\"}) " +
+                    "MATCH (m:${MessageType.Sent.COMPONENT_RESPONSE} {id:\"$pathEnd\"}) " +
                             "WITH m " +
                             "MATCH (m)-[:SENT_BY]->(oi) " +
-                            "RETURN oi.id"
-                ).fetchAs(UUID::class.java).first().get()
+                            "RETURN oi.id as id"
+                ).fetchAs(InterfaceId::class.java)
+                    .mappedBy{
+                        _, record ->
+                        InterfaceId(UUID.fromString(record.get("id").asString()))
+                    }.first().get()
 
                 val newTestCaseReplacements = searchPath.testCaseReplacements.getOrElse(ie.baseTest) {
                     mapOf()
@@ -166,9 +193,9 @@ class IntegrationRepository(private val neo4jClient: Neo4jClient, private val ob
                 )
             }
             val next = neo4jClient.query(
-                "MATCH (:COMPONENT_RESPONSE {id:\"$pathEnd\"})-[:SENT_BY]->(oi)-[:BOUND_TO]->(ii)<-[:RECEIVED_BY]-(m)<-[:TRIGGERED]-(ctc:UNITTest) " +
+                "MATCH (:${MessageType.Sent.COMPONENT_RESPONSE} {id:\"$pathEnd\"})-[:SENT_BY]->(oi)-[:BOUND_TO]->(ii)<-[:RECEIVED_BY]-(m)<-[:TRIGGERED]-(ctc:UNITTest) " +
                         "MATCH (ii)<-[:PROVIDES]-(c) " +
-                        "CALL apoc.path.expand(m,\"NEXT>\",\"COMPONENT_RESPONSE\",1,-1) " +
+                        "CALL apoc.path.expand(m,\"NEXT>\",\"${MessageType.Sent.COMPONENT_RESPONSE}\",1,-1) " +
                         "YIELD path as paths " +
                         "UNWIND paths as path " +
                         "WITH apoc.path.elements(path) as elems, m, oi, ii, c, ctc " +
@@ -176,17 +203,17 @@ class IntegrationRepository(private val neo4jClient: Neo4jClient, private val ob
             ).fetchAs(PathStepInfo::class.java)
                 .mappedBy { _, record ->
                     PathStepInfo(
-                        UUID.fromString(record.get("next").asString()),
-                        UUID.fromString(record.get("original").asString()),
-                        UUID.fromString(record.get("replacement").asString()),
-                        UUID.fromString(record.get("component").asString()),
-                        UUID.fromString(record.get("testcase").asString()),
-                        UUID.fromString(record.get("interface").asString()),
+                        MessageId(UUID.fromString(record.get("next").asString())),
+                        MessageId(UUID.fromString(record.get("original").asString())),
+                        InterfaceId(UUID.fromString(record.get("replacement").asString())),
+                        ComponentId(UUID.fromString(record.get("component").asString())),
+                        ConcreteTestCaseId(UUID.fromString(record.get("testcase").asString())),
+                        InterfaceId(UUID.fromString(record.get("interface").asString())),
                     )
                 }.all().toList()
             for (n in next) {
                 if (isNotVisited(n, searchPath)) {
-                    var newReplacements: Map<UUID, Map<UUID, UUID>>
+                    var newReplacements: Map<ConcreteTestCaseId, Map<MessageId, InterfaceId>>
                     if (searchPath.testCaseReplacements[n.testCase] == null) {
                         newReplacements = searchPath.testCaseReplacements.plus(
                             Pair(
@@ -227,10 +254,10 @@ class IntegrationRepository(private val neo4jClient: Neo4jClient, private val ob
         return null
     }
 
-    private fun findTerminalNodes(ie: InteractionExpectationInfo): List<UUID> {
+    private fun findTerminalNodes(ie: InteractionExpectationInfo): List<MessageId> {
         return neo4jClient.query(
-            "MATCH (:UNITTest)-[:TRIGGERED]->(tn:COMPONENT_RESPONSE)-[:SENT_BY]->()-[:BOUND_TO]->()<-[:RECEIVED_BY]-(:ENVIRONMENT_RESPONSE{id:\"" + ie.toId + "\"}) RETURN tn.id"
-        ).fetchAs(UUID::class.java)
+            "MATCH (:UNITTest)-[:TRIGGERED]->(tn:${MessageType.Sent.COMPONENT_RESPONSE})-[:SENT_BY]->()-[:BOUND_TO]->()<-[:RECEIVED_BY]-(:${MessageType.Received.ENVIRONMENT_RESPONSE}{id:\"" + ie.toId + "\"}) RETURN tn.id as id"
+        ).fetchAs(MessageId::class.java).mappedBy{_, record -> MessageId(UUID.fromString(record.get("id").asString()))}
             .all().toList()
     }
 
@@ -258,42 +285,42 @@ class IntegrationRepository(private val neo4jClient: Neo4jClient, private val ob
         }
     }
 
-    fun findInteractionExpectationPathInfoAndTestedPath(interactionExpectationId: UUID): Pair<InteractionPathInfo, List<UUID>> {
+    fun findInteractionExpectationPathInfoAndTestedPath(interactionExpectationId: InteractionExpectationId): Pair<InteractionPathInfo, List<ConcreteTestCaseId>> {
         @Suppress("UNCHECKED_CAST")
         return neo4jClient.query(
-            "MATCH (ie:InteractionExpectation{id:\"$interactionExpectationId\"}) RETURN ie.interactionPathInfo as path, ie.testedPath as testedPath"
+            "MATCH (ie:$INTERACTION_EXPECTATION_NODE_LABEL{id:\"$interactionExpectationId\"}) RETURN ie.interactionPathInfo as path, ie.testedPath as testedPath"
         ).fetchAs(Pair::class.java)
             .mappedBy { _, record ->
                 Pair(
                     objectMapper.readValue(record.get("path").asString(), InteractionPathInfo::class.java),
-                    record.get("testedPath").asList().map { UUID.fromString(it.toString()) }
+                    record.get("testedPath").asList().map { ConcreteTestCaseId(UUID.fromString(it.toString())) }
                 )
-            }.first().orElseThrow() as Pair<InteractionPathInfo, List<UUID>>
+            }.first().orElseThrow() as Pair<InteractionPathInfo, List<ConcreteTestCaseId>>
     }
 
-    fun updateInterfaceExpectationInfo(interactionExpectationId: UUID, testedPath: List<UUID>, nextTest: UUID?) {
+    fun updateInterfaceExpectationInfo(interactionExpectationId: InteractionExpectationId, testedPath: List<ConcreteTestCaseId>, nextTest: ConcreteTestCaseId?) {
         if(nextTest == null) {
             tryValidateInteractionExpectation(interactionExpectationId)
         }
         neo4jClient.query(
-            "MATCH (ie:InteractionExpectation{id:\"$interactionExpectationId\"}) SET ie.testedPath=\$testedPath" +
+            "MATCH (ie:$INTERACTION_EXPECTATION_NODE_LABEL{id:\"$interactionExpectationId\"}) SET ie.testedPath=\$testedPath" +
                     if (nextTest != null) ", ie.nextTest=\"$nextTest\"" else " REMOVE ie.nextTest"
         )
             .bind(testedPath.map { it.toString() }).to("testedPath")
             .run()
     }
 
-    private fun tryValidateInteractionExpectation(interactionExpectationId: UUID) {
+    private fun tryValidateInteractionExpectation(interactionExpectationId: InteractionExpectationId) {
         val valid = neo4jClient.query(
-            "MATCH (ie:InteractionExpectation{id:\"$interactionExpectationId\"}) " +
+            "MATCH (ie:$INTERACTION_EXPECTATION_NODE_LABEL{id:\"$interactionExpectationId\"}) " +
                     "MATCH (ctc:ConcreteTestCase) WHERE ctc.id IN ie.testedPath " +
                     "RETURN ctc.result AS result"
         ).fetchAs(Boolean::class.java)
-            .mappedBy { _, record ->  record.get("result").asString() == ConcreteTestCase.TestResult.SUCCESS.name }
+            .mappedBy { _, record ->  record.get("result").asString() == TestResult.SUCCESS.name }
             .all().reduce { acc, b -> acc && b }
         if(valid) {
             neo4jClient.query(
-                "MATCH (ie:InteractionExpectation{id:\"$interactionExpectationId\"}) SET ie.validated = \"true\""
+                "MATCH (ie:$INTERACTION_EXPECTATION_NODE_LABEL{id:\"$interactionExpectationId\"}) SET ie.validated = \"true\""
             ).run()
         }
     }

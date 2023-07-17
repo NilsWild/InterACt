@@ -1,11 +1,11 @@
 package de.rwth.swc.interact.controller.persistence.repository
 
-import de.rwth.swc.interact.controller.persistence.domain.IncomingInterface
+import de.rwth.swc.interact.controller.persistence.domain.IncomingInterfaceEntity
 import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-interface IncomingInterfaceRepository : org.springframework.data.repository.Repository<IncomingInterface, UUID> {
+internal interface IncomingInterfaceRepository : org.springframework.data.repository.Repository<IncomingInterfaceEntity, UUID> {
 
-    fun save(incomingInterface: IncomingInterface): IncomingInterface
+    fun save(incomingInterface: IncomingInterfaceEntity): IncomingInterfaceEntity
 }

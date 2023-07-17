@@ -1,9 +1,11 @@
 package de.rwth.swc.interact.controller.integrations.dto
 
-import java.util.*
+import de.rwth.swc.interact.domain.ConcreteTestCaseId
+import de.rwth.swc.interact.domain.MessageId
+import de.rwth.swc.interact.domain.InterfaceId
 
 data class InteractionTestInfo(
-    val testCaseId: UUID,
-    val nextStart: UUID?,
-    val replacements: Map<UUID, UUID>
+    val testCaseId: ConcreteTestCaseId,
+    val nextStart: MessageId?,
+    val replacements: Map<MessageId, InterfaceId>
 )

@@ -1,12 +1,12 @@
 package de.rwth.swc.interact.controller.integrations.dto
 
-import java.util.*
+import de.rwth.swc.interact.domain.*
 
 data class PathStepInfo(
-    val next: UUID,
-    val originalMessage: UUID,
-    val replacementMessageInterface: UUID,
-    val component: UUID,
-    val testCase: UUID,
-    val originalMessageInterface: UUID
+    val next: MessageId,
+    val originalMessage: MessageId,
+    val replacementMessageInterface: InterfaceId,
+    val component: ComponentId,
+    val testCase: ConcreteTestCaseId,
+    val originalMessageInterface: InterfaceId
 )

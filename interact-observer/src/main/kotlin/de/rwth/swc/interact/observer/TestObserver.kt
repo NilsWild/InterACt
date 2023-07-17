@@ -1,22 +1,27 @@
 package de.rwth.swc.interact.observer
 
-import de.rwth.swc.interact.controller.client.api.ObservationControllerApi
-import de.rwth.swc.interact.observer.domain.*
+import de.rwth.swc.interact.domain.*
 import de.rwth.swc.interact.test.ComponentInformationLoader
 import de.rwth.swc.interact.test.ExITConfiguration
 import de.rwth.swc.interact.test.PropertiesBasedComponentInformationLoader
-import okhttp3.OkHttpClient
+import de.rwth.swc.interact.utils.Logging
+import de.rwth.swc.interact.utils.logger
+import io.vertx.core.Vertx
 import java.lang.reflect.Method
 import java.util.*
 
-object TestObserver {
+/**
+ * The TestObserver is used to observe the test execution and record the observed messages.
+ */
+object TestObserver : Logging {
 
-    var componentInformationLoader: ComponentInformationLoader = PropertiesBasedComponentInformationLoader()
-    private var observedComponentInfo: ComponentInfo? = null
-    private var currentTestCase: ConcreteTestCaseInfo? = null
-    private var observations: MutableList<ComponentInfo> = mutableListOf()
+    var componentInformationLoader: ComponentInformationLoader = PropertiesBasedComponentInformationLoader
+    private var component: Component? = null
+    private var currentTestCase: ConcreteTestCase? = null
+    private var observations: MutableList<Component> = mutableListOf()
 
     private val props = Properties()
+    private val logger = logger()
 
     init {
         props.load(this.javaClass.classLoader.getResourceAsStream("interact.properties"))
@@ -25,76 +30,72 @@ object TestObserver {
     fun startObservation(
         testClass: Class<*>,
         testMethod: Method,
-        testParameters: List<String>
+        testParameters: List<TestCaseParameter>
     ) {
         if (testParameters.isEmpty()) {
             throw java.lang.RuntimeException("A concrete test case name needs to be provided if no parameterized tests are used")
         }
         startObservation(
             testClass,
-            testMethod.name,
-            "(" + testParameters.joinToString(",") + ")",
+            AbstractTestCaseName(testMethod.name),
+            ConcreteTestCaseName("(" + testParameters.joinToString(",") + ")"),
             testParameters
         )
     }
 
     fun startObservation(
         testClass: Class<*>,
-        abstractTestName: String,
-        concreteTestName: String,
-        testParameters: List<String>
+        abstractTestName: AbstractTestCaseName,
+        concreteTestName: ConcreteTestCaseName,
+        testParameters: List<TestCaseParameter>
     ) {
-        val component = ComponentInfo(
+        component = Component(
             componentInformationLoader.getComponentName(),
             componentInformationLoader.getComponentVersion()
         )
-
-        observedComponentInfo = component
-        observations.add(observedComponentInfo!!)
-
-        val abstractTestCaseInfo = AbstractTestCaseInfo(testClass.canonicalName, abstractTestName)
-
-        observedComponentInfo!!.abstractTestCaseInfo = abstractTestCaseInfo
-
-        val concreteTestCaseInfo = ConcreteTestCaseInfo(
-            concreteTestName,
-            ExITConfiguration.mode,
-            testParameters
-        )
-        observedComponentInfo!!.abstractTestCaseInfo!!.concreteTestCaseInfo = concreteTestCaseInfo
-        currentTestCase = concreteTestCaseInfo
+        component?.also { component ->
+            observations.add(component)
+            val abstractTestCase = AbstractTestCase(AbstractTestCaseSource(testClass.canonicalName), abstractTestName)
+            component.abstractTestCases.add(abstractTestCase)
+            val concreteTestCase = ConcreteTestCase(
+                concreteTestName,
+                ExITConfiguration.mode,
+                testParameters
+            )
+            abstractTestCase.concreteTestCases.add(concreteTestCase)
+            currentTestCase = concreteTestCase
+        }
     }
 
-    fun setTestedInteractionExpectation(id: UUID) {
+    fun setTestedInteractionExpectation(id: InteractionExpectationId) {
         currentTestCase?.interactionExpectationId = id
     }
 
-    fun recordMessage(observedMessage: ObservedMessage) {
-        currentTestCase!!.observedMessages.add(observedMessage)
+    fun recordMessage(observedMessage: Message) {
+        currentTestCase?.observedMessages?.add(observedMessage) ?: throw RuntimeException("No test case started")
     }
 
-    fun getObservations(): List<ComponentInfo> {
+    fun getObservations(): List<Component> {
         return observations
     }
 
     fun clear() {
         observations = mutableListOf()
         currentTestCase = null
-        observedComponentInfo = null
+        component = null
     }
 
-    fun setTestResult(result: ObservedTestResult) {
-        currentTestCase?.result = result
+    fun setTestResult(result: TestResult) {
+        currentTestCase?.also { it.result = result } ?: throw RuntimeException("No test case started")
     }
 
     fun pushObservations() {
-        val client = ObservationControllerApi(props.getProperty("broker.url", "http://localhost:8080"), OkHttpClient())
-        try {
-            client.storeObservations(observations)
-            clear()
-        } catch (_: java.lang.Exception) {
+        val client =
+            ObservationControllerApi(props.getProperty("broker.url", "http://localhost:8080"), vertx = Vertx.vertx())
 
-        }
+        client.storeObservations(observations).onSuccess {
+            clear()
+        }.toCompletionStage().toCompletableFuture().join()
     }
 
     fun dropObservation() {
