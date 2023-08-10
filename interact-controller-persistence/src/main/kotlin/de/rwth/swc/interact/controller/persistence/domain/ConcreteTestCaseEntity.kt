@@ -71,7 +71,15 @@ internal data class ConcreteTestCaseEntity(
     ).also {
         it.id = ConcreteTestCaseId(id)
         it.result = result
-        it.observedMessages = triggeredMessages.map { it.toDomain() }.toMutableList()
+        triggeredMessages.first { it.next == null }.apply {
+            var next: MessageEntity? = this
+            val observedMessages = mutableListOf<Message>()
+            while (next != null) {
+                observedMessages.add(next.toDomain())
+                next = triggeredMessages.firstOrNull { it.next == next }
+            }
+            it.observedMessages = observedMessages.reversed().toMutableList()
+        }
     }
 
 }

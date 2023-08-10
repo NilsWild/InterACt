@@ -20,7 +20,6 @@
         <module>interact-binder-rest</module>
         <module>interact-observer-spring-rest</module>
         <module>interact-integrator</module>
-        <module>interact-integrator-spring-rest</module>
         <module>interact-test</module>
     </modules>
 
@@ -32,7 +31,7 @@
         <kotlin.version>1.8.20</kotlin.version>
         <testcontainers.version>1.17.6</testcontainers.version>
         <surefire.version>2.22.2</surefire.version>
-        <spring.version>3.1.1</spring.version>
+        <spring.version>3.1.2</spring.version>
         <openapi.springdoc.version>1.4</openapi.springdoc.version>
         <failsafe.version>2.22.2</failsafe.version>
         <jackson.kogera.version>2.15.2-beta0</jackson.kogera.version>
@@ -40,6 +39,14 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- TODO remove when updated in spring -->
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>5.10.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>

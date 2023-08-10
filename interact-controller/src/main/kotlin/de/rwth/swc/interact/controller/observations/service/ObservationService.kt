@@ -50,7 +50,13 @@ class ObservationService(
         abstractTestCaseId: AbstractTestCaseId,
         concreteTestCases: List<ConcreteTestCase>
     ): List<ConcreteTestCase> {
-        return concreteTestCases.map {
+        return concreteTestCases.filter {
+            concreteTestCaseDao.findIdByAbstractTestCaseIdAndNameAndMode(
+                abstractTestCaseId,
+                it.name,
+                it.mode
+            ) == null
+        }.map {
             it.apply {
                 val id = concreteTestCaseDao.findIdByAbstractTestCaseIdAndNameAndMode(
                     abstractTestCaseId,

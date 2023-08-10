@@ -2,10 +2,8 @@ package de.rwth.swc.interact.observer
 
 import de.rwth.swc.interact.domain.*
 import de.rwth.swc.interact.test.ComponentInformationLoader
-import de.rwth.swc.interact.test.ExITConfiguration
 import de.rwth.swc.interact.test.PropertiesBasedComponentInformationLoader
 import de.rwth.swc.interact.utils.Logging
-import de.rwth.swc.interact.utils.logger
 import io.vertx.core.Vertx
 import java.lang.reflect.Method
 import java.util.*
@@ -21,7 +19,6 @@ object TestObserver : Logging {
     private var observations: MutableList<Component> = mutableListOf()
 
     private val props = Properties()
-    private val logger = logger()
 
     init {
         props.load(this.javaClass.classLoader.getResourceAsStream("interact.properties"))
@@ -30,7 +27,8 @@ object TestObserver : Logging {
     fun startObservation(
         testClass: Class<*>,
         testMethod: Method,
-        testParameters: List<TestCaseParameter>
+        testParameters: List<TestCaseParameter>,
+        mode: TestMode
     ) {
         if (testParameters.isEmpty()) {
             throw java.lang.RuntimeException("A concrete test case name needs to be provided if no parameterized tests are used")
@@ -39,7 +37,8 @@ object TestObserver : Logging {
             testClass,
             AbstractTestCaseName(testMethod.name),
             ConcreteTestCaseName("(" + testParameters.joinToString(",") + ")"),
-            testParameters
+            testParameters,
+            mode
         )
     }
 
@@ -47,7 +46,8 @@ object TestObserver : Logging {
         testClass: Class<*>,
         abstractTestName: AbstractTestCaseName,
         concreteTestName: ConcreteTestCaseName,
-        testParameters: List<TestCaseParameter>
+        testParameters: List<TestCaseParameter>,
+        mode: TestMode
     ) {
         component = Component(
             componentInformationLoader.getComponentName(),
@@ -59,7 +59,7 @@ object TestObserver : Logging {
             component.abstractTestCases.add(abstractTestCase)
             val concreteTestCase = ConcreteTestCase(
                 concreteTestName,
-                ExITConfiguration.mode,
+                mode,
                 testParameters
             )
             abstractTestCase.concreteTestCases.add(concreteTestCase)

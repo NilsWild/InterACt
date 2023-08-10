@@ -19,7 +19,7 @@ class MessageIdMapKeyDeserializer: KeyDeserializer() {
     }
 }
 
-class ConcreteTestCaseIdMaoKeyDeserializer: KeyDeserializer() {
+class ConcreteTestCaseIdMapKeyDeserializer : KeyDeserializer() {
     override fun deserializeKey(key: String, ctx: DeserializationContext): ConcreteTestCaseId {
         return ConcreteTestCaseId(UUID.fromString(key))
     }
@@ -55,7 +55,7 @@ class ReceivedMessageMapKeySerializer: JsonSerializer<ReceivedMessage>() {
 object InteractModule: SimpleModule() {
     init {
         this.addKeyDeserializer(MessageId::class.java, MessageIdMapKeyDeserializer())
-        this.addKeyDeserializer(ConcreteTestCaseId::class.java, ConcreteTestCaseIdMaoKeyDeserializer())
+        this.addKeyDeserializer(ConcreteTestCaseId::class.java, ConcreteTestCaseIdMapKeyDeserializer())
         this.addKeyDeserializer(ComponentId::class.java, ComponentIdMapKeyDeserializer())
         this.addKeyDeserializer(ReceivedMessage::class.java, ReceivedMessageMapKeyDeserializer())
         this.addKeySerializer(ReceivedMessage::class.java, ReceivedMessageMapKeySerializer())

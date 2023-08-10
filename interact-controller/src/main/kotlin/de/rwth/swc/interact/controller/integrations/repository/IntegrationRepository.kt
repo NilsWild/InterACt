@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import de.rwth.swc.interact.controller.integrations.dto.*
 import de.rwth.swc.interact.controller.persistence.domain.COMPONENT_NODE_LABEL
 import de.rwth.swc.interact.controller.persistence.domain.INTERACTION_EXPECTATION_NODE_LABEL
+import de.rwth.swc.interact.controller.persistence.service.ConcreteTestCaseDao
 import de.rwth.swc.interact.domain.*
 import org.neo4j.driver.Value
 import org.springframework.data.neo4j.core.Neo4jClient
@@ -11,7 +12,11 @@ import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
-class IntegrationRepository(private val neo4jClient: Neo4jClient, private val objectMapper: ObjectMapper) {
+class IntegrationRepository(
+    private val neo4jClient: Neo4jClient,
+    private val concreteTestCaseDao: ConcreteTestCaseDao,
+    private val objectMapper: ObjectMapper
+) {
 
     fun findReplacementsForComponent(name: ComponentName, version: ComponentVersion): List<TestInvocationsDescriptor> {
 
@@ -30,18 +35,18 @@ class IntegrationRepository(private val neo4jClient: Neo4jClient, private val ob
         }.all()
 
         return ies.map { ie ->
-            val replacements =
-                (ie.second as InteractionPathInfo).interactionTests[(ie.third as List<*>).size].replacements.map { replacement ->
-                    @Suppress("UNCHECKED_CAST")
-                    neo4jClient.query(
-                        "MATCH (ctc)-[:TRIGGERED]->(m)-[:SENT_BY]->(oi{id:\"${replacement.value}\"}) WHERE ctc.id IN \$testCases " +
-                                "MATCH (om{id:\"${replacement.key}\"}) " +
-                                "WITH om,m,oi,labels(om) as omlabels, labels(m) as mlabels " +
-                                "RETURN om{.*, labels:omlabels},m{.*,labels:mlabels},oi"
-                    ).bind((ie.third as List<*>).map { it.toString() }).to("testCases")
-                        .fetchAs(Pair::class.java)
-                        .mappedBy { _, record ->
-                            Pair(
+            val testcase = (ie.second as InteractionPathInfo).interactionTests[(ie.third as List<*>).size]
+            val replacements = testcase.replacements.map { replacement ->
+                @Suppress("UNCHECKED_CAST")
+                neo4jClient.query(
+                    "MATCH (ctc)-[:TRIGGERED]->(m)-[:SENT_BY]->(oi{id:\"${replacement.value}\"}) WHERE ctc.id IN \$testCases " +
+                            "MATCH (om{id:\"${replacement.key}\"}) " +
+                            "WITH om,m,oi,labels(om) as omlabels, labels(m) as mlabels " +
+                            "RETURN om{.*, labels:omlabels},m{.*,labels:mlabels},oi"
+                ).bind((ie.third as List<*>).map { it.toString() }).to("testCases")
+                    .fetchAs(Pair::class.java)
+                    .mappedBy { _, record ->
+                        Pair(
                                 mapToReceivedMessage(record.get("om"), record.get("oi")),
                                 mapToSentMessage(record.get("m"), record.get("oi"))
                             )
@@ -58,12 +63,21 @@ class IntegrationRepository(private val neo4jClient: Neo4jClient, private val ob
                     name = AbstractTestCaseName(record.get("atc").get("name").asString())
                 )
             }.first().orElseGet { throw RuntimeException() }
+
+            val messages = concreteTestCaseDao.findById(testcase.testCaseId)!!.observedMessages
             TestInvocationsDescriptor(
                 tr,
                 listOf(
                     TestInvocationDescriptor(
-                        ie.first as InteractionExpectationId,
-                        replacements
+                        ieId,
+                        messages.filter { it.messageType != MessageType.Sent.COMPONENT_RESPONSE }.map {
+                            val key = replacements.keys.firstOrNull { k -> k.value == it.value }
+                            if (key == null) {
+                                it.value
+                            } else {
+                                replacements[key]!!.value
+                            }
+                        }.toList(),
                     )
                 )
             )
@@ -72,14 +86,16 @@ class IntegrationRepository(private val neo4jClient: Neo4jClient, private val ob
 
     private fun mapToReceivedMessage(value: Value, _interface: Value): ReceivedMessage {
         return ReceivedMessage(
-            if(value.get("labels").asList().contains(MessageType.Received.STIMULUS.name)) MessageType.Received.STIMULUS else MessageType.Received.ENVIRONMENT_RESPONSE,
+            if (value.get("labels").asList()
+                    .contains(MessageType.Received.STIMULUS.name)
+            ) MessageType.Received.STIMULUS else MessageType.Received.ENVIRONMENT_RESPONSE,
             MessageValue(value.get("payload").asString()),
             IncomingInterface(
                 Protocol(_interface.get("protocol").asString()),
                 ProtocolData(_interface.keys().filter { it.startsWith("protocolData") }
                     .associate { Pair(it.replaceFirst("protocolData.", ""), _interface.get(it).asString()) })
             )
-        ).also { it ->
+        ).also {
             it.id = MessageId(UUID.fromString(value.get("id").asString()))
         }
     }
@@ -93,8 +109,8 @@ class IntegrationRepository(private val neo4jClient: Neo4jClient, private val ob
                 ProtocolData(_interface.keys().filter { it.startsWith("protocolData") }
                     .associate { Pair(it.replaceFirst("protocolData.", ""), _interface.get(it).asString()) })
             )
-        ).also { m ->
-            m.id = MessageId(UUID.fromString(value.get("id").asString()))
+        ).also {
+            it.id = MessageId(UUID.fromString(value.get("id").asString()))
         }
     }
 

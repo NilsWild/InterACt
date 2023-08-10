@@ -19,6 +19,7 @@ interface ConcreteTestCaseDao {
     ): ConcreteTestCaseId?
     fun save(concreteTestCase: ConcreteTestCase): ConcreteTestCaseId
     fun addMessages(concreteTestCaseId: ConcreteTestCaseId, messageIds: Collection<MessageId>)
+    fun findById(id: ConcreteTestCaseId): ConcreteTestCase?
 }
 
 @Service
@@ -38,10 +39,23 @@ internal class ConcreteTestCaseDaoImpl(private val neo4jTemplate: Neo4jTemplate,
             ConcreteTestCaseId(it)
         }
     }
+
     override fun save(concreteTestCase: ConcreteTestCase): ConcreteTestCaseId {
-        return ConcreteTestCaseId(neo4jTemplate.saveAs(concreteTestCase.toEntity(), ConcreteTestCaseEntityNoRelations::class.java).id)
+        return ConcreteTestCaseId(
+            neo4jTemplate.saveAs(
+                concreteTestCase.toEntity(),
+                ConcreteTestCaseEntityNoRelations::class.java
+            ).id
+        )
     }
+
     override fun addMessages(concreteTestCaseId: ConcreteTestCaseId, messageIds: Collection<MessageId>) {
         concreteTestCaseRepository.addMessages(concreteTestCaseId.id, messageIds.map { it.id })
+    }
+
+    override fun findById(id: ConcreteTestCaseId): ConcreteTestCase? {
+        return concreteTestCaseRepository.findById(id.id)?.let {
+            return it.toDomain()
+        }
     }
 }

@@ -36,4 +36,6 @@ internal interface ConcreteTestCaseRepository : org.springframework.data.reposit
         @Param("concreteTestCaseId") concreteTestCaseId: UUID,
         @Param("messageIds") messageIds: Collection<UUID>
     )
+
+    fun findById(id: UUID): ConcreteTestCaseEntity?
 }
