@@ -12,32 +12,31 @@ import org.springframework.transaction.annotation.Transactional
  * Service to access ConcreteTestCaseEntity needed to support Kotlin value classes and to hide the repository
  */
 interface ConcreteTestCaseDao {
-    fun findIdByAbstractTestCaseIdAndNameAndMode(
-        abstractTestCaseId: AbstractTestCaseId,
-        name: ConcreteTestCaseName,
-        mode: TestMode
-    ): ConcreteTestCaseId?
     fun save(concreteTestCase: ConcreteTestCase): ConcreteTestCaseId
-    fun addMessages(concreteTestCaseId: ConcreteTestCaseId, messageIds: Collection<MessageId>)
+    fun addMessages(concreteTestCaseId: ConcreteTestCaseId, messageIds: List<MessageId>)
     fun findById(id: ConcreteTestCaseId): ConcreteTestCase?
+    fun findIdByTriggeredMessage(id: MessageId): ConcreteTestCaseId?
+    fun findByAbstractTestCaseIdAndParameters(
+        abstractTestCaseId: AbstractTestCaseId,
+        parameters: List<TestCaseParameter>
+    ): ConcreteTestCase?
 }
 
 @Service
 @Transactional
-internal class ConcreteTestCaseDaoImpl(private val neo4jTemplate: Neo4jTemplate, private val concreteTestCaseRepository: ConcreteTestCaseRepository) : ConcreteTestCaseDao {
+internal class ConcreteTestCaseDaoImpl(
+    private val neo4jTemplate: Neo4jTemplate,
+    private val repository: ConcreteTestCaseRepository) : ConcreteTestCaseDao {
+
     @Transactional(readOnly = true)
-    override fun findIdByAbstractTestCaseIdAndNameAndMode(
+    override fun findByAbstractTestCaseIdAndParameters(
         abstractTestCaseId: AbstractTestCaseId,
-        name: ConcreteTestCaseName,
-        mode: TestMode
-    ): ConcreteTestCaseId? {
-        return concreteTestCaseRepository.findIdByAbstractTestCaseIdAndNameAndMode(
+        parameters: List<TestCaseParameter>
+    ): ConcreteTestCase? {
+        return repository.findByAbstractTestCaseIdAndParameters(
             abstractTestCaseId.id,
-            name.name,
-            mode
-        )?.let {
-            ConcreteTestCaseId(it)
-        }
+            parameters.map { it.value }
+        )?.toDomain()
     }
 
     override fun save(concreteTestCase: ConcreteTestCase): ConcreteTestCaseId {
@@ -49,13 +48,19 @@ internal class ConcreteTestCaseDaoImpl(private val neo4jTemplate: Neo4jTemplate,
         )
     }
 
-    override fun addMessages(concreteTestCaseId: ConcreteTestCaseId, messageIds: Collection<MessageId>) {
-        concreteTestCaseRepository.addMessages(concreteTestCaseId.id, messageIds.map { it.id })
+    override fun addMessages(concreteTestCaseId: ConcreteTestCaseId, messageIds: List<MessageId>) {
+        repository.addMessages(concreteTestCaseId.id, messageIds.map { it.id })
     }
 
     override fun findById(id: ConcreteTestCaseId): ConcreteTestCase? {
-        return concreteTestCaseRepository.findById(id.id)?.let {
+        return repository.findById(id.id)?.let {
             return it.toDomain()
+        }
+    }
+
+    override fun findIdByTriggeredMessage(id: MessageId): ConcreteTestCaseId? {
+        return repository.findByTriggeredMessage(id.id)?.let {
+            return ConcreteTestCaseId(it.id)
         }
     }
 }

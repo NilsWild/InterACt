@@ -10,7 +10,7 @@ data class AbstractTestCase (val source: AbstractTestCaseSource, val name: Abstr
     fun concreteTestCase(
         name: ConcreteTestCaseName,
         mode: TestMode,
-        parameters: List<TestCaseParameter> = listOf(),
+        parameters: List<TestCaseParameter>,
         init: (ConcreteTestCase.() -> Unit)? = null
     ) = ConcreteTestCase(name, mode, parameters).also {
         if (init != null) {

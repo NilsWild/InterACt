@@ -1,6 +1,6 @@
 package de.rwth.swc.interact.integrator
 
-import de.rwth.swc.interact.domain.TestInvocationsDescriptor
+import de.rwth.swc.interact.domain.TestInvocationDescriptor
 import de.rwth.swc.interact.test.ComponentInformationLoader
 import de.rwth.swc.interact.test.PropertiesBasedComponentInformationLoader
 import de.rwth.swc.interact.utils.Logging
@@ -14,7 +14,7 @@ import java.util.*
 object Integrator: Logging {
     var componentInformationLoader: ComponentInformationLoader = PropertiesBasedComponentInformationLoader
 
-    var interactionTestCases: List<TestInvocationsDescriptor> = listOf()
+    var interactionTestCases: List<TestInvocationDescriptor> = listOf()
     private val props = Properties()
     private val logger = logger()
     var initialized = false

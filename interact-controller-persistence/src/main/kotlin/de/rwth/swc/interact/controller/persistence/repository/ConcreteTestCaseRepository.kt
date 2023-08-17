@@ -15,27 +15,34 @@ internal interface ConcreteTestCaseRepository : org.springframework.data.reposit
 
     @Query(
         value = "MATCH (atc:$ABSTRACT_TEST_CASE_NODE_LABEL)-[:USED_TO_DERIVE]->(ctc:$CONCRETE_TEST_CASE_NODE_LABEL) " +
-                "WHERE atc.id=\$id AND ctc.name=\$name AND ctc.mode=\$mode " +
-                "RETURN ctc.id"
+                "WHERE atc.id=\$id AND ctc.parameters = \$parameters " +
+                "RETURN ctc"
     )
-    fun findIdByAbstractTestCaseIdAndNameAndMode(
+    fun findByAbstractTestCaseIdAndParameters(
         @Param("id") abstractTestCaseId: UUID,
-        @Param("name") name: String,
-        @Param("mode") mode: TestMode
-    ): UUID?
+        @Param("parameters") parameters: List<String>,
+    ): ConcreteTestCaseEntity?
 
     fun save(concreteTestCase: ConcreteTestCaseEntity): ConcreteTestCaseEntity
 
     @Query(
-        value = "UNWIND \$messageIds as mId " +
+        value = "UNWIND range(0, size(\$messageIds)-1) as idx " +
+                "WITH idx, \$messageIds[idx] as mId " +
                 "MATCH (ctc:$CONCRETE_TEST_CASE_NODE_LABEL), (m:$MESSAGE_NODE_LABEL) " +
                 "WHERE ctc.id=\$concreteTestCaseId AND m.id=mId " +
-                "MERGE (ctc)-[:TRIGGERED]->(m)"
+                "MERGE (ctc)-[:TRIGGERED{order:idx}]->(m)"
     )
     fun addMessages(
         @Param("concreteTestCaseId") concreteTestCaseId: UUID,
-        @Param("messageIds") messageIds: Collection<UUID>
+        @Param("messageIds") messageIds: List<UUID>
     )
 
     fun findById(id: UUID): ConcreteTestCaseEntity?
+
+    @Query(
+        "MATCH (ctc:$CONCRETE_TEST_CASE_NODE_LABEL)-[:TRIGGERED]->(m:$MESSAGE_NODE_LABEL) " +
+        "WHERE m.id=\$id " +
+        "RETURN ctc"
+    )
+    fun findByTriggeredMessage(@Param("id") id: UUID): ConcreteTestCaseEntity?
 }

@@ -67,10 +67,6 @@ object TestObserver : Logging {
         }
     }
 
-    fun setTestedInteractionExpectation(id: InteractionExpectationId) {
-        currentTestCase?.interactionExpectationId = id
-    }
-
     fun recordMessage(observedMessage: Message) {
         currentTestCase?.observedMessages?.add(observedMessage) ?: throw RuntimeException("No test case started")
     }

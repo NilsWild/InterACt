@@ -10,7 +10,6 @@ val parameters: List<TestCaseParameter>
     var id: ConcreteTestCaseId? = null
     var result: TestResult = TestResult.NOT_EXECUTED
     var observedMessages: MutableList<Message> = mutableListOf()
-    var interactionExpectationId: InteractionExpectationId? = null
 
     fun sentMessage(
         messageType: MessageType.Sent,
@@ -28,11 +27,6 @@ val parameters: List<TestCaseParameter>
     ) = ReceivedMessage(messageType, value, receivedBy, isParameter).also {
         observedMessages.add(it)
     }
-
-    val fullName: String
-        get(){
-            return "$name${(interactionExpectationId ?: "")}"
-        }
 
 }
 

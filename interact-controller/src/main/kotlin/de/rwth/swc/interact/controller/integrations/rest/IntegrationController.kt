@@ -3,7 +3,7 @@ package de.rwth.swc.interact.controller.integrations.rest
 import de.rwth.swc.interact.controller.integrations.service.IntegrationService
 import de.rwth.swc.interact.domain.ComponentName
 import de.rwth.swc.interact.domain.ComponentVersion
-import de.rwth.swc.interact.domain.TestInvocationsDescriptor
+import de.rwth.swc.interact.domain.TestInvocationDescriptor
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.web.bind.annotation.GetMapping
@@ -18,10 +18,10 @@ class IntegrationController(private val integrationService: IntegrationService) 
 
     @Operation(operationId = "getIntegrationsForComponent")
     @GetMapping("/{componentName}/{componentVersion}")
-    fun getIntegrationsForComponent(
+    fun findInteractionTestsToExecuteForComponent(
         @PathVariable("componentName") name: ComponentName,
         @PathVariable("componentVersion") version: ComponentVersion
-    ): List<TestInvocationsDescriptor> {
-        return integrationService.getIntegrationsForComponent(name, version)
+    ): List<TestInvocationDescriptor> {
+        return integrationService.findInteractionTestsToExecuteForComponent(name, version)
     }
 }

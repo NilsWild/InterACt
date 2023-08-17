@@ -1,6 +1,5 @@
 package de.rwth.swc.interact.junit.jupiter
 
-import de.rwth.swc.interact.domain.TestInvocationDescriptor
 import de.rwth.swc.interact.domain.TestMode
 import de.rwth.swc.interact.integrator.Integrator
 import de.rwth.swc.interact.junit.jupiter.InterACtTestConstants.ARGUMENT_MAX_LENGTH_KEY
@@ -104,10 +103,9 @@ class InterACtTestsExtension : TestTemplateInvocationContextProvider {
                 createInvocationContext(
                     formatter,
                     methodContext,
-                    consumedArguments(arguments.second.get(), methodContext),
+                    consumedArguments(arguments.get(), methodContext),
                     invocationCount.toInt(),
                     TestMode.INTERACTION,
-                    arguments.first
                 )
             }
 
@@ -145,16 +143,14 @@ class InterACtTestsExtension : TestTemplateInvocationContextProvider {
         methodContext: InterACtTestMethodContext,
         arguments: Array<Any?>,
         invocationIndex: Int,
-        mode: TestMode,
-        testInvocationDescriptor: TestInvocationDescriptor? = null
+        mode: TestMode
     ): TestTemplateInvocationContext {
         return InterACtTestInvocationContext(
             formatter,
             methodContext,
             arguments,
             invocationIndex,
-            mode,
-            testInvocationDescriptor
+            mode
         )
     }
 
