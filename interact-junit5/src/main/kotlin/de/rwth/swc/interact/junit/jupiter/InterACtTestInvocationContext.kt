@@ -1,6 +1,5 @@
 package de.rwth.swc.interact.junit.jupiter
 
-import de.rwth.swc.interact.domain.TestInvocationDescriptor
 import de.rwth.swc.interact.domain.TestMode
 import org.junit.jupiter.api.extension.Extension
 import org.junit.jupiter.api.extension.TestTemplateInvocationContext
@@ -11,8 +10,7 @@ class InterACtTestInvocationContext(
     private val methodContext: InterACtTestMethodContext,
     private val arguments: Array<Any?>,
     private val invocationIndex: Int,
-    private val mode: TestMode,
-    private val testInvocationDescriptor: TestInvocationDescriptor? = null
+    private val mode: TestMode
 ) : TestTemplateInvocationContext {
 
     override fun getDisplayName(invocationIndex: Int): String {
@@ -22,7 +20,7 @@ class InterACtTestInvocationContext(
     override fun getAdditionalExtensions(): List<Extension> {
         return listOf(
             InterACtTestParameterResolver(methodContext, arguments, invocationIndex, mode),
-            InterACtTestInvocationInterceptor(mode, testInvocationDescriptor),
+            InterACtTestInvocationInterceptor(mode),
             StoreObservationsExtension()
         )
     }

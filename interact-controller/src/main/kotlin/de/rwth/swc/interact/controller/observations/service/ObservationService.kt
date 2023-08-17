@@ -26,24 +26,21 @@ class ObservationService(
         abstractTestCases.forEach { abstractTestCase ->
             val concreteTestCases = createConcreteTestCasesIfTheyDoNotExist(abstractTestCase.id!!, abstractTestCase.concreteTestCases)
             concreteTestCases.forEach { concreteTestCase ->
-                storeMessagesIfTheyDoNotExist(componentId,concreteTestCase, concreteTestCase.observedMessages)
+                storeMessagesIfTheyDoNotExist(componentId,concreteTestCase)
             }
         }
     }
 
-    private fun storeMessagesIfTheyDoNotExist(componentId: ComponentId, concreteTestCase: ConcreteTestCase, messages: List<Message>) {
-        val messageIds = messages.reversed()
+    private fun storeMessagesIfTheyDoNotExist(componentId: ComponentId, concreteTestCase: ConcreteTestCase) {
+        val messageIds = concreteTestCase.observedMessages.reversed()
             .runningFold(null) { next: MessageId?, m: Message ->
                 saveMessage(componentId, m, next)
             }.filterNotNull()
-        addMessagesToTestCase(concreteTestCase.id!!, messageIds)
-        concreteTestCase.interactionExpectationId?.let {
-            integrationService.updateInteractionExpectationInfo(
-                it,
-                concreteTestCase.id!!,
-                concreteTestCase.result
-            )
-        }
+        addMessagesToTestCase(concreteTestCase.id!!, messageIds.reversed())
+
+        integrationService.updateInteractionExpectationValidationPlanInfos(
+            concreteTestCase
+        )
     }
 
     private fun createConcreteTestCasesIfTheyDoNotExist(
@@ -51,18 +48,16 @@ class ObservationService(
         concreteTestCases: List<ConcreteTestCase>
     ): List<ConcreteTestCase> {
         return concreteTestCases.filter {
-            concreteTestCaseDao.findIdByAbstractTestCaseIdAndNameAndMode(
+            concreteTestCaseDao.findByAbstractTestCaseIdAndParameters(
                 abstractTestCaseId,
-                it.name,
-                it.mode
+                it.parameters
             ) == null
         }.map {
             it.apply {
-                val id = concreteTestCaseDao.findIdByAbstractTestCaseIdAndNameAndMode(
+                val id = concreteTestCaseDao.findByAbstractTestCaseIdAndParameters(
                     abstractTestCaseId,
-                    this.name,
-                    this.mode
-                )
+                    this.parameters
+                )?.id
                 if (id == null) {
                     concreteTestCaseDao.save(
                         this
@@ -158,7 +153,7 @@ class ObservationService(
         return messageId
     }
 
-    private fun addMessagesToTestCase(concreteTestCaseId: ConcreteTestCaseId, messageIds: Collection<MessageId>) {
+    private fun addMessagesToTestCase(concreteTestCaseId: ConcreteTestCaseId, messageIds: List<MessageId>) {
         concreteTestCaseDao.addMessages(concreteTestCaseId, messageIds)
     }
 }

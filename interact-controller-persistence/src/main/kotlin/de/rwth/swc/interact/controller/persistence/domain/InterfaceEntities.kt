@@ -88,5 +88,4 @@ internal data class InterfaceBinding(
     @RelationshipId
     var id: Long? = null
         private set
-
 }

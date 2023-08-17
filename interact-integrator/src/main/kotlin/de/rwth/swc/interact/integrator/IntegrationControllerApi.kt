@@ -1,6 +1,6 @@
 package de.rwth.swc.interact.integrator
 
-import de.rwth.swc.interact.domain.TestInvocationsDescriptor
+import de.rwth.swc.interact.domain.TestInvocationDescriptor
 import de.rwth.swc.interact.domain.serialization.InteractModule
 import de.rwth.swc.interact.utils.Logging
 import de.rwth.swc.interact.utils.logger
@@ -24,7 +24,7 @@ class IntegrationControllerApi(private val url: String, vertx: Vertx): Logging {
         objectMapper.registerModule(InteractModule)
     }
 
-    fun getIntegrationsForComponent(name: String, version: String): Future<List<TestInvocationsDescriptor>> {
+    fun getIntegrationsForComponent(name: String, version: String): Future<List<TestInvocationDescriptor>> {
         return client.getAbs("$url/api/integrations/$name/$version").send()
             .map { response ->
                 if (response.statusCode() != 200) {
@@ -35,7 +35,7 @@ class IntegrationControllerApi(private val url: String, vertx: Vertx): Logging {
                 if(body.isEmpty()) {
                     log.info("No integrations found for component $name:$version")
                 }
-                objectMapper.readerForListOf(TestInvocationsDescriptor::class.java).readValue<List<TestInvocationsDescriptor>?>(body).also {
+                objectMapper.readerForListOf(TestInvocationDescriptor::class.java).readValue<List<TestInvocationDescriptor>?>(body).also {
                     log.info("Found ${it?.size ?: 0} integrations for component $name:$version")
                 }
             }

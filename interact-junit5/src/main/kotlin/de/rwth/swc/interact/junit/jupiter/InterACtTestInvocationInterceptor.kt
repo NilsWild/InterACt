@@ -1,7 +1,10 @@
 package de.rwth.swc.interact.junit.jupiter
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import de.rwth.swc.interact.domain.*
+import de.rwth.swc.interact.domain.AbstractTestCaseName
+import de.rwth.swc.interact.domain.ConcreteTestCaseName
+import de.rwth.swc.interact.domain.TestCaseParameter
+import de.rwth.swc.interact.domain.TestMode
 import de.rwth.swc.interact.observer.TestObserver
 import de.rwth.swc.interact.test.ExampleBasedAssertionError
 import de.rwth.swc.interact.test.annotation.ComponentInformationLoader
@@ -12,8 +15,7 @@ import java.lang.reflect.Method
 import kotlin.reflect.full.createInstance
 
 class InterACtTestInvocationInterceptor(
-    private val mode: TestMode,
-    private val testInvocationDescriptor: TestInvocationDescriptor?
+    private val mode: TestMode
 ) : InvocationInterceptor {
 
     override fun interceptTestTemplateMethod(
@@ -22,7 +24,6 @@ class InterACtTestInvocationInterceptor(
         extensionContext: ExtensionContext
     ) {
         observeTest(extensionContext, argumentsFrom(invocationContext), mode)
-        integrate(testInvocationDescriptor)
         try {
             super.interceptTestTemplateMethod(invocation, invocationContext, extensionContext)
         } catch (e: ExampleBasedAssertionError) {
@@ -52,10 +53,6 @@ class InterACtTestInvocationInterceptor(
         } else {
             getContextWithRequiredTestClass(context.parent.orElseThrow { RuntimeException("Could not retrieve test class!") })
         }
-    }
-
-    private fun integrate(testInvocationDescriptor: TestInvocationDescriptor?) {
-        testInvocationDescriptor?.let { TestObserver.setTestedInteractionExpectation(it.interactionExpectationId) }
     }
 
     private fun argumentsFrom(context: ReflectiveInvocationContext<Method>): List<TestCaseParameter> {

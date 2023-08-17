@@ -2,9 +2,11 @@ package de.rwth.swc.interact.controller.persistence.domain
 
 import de.rwth.swc.interact.domain.*
 import org.springframework.data.annotation.Version
+import org.springframework.data.neo4j.core.schema.CompositeProperty
 import org.springframework.data.neo4j.core.schema.DynamicLabels
 import org.springframework.data.neo4j.core.schema.Id
 import org.springframework.data.neo4j.core.schema.Node
+import org.springframework.data.neo4j.core.schema.PostLoad
 import org.springframework.data.neo4j.core.schema.Relationship
 import java.util.*
 
@@ -17,6 +19,7 @@ internal data class ConcreteTestCaseEntity(
     val name: String,
     val result: TestResult,
     val mode: TestMode,
+    val parameters: List<String> = listOf(),
     @DynamicLabels
     val labels: MutableList<String> = mutableListOf()
 ) {
@@ -28,7 +31,7 @@ internal data class ConcreteTestCaseEntity(
     }
 
     @Relationship(type = "TRIGGERED")
-    var triggeredMessages: Set<MessageEntity> = emptySet()
+    var triggeredMessages: SortedSet<MessageOrderRelationship> = sortedSetOf()
 
     @Version
     var neo4jVersion: Long = 0
@@ -45,8 +48,8 @@ internal data class ConcreteTestCaseEntity(
         if (init != null) {
             it.init()
         }
-        triggeredMessages.lastOrNull()?.next = it
-        triggeredMessages = triggeredMessages.plusElement(it)
+        triggeredMessages.lastOrNull()?.message?.next = it
+        triggeredMessages = triggeredMessages.plusElement(MessageOrderRelationship(triggeredMessages.size,it)).toSortedSet()
     }
 
     fun message(
@@ -60,26 +63,18 @@ internal data class ConcreteTestCaseEntity(
         if (init != null) {
             it.init()
         }
-        triggeredMessages.lastOrNull()?.next = it
-        triggeredMessages = triggeredMessages.plusElement(it)
+        triggeredMessages.lastOrNull()?.message?.next = it
+        triggeredMessages = triggeredMessages.plusElement(MessageOrderRelationship(triggeredMessages.size,it)).toSortedSet()
     }
 
     fun toDomain() = ConcreteTestCase(
         ConcreteTestCaseName(name),
         mode,
-        emptyList()
-    ).also {
-        it.id = ConcreteTestCaseId(id)
-        it.result = result
-        triggeredMessages.first { it.next == null }.apply {
-            var next: MessageEntity? = this
-            val observedMessages = mutableListOf<Message>()
-            while (next != null) {
-                observedMessages.add(next.toDomain())
-                next = triggeredMessages.firstOrNull { it.next == next }
-            }
-            it.observedMessages = observedMessages.reversed().toMutableList()
-        }
+        parameters.map { TestCaseParameter(it) }
+    ).also { testCase ->
+        testCase.id = ConcreteTestCaseId(id)
+        testCase.result = result
+        testCase.observedMessages = triggeredMessages.map { it.message.toDomain() }.toMutableList()
     }
 
 }
@@ -88,9 +83,10 @@ internal fun ConcreteTestCase.toEntity() = ConcreteTestCaseEntity(
     this.id?.id ?: UUID.randomUUID(),
     this.name.name,
     this.result,
-    this.mode
+    this.mode,
+    this.parameters.map { it.value },
 ).also { entity ->
-    entity.triggeredMessages = this.observedMessages.map { it.toEntity() }.toSet()
+    entity.triggeredMessages = this.observedMessages.mapIndexed {index, message -> MessageOrderRelationship(index,message.toEntity()) }.toSortedSet()
 }
 
 internal interface ConcreteTestCaseEntityNoRelations {
@@ -98,5 +94,6 @@ internal interface ConcreteTestCaseEntityNoRelations {
     val name: String
     val result: TestResult
     val mode: TestMode
+    val parameters: List<String>
     val labels: MutableList<String>
 }

@@ -4,7 +4,7 @@ import java.util.UUID
 
 data class InteractionExpectation (
     val from: SentMessage,
-    val to: ReceivedMessage,
+    val to: List<ReceivedMessage>,
     val validated: Boolean = false
 ) {
     var id: InteractionExpectationId? = null

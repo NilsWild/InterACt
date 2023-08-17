@@ -7,7 +7,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.platform.engine.discovery.DiscoverySelectors
 import org.junit.platform.testkit.engine.EngineTestKit
-import java.util.*
 
 class InterACtTestTest {
 
@@ -16,33 +15,23 @@ class InterACtTestTest {
 
         Integrator.initialized = true
         Integrator.interactionTestCases = listOf(
-            TestInvocationsDescriptor(
+            TestInvocationDescriptor(
                 AbstractTestCase(
                     AbstractTestCaseSource(InterACtTestCases::class.java.canonicalName),
                     AbstractTestCaseName("filled with null parameters in interaction test"),
                 ),
-                listOf(
-                    TestInvocationDescriptor(
-                        InteractionExpectationId(UUID.randomUUID()),
-                        listOf(
-                            MessageValue("Test3")
-                        )
+                    listOf(
+                        MessageValue("Test3")
                     )
-                )
             ),
-            TestInvocationsDescriptor(
+            TestInvocationDescriptor(
                 AbstractTestCase(
                     AbstractTestCaseSource(InterACtTestCases::class.java.canonicalName),
                     AbstractTestCaseName("works with aggregators"),
                 ),
-                listOf(
-                    TestInvocationDescriptor(
-                        InteractionExpectationId(UUID.randomUUID()),
-                        listOf(
-                            MessageValue("{\"name\":\"Test3\", \"name2\":\"Test\"}"),
-                        )
+                    listOf(
+                        MessageValue("{\"name\":\"Test3\", \"name2\":\"Test\"}"),
                     )
-                )
             )
         )
 
