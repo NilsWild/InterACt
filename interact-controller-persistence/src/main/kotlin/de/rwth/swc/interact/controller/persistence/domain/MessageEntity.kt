@@ -54,25 +54,25 @@ internal data class MessageEntity(
 
     fun toDomain() = when {
         this.sentBy != null -> SentMessage(
-                MessageType.Sent.COMPONENT_RESPONSE,
-                MessageValue(this.payload),
-                this.sentBy.toDomain()
-            ).also {
-                it.id = MessageId(this.id)
-            }
+            MessageType.Sent.COMPONENT_RESPONSE,
+            MessageValue(this.payload),
+            this.sentBy.toDomain()
+        ).also {
+            it.id = MessageId(this.id)
+        }
         this.receivedBy != null -> ReceivedMessage(
-                if(hasLabel(MessageType.Received.STIMULUS.name)) MessageType.Received.STIMULUS else MessageType.Received.ENVIRONMENT_RESPONSE,
-                MessageValue(this.payload),
-                this.receivedBy.toDomain(),
-                this.isParameter
-            ).also {
-                it.id = MessageId(this.id)
-            }
+            if (hasLabel(MessageType.Received.STIMULUS.name)) MessageType.Received.STIMULUS else MessageType.Received.ENVIRONMENT_RESPONSE,
+            MessageValue(this.payload),
+            this.receivedBy.toDomain(),
+            this.isParameter
+        ).also {
+            it.id = MessageId(this.id)
+        }
         else -> throw IllegalStateException("MessageEntity must have either a sentBy or receivedBy relationship")
     }
 }
 
-internal fun Message.toEntity() = when(this) {
+internal fun Message.toEntity() = when (this) {
     is SentMessage -> MessageEntity(
         this.id?.id ?: UUID.randomUUID(),
         this.value.value,
@@ -88,7 +88,7 @@ internal fun Message.toEntity() = when(this) {
         this.value.value,
         this.isParameter,
         mutableListOf(
-            if(this.messageType == MessageType.Received.STIMULUS) MessageEntity.Label.STIMULUS.name else MessageEntity.Label.ENVIRONMENT_RESPONSE.name
+            if (this.messageType == MessageType.Received.STIMULUS) MessageEntity.Label.STIMULUS.name else MessageEntity.Label.ENVIRONMENT_RESPONSE.name
         ),
         null,
         this.receivedBy.toEntity(),
@@ -97,7 +97,7 @@ internal fun Message.toEntity() = when(this) {
     )
 }
 
-internal interface MessageEntityNoRelations{
+internal interface MessageEntityNoRelations {
     val id: UUID
     val payload: String
     val isParameter: Boolean

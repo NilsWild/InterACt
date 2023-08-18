@@ -26,7 +26,8 @@ interface ConcreteTestCaseDao {
 @Transactional
 internal class ConcreteTestCaseDaoImpl(
     private val neo4jTemplate: Neo4jTemplate,
-    private val repository: ConcreteTestCaseRepository) : ConcreteTestCaseDao {
+    private val repository: ConcreteTestCaseRepository
+) : ConcreteTestCaseDao {
 
     @Transactional(readOnly = true)
     override fun findByAbstractTestCaseIdAndParameters(

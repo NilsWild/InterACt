@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Named
 import org.junit.jupiter.api.extension.*
 import org.junit.jupiter.params.converter.DefaultArgumentConverter
 import org.junit.platform.commons.util.AnnotationUtils
+import java.lang.reflect.ParameterizedType
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -56,11 +57,11 @@ class InterACtTestParameterResolver(
                 }
                 methodContext.resolve(parameterContext, extractPayloads(args), invocationIndex)
             }
-            TestMode.INTERACTION -> resolveMessage(parameterContext, extractPayloads(arguments))
+            TestMode.INTERACTION -> resolveInteractionMessage(parameterContext, extractPayloads(arguments))
         }
     }
 
-    private fun resolveMessage(parameterContext: ParameterContext, arguments: Array<Any?>): Any? {
+    private fun resolveInteractionMessage(parameterContext: ParameterContext, arguments: Array<Any?>): Any? {
         val argument = arguments[parameterContext.index]
         return if (argument == null) {
             null
@@ -69,7 +70,17 @@ class InterACtTestParameterResolver(
         } else if (parameterContext.parameter.type.isPrimitive) {
             DefaultArgumentConverter.INSTANCE.convert(argument, parameterContext)
         } else {
-            jacksonObjectMapper().readValue(argument.toString(), parameterContext.parameter.type)
+            val type = parameterContext.parameter.parameterizedType
+            if (type is ParameterizedType) {
+                val mapper = jacksonObjectMapper()
+                val genericTypes = type.actualTypeArguments.map { mapper.typeFactory.constructType(it) }.toTypedArray()
+                mapper.readValue(
+                    argument.toString(),
+                    mapper.typeFactory.constructParametricType(parameterContext.parameter.type, *genericTypes)
+                )
+            } else {
+                jacksonObjectMapper().readValue(argument.toString(), parameterContext.parameter.type)
+            }
         }
     }
 

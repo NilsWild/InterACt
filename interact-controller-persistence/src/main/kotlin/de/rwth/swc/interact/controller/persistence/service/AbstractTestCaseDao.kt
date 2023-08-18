@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional
 /**
  * Service to access AbstractTestCaseEntity needed to support Kotlin value classes and to hide the repository
  */
-interface AbstractTestCaseDao{
+interface AbstractTestCaseDao {
     fun findIdByComponentIdSourceAndName(
         componentId: ComponentId,
         source: AbstractTestCaseSource,
@@ -25,7 +25,10 @@ interface AbstractTestCaseDao{
 
 @Service
 @Transactional
-internal class AbstractTestCaseDaoImpl(private val neo4jTemplate: Neo4jTemplate, private val abstractTestCaseRepository: AbstractTestCaseRepository): AbstractTestCaseDao {
+internal class AbstractTestCaseDaoImpl(
+    private val neo4jTemplate: Neo4jTemplate,
+    private val abstractTestCaseRepository: AbstractTestCaseRepository
+) : AbstractTestCaseDao {
 
     @Transactional(readOnly = true)
     override fun findIdByComponentIdSourceAndName(
@@ -33,13 +36,19 @@ internal class AbstractTestCaseDaoImpl(private val neo4jTemplate: Neo4jTemplate,
         source: AbstractTestCaseSource,
         name: AbstractTestCaseName
     ): AbstractTestCaseId? {
-        return abstractTestCaseRepository.findIdByComponentIdSourceAndName(componentId.id, source.source, name.name)?.let {
-            AbstractTestCaseId(it)
-        }
+        return abstractTestCaseRepository.findIdByComponentIdSourceAndName(componentId.id, source.source, name.name)
+            ?.let {
+                AbstractTestCaseId(it)
+            }
     }
 
     override fun save(abstractTestCase: AbstractTestCase): AbstractTestCaseId {
-        return AbstractTestCaseId(neo4jTemplate.saveAs(abstractTestCase.toEntity(), AbstractTestCaseEntityNoRelations::class.java).id)
+        return AbstractTestCaseId(
+            neo4jTemplate.saveAs(
+                abstractTestCase.toEntity(),
+                AbstractTestCaseEntityNoRelations::class.java
+            ).id
+        )
     }
 
     override fun addConcreteTestCase(abstractTestCaseId: AbstractTestCaseId, id: ConcreteTestCaseId) {

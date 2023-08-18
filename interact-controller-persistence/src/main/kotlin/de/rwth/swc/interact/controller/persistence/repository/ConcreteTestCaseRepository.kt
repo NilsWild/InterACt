@@ -11,7 +11,8 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-internal interface ConcreteTestCaseRepository : org.springframework.data.repository.Repository<ConcreteTestCaseEntity, UUID> {
+internal interface ConcreteTestCaseRepository :
+    org.springframework.data.repository.Repository<ConcreteTestCaseEntity, UUID> {
 
     @Query(
         value = "MATCH (atc:$ABSTRACT_TEST_CASE_NODE_LABEL)-[:USED_TO_DERIVE]->(ctc:$CONCRETE_TEST_CASE_NODE_LABEL) " +
@@ -41,8 +42,8 @@ internal interface ConcreteTestCaseRepository : org.springframework.data.reposit
 
     @Query(
         "MATCH (ctc:$CONCRETE_TEST_CASE_NODE_LABEL)-[:TRIGGERED]->(m:$MESSAGE_NODE_LABEL) " +
-        "WHERE m.id=\$id " +
-        "RETURN ctc"
+                "WHERE m.id=\$id " +
+                "RETURN ctc"
     )
     fun findByTriggeredMessage(@Param("id") id: UUID): ConcreteTestCaseEntity?
 }

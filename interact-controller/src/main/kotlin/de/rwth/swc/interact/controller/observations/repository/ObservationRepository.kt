@@ -1,6 +1,9 @@
 package de.rwth.swc.interact.controller.observations.repository
 
-import de.rwth.swc.interact.domain.*
+import de.rwth.swc.interact.domain.ComponentId
+import de.rwth.swc.interact.domain.InterfaceId
+import de.rwth.swc.interact.domain.Protocol
+import de.rwth.swc.interact.domain.ProtocolData
 import org.springframework.data.neo4j.core.Neo4jClient
 import org.springframework.stereotype.Component
 import java.util.*

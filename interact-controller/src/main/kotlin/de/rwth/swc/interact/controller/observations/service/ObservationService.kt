@@ -24,9 +24,10 @@ class ObservationService(
         val componentId = createComponentIfItDoesNotExist(component)
         val abstractTestCases = createAbstractTestCasesIfTheyDoNotExist(componentId, component.abstractTestCases)
         abstractTestCases.forEach { abstractTestCase ->
-            val concreteTestCases = createConcreteTestCasesIfTheyDoNotExist(abstractTestCase.id!!, abstractTestCase.concreteTestCases)
+            val concreteTestCases =
+                createConcreteTestCasesIfTheyDoNotExist(abstractTestCase.id!!, abstractTestCase.concreteTestCases)
             concreteTestCases.forEach { concreteTestCase ->
-                storeMessagesIfTheyDoNotExist(componentId,concreteTestCase)
+                storeMessagesIfTheyDoNotExist(componentId, concreteTestCase)
             }
         }
     }

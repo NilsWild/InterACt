@@ -7,7 +7,6 @@ import de.rwth.swc.interact.domain.ComponentId
 import de.rwth.swc.interact.domain.InteractionExpectationValidationPlan
 import de.rwth.swc.interact.domain.InteractionExpectationValidationPlanId
 import de.rwth.swc.interact.domain.TestInvocationDescriptor
-import org.springframework.data.neo4j.core.Neo4jTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -23,7 +22,8 @@ interface InteractionExpectationValidationPlanDao {
 @Transactional
 internal class InteractionExpectationValidationPlanDaoImpl(
     private val repository: InteractionExpectationValidationPlanRepository,
-    private val mapper: ObjectMapper) : InteractionExpectationValidationPlanDao {
+    private val mapper: ObjectMapper
+) : InteractionExpectationValidationPlanDao {
     override fun existsByPathInfo(pathInfo: String): Boolean {
         return repository.existsByInteractionPathInfo(pathInfo)
     }

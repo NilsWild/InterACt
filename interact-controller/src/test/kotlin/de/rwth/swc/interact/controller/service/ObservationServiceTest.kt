@@ -27,7 +27,8 @@ internal class ObservationServiceTest : Neo4jBaseTest() {
             component(ComponentName("test"), ComponentVersion("1.0.0")) {
                 abstractTestCase(
                     AbstractTestCaseSource("de.rwth.swc.test.TestCase"),
-                    AbstractTestCaseName("should be successfull")) {
+                    AbstractTestCaseName("should be successfull")
+                ) {
                     concreteTestCase(ConcreteTestCaseName("should be successfull 1"), TestMode.UNIT, listOf()) {
                         receivedMessage(
                             MessageType.Received.STIMULUS,
@@ -52,7 +53,8 @@ internal class ObservationServiceTest : Neo4jBaseTest() {
             component(ComponentName("test"), ComponentVersion("1.0.0")) {
                 abstractTestCase(
                     AbstractTestCaseSource("de.rwth.swc.test.TestCase"),
-                    AbstractTestCaseName("should be successfull")) {
+                    AbstractTestCaseName("should be successfull")
+                ) {
                     concreteTestCase(ConcreteTestCaseName("should be successfull 1"), TestMode.UNIT, listOf()) {
                         receivedMessage(
                             MessageType.Received.STIMULUS,

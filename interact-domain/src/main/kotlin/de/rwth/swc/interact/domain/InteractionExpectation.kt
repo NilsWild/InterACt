@@ -1,8 +1,8 @@
 package de.rwth.swc.interact.domain
 
-import java.util.UUID
+import java.util.*
 
-data class InteractionExpectation (
+data class InteractionExpectation(
     val from: SentMessage,
     val to: List<ReceivedMessage>,
     val validated: Boolean = false

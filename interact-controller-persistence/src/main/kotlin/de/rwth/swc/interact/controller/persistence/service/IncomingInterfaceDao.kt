@@ -18,8 +18,16 @@ interface IncomingInterfaceDao {
 
 @Service
 @Transactional
-internal class IncomingInterfaceDaoImpl(private val neo4jTemplate: Neo4jTemplate, private val incomingInterfaceRepository: IncomingInterfaceRepository) : IncomingInterfaceDao {
+internal class IncomingInterfaceDaoImpl(
+    private val neo4jTemplate: Neo4jTemplate,
+    private val incomingInterfaceRepository: IncomingInterfaceRepository
+) : IncomingInterfaceDao {
     override fun save(incomingInterface: IncomingInterface): InterfaceId {
-        return InterfaceId(neo4jTemplate.saveAs(incomingInterface.toEntity(), IncomingInterfaceEntityNoRelations::class.java).id)
+        return InterfaceId(
+            neo4jTemplate.saveAs(
+                incomingInterface.toEntity(),
+                IncomingInterfaceEntityNoRelations::class.java
+            ).id
+        )
     }
 }

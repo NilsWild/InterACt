@@ -10,7 +10,7 @@ import java.util.*
 const val INTERACTION_EXPECTATION_VALIDATION_PLAN_NODE_LABEL = "InteractionExpectationValidationPlan"
 
 @Node(INTERACTION_EXPECTATION_VALIDATION_PLAN_NODE_LABEL)
-internal data class InteractionExpectationValidationPlanEntity (
+internal data class InteractionExpectationValidationPlanEntity(
     @Id
     val id: UUID = UUID.randomUUID(),
     var interactionPathInfo: String
@@ -26,7 +26,7 @@ internal data class InteractionExpectationValidationPlanEntity (
 
     fun toDomain() = InteractionExpectationValidationPlan(
         this.interactionPathInfo,
-        this.nextTest?.let{jacksonObjectMapper().readValue(it, TestInvocationDescriptor::class.java)},
+        this.nextTest?.let { jacksonObjectMapper().readValue(it, TestInvocationDescriptor::class.java) },
         this.nextComponent?.let { ComponentId(it) },
         this.testedPath?.map { ConcreteTestCaseId(it) } ?: emptyList(),
         this.validated
@@ -39,7 +39,7 @@ internal fun InteractionExpectationValidationPlan.toEntity() = InteractionExpect
     this.id?.id ?: UUID.randomUUID(),
     this.interactionPathInfo
 ).also { entity ->
-    entity.nextTest = this.nextTest?.let { jacksonObjectMapper().writeValueAsString(it)}
+    entity.nextTest = this.nextTest?.let { jacksonObjectMapper().writeValueAsString(it) }
     entity.nextComponent = this.nextComponent?.id
     entity.testedPath = this.testedPath.map { it.id }
     entity.validated = this.validated

@@ -4,6 +4,7 @@ import de.rwth.swc.interact.domain.*
 import de.rwth.swc.interact.test.ComponentInformationLoader
 import de.rwth.swc.interact.test.PropertiesBasedComponentInformationLoader
 import de.rwth.swc.interact.utils.Logging
+import de.rwth.swc.interact.utils.logger
 import io.vertx.core.Vertx
 import java.lang.reflect.Method
 import java.util.*
@@ -19,6 +20,7 @@ object TestObserver : Logging {
     private var observations: MutableList<Component> = mutableListOf()
 
     private val props = Properties()
+    private val log = logger()
 
     init {
         props.load(this.javaClass.classLoader.getResourceAsStream("interact.properties"))
@@ -69,6 +71,15 @@ object TestObserver : Logging {
 
     fun recordMessage(observedMessage: Message) {
         currentTestCase?.observedMessages?.add(observedMessage) ?: throw RuntimeException("No test case started")
+
+        when (observedMessage.messageType) {
+            is MessageType.Sent -> (observedMessage as SentMessage).let { message ->
+                log.info("SENT ${message.messageType}: ${message.value} to ${observedMessage.sentBy}")
+            }
+            is MessageType.Received -> (observedMessage as ReceivedMessage).let { message ->
+                log.info("RECEIVED ${message.messageType}: ${message.value} from ${observedMessage.receivedBy}")
+            }
+        }
     }
 
     fun getObservations(): List<Component> {

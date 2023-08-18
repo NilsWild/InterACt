@@ -1,8 +1,8 @@
 package de.rwth.swc.interact.domain
 
-import java.util.UUID
+import java.util.*
 
-data class AbstractTestCase (val source: AbstractTestCaseSource, val name: AbstractTestCaseName) {
+data class AbstractTestCase(val source: AbstractTestCaseSource, val name: AbstractTestCaseName) {
 
     var id: AbstractTestCaseId? = null
     var concreteTestCases: MutableList<ConcreteTestCase> = mutableListOf()

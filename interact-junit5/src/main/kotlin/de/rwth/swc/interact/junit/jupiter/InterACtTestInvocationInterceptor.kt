@@ -25,9 +25,16 @@ class InterACtTestInvocationInterceptor(
     ) {
         observeTest(extensionContext, argumentsFrom(invocationContext), mode)
         try {
-            super.interceptTestTemplateMethod(invocation, invocationContext, extensionContext)
-        } catch (e: ExampleBasedAssertionError) {
+            try {
+                super.interceptTestTemplateMethod(invocation, invocationContext, extensionContext)
+            } catch (e: ExampleBasedAssertionError) {
+                if (mode == TestMode.UNIT) {
+                    throw e
+                }
+            }
+        } catch (e: Throwable) {
             if (mode == TestMode.UNIT) {
+                TestObserver.dropObservation()
                 throw e
             }
         }

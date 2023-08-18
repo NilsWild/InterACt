@@ -17,12 +17,12 @@ class InterACtArgumentsProvider {
         )
         val testCases = Integrator.interactionTestCases
         return testCases.filter { it.abstractTestCase == abstractTestCase }.map { invocation ->
-                Arguments.of(
-                    *fillWithNull(
-                        invocation.testInvocations.map { it.value }.toTypedArray(),
-                        context.requiredTestMethod.parameters.size
-                    )
+            Arguments.of(
+                *fillWithNull(
+                    invocation.testInvocations.map { it.value }.toTypedArray(),
+                    context.requiredTestMethod.parameters.size
                 )
+            )
         }.stream()
     }
 

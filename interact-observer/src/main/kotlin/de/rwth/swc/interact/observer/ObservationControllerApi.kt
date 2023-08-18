@@ -13,7 +13,7 @@ import io.vertx.ext.web.client.WebClient
 /**
  * The ObservationControllerApi is used to send the observations to the interact-controller.
  */
-class ObservationControllerApi(private val url: String, vertx: Vertx): Logging {
+class ObservationControllerApi(private val url: String, vertx: Vertx) : Logging {
 
     private val client: WebClient
     private val objectMapper = jacksonObjectMapper()

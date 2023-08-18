@@ -2,10 +2,10 @@ package de.rwth.swc.interact.domain
 
 import java.util.*
 
-data class ConcreteTestCase (
-val name: ConcreteTestCaseName,
-val mode: TestMode,
-val parameters: List<TestCaseParameter>
+data class ConcreteTestCase(
+    val name: ConcreteTestCaseName,
+    val mode: TestMode,
+    val parameters: List<TestCaseParameter>
 ) {
     var id: ConcreteTestCaseId? = null
     var result: TestResult = TestResult.NOT_EXECUTED

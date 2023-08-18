@@ -26,7 +26,10 @@ interface ComponentDao {
 
 @Service
 @Transactional
-internal class ComponentDaoImpl(private val neo4jTemplate: Neo4jTemplate, private val componentRepository: ComponentRepository) : ComponentDao {
+internal class ComponentDaoImpl(
+    private val neo4jTemplate: Neo4jTemplate,
+    private val componentRepository: ComponentRepository
+) : ComponentDao {
     override fun addAbstractTestCase(componentId: ComponentId, abstractTestCaseId: AbstractTestCaseId) {
         componentRepository.addAbstractTestCase(componentId.id, abstractTestCaseId.id)
     }

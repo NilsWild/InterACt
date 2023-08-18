@@ -1,6 +1,5 @@
 package de.rwth.swc.interact.controller.integrations.repository
 
-import com.fasterxml.jackson.databind.AbstractTypeResolver
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.rwth.swc.interact.controller.integrations.dto.*
 import de.rwth.swc.interact.controller.persistence.domain.ABSTRACT_TEST_CASE_NODE_LABEL
@@ -20,7 +19,7 @@ class IntegrationRepository(
     private val objectMapper: ObjectMapper
 ) {
 
-    fun findByMissingValidationCandidate() : Collection<InteractionExpectationInfo> {
+    fun findByMissingValidationCandidate(): Collection<InteractionExpectationInfo> {
         return neo4jClient.query(
             "MATCH (ie:$INTERACTION_EXPECTATION_NODE_LABEL{validated:false}) " +
                     "WHERE NOT (ie)-[:POTENTIALLY_VALIDATED_BY]->(:$INTERACTION_EXPECTATION_VALIDATION_PLAN_NODE_LABEL{nextTest:NOT NULL}) " +
@@ -38,7 +37,10 @@ class IntegrationRepository(
         }.all()
     }
 
-    fun determineTestInvocationDescriptor(interactionTestInfo: InteractionTestInfo, executedTests: List<ConcreteTestCaseId>): TestInvocationDescriptor {
+    fun determineTestInvocationDescriptor(
+        interactionTestInfo: InteractionTestInfo,
+        executedTests: List<ConcreteTestCaseId>
+    ): TestInvocationDescriptor {
         val replacements = interactionTestInfo.replacements.map { replacement ->
             @Suppress("UNCHECKED_CAST")
             neo4jClient.query(
@@ -71,26 +73,27 @@ class IntegrationRepository(
     }
 
     fun findAbstractTestCaseByConcreteTestCaseId(testCaseId: ConcreteTestCaseId): AbstractTestCase {
-       return  neo4jClient.query(
+        return neo4jClient.query(
             "MATCH (atc)-[:USED_TO_DERIVE]->(ctc) WHERE ctc.id = \$ctc_id " +
                     "RETURN atc"
         ).bind(testCaseId.toString()).to("ctc_id")
-           .fetchAs(AbstractTestCase::class.java).mappedBy{_,record ->
-            AbstractTestCase(
-                AbstractTestCaseSource(record.get("atc").asNode().get("source").asString()),
-                AbstractTestCaseName(record.get("atc").asNode().get("name").asString())
-            ).also {
-                it.id = AbstractTestCaseId(UUID.fromString(record.get("atc").asNode().get("id").asString()))
-            }
-        }.first().orElseGet{ throw RuntimeException() }
+            .fetchAs(AbstractTestCase::class.java).mappedBy { _, record ->
+                AbstractTestCase(
+                    AbstractTestCaseSource(record.get("atc").asNode().get("source").asString()),
+                    AbstractTestCaseName(record.get("atc").asNode().get("name").asString())
+                ).also {
+                    it.id = AbstractTestCaseId(UUID.fromString(record.get("atc").asNode().get("id").asString()))
+                }
+            }.first().orElseGet { throw RuntimeException() }
     }
 
     fun findInteractionTestsToExecuteForComponent(componentId: ComponentId): List<TestInvocationDescriptor> {
         return neo4jClient.query(
             "MATCH (vp:$INTERACTION_EXPECTATION_VALIDATION_PLAN_NODE_LABEL{nextComponent:\$componentId}) " +
-                    "RETURN vp.nextTest as nextTest")
+                    "RETURN vp.nextTest as nextTest"
+        )
             .bind(componentId.toString()).to("componentId")
-            .fetchAs(TestInvocationDescriptor::class.java).mappedBy{_,record ->
+            .fetchAs(TestInvocationDescriptor::class.java).mappedBy { _, record ->
                 objectMapper.readValue(record.get("nextTest").asString(), TestInvocationDescriptor::class.java)
             }.all().toList()
     }
@@ -128,14 +131,15 @@ class IntegrationRepository(
     fun deriveInteractionExpectations() {
         val getComponentResponsesWithoutExistingInteractonExpectations =
             "MATCH (cmp_res:${MessageType.Sent.COMPONENT_RESPONSE})<-[:TRIGGERED]-(:UNITTest) " +
-            "WHERE NOT (cmp_res)<-[:EXPECT_FROM]-() "
+                    "WHERE NOT (cmp_res)<-[:EXPECT_FROM]-() "
         val getThePathFromEachComponentResponseOverAllEnvironmentResponsesThatAreAResponseToThatComponentResponse =
             "CALL apoc.path.expand(cmp_res,\"NEXT>\",\"${MessageType.Received.ENVIRONMENT_RESPONSE}\",1,-1) " +
-            "YIELD path " +
-            "WITH cmp_res, length(path) as len, path " +
-            "WITH cmp_res, apoc.agg.maxItems(path,len) as longestPath "
-        neo4jClient.query(getComponentResponsesWithoutExistingInteractonExpectations +
-                getThePathFromEachComponentResponseOverAllEnvironmentResponsesThatAreAResponseToThatComponentResponse +
+                    "YIELD path " +
+                    "WITH cmp_res, length(path) as len, path " +
+                    "WITH cmp_res, apoc.agg.maxItems(path,len) as longestPath "
+        neo4jClient.query(
+            getComponentResponsesWithoutExistingInteractonExpectations +
+                    getThePathFromEachComponentResponseOverAllEnvironmentResponsesThatAreAResponseToThatComponentResponse +
                     "WITH nodes(longestPath.items[0]) as elems " +
                     "WITH head(elems) as h, randomUUID() as ieid, tail(elems) as t, range(0, size(elems)-2) as idxs " +
                     "UNWIND idxs as idx " +
@@ -171,17 +175,24 @@ class IntegrationRepository(
     fun findTerminalNodesForTargetMessage(messageId: MessageId): List<MessageId> {
         return neo4jClient.query(
             "MATCH (:UNITTest)-[:TRIGGERED]->(tn:${MessageType.Sent.COMPONENT_RESPONSE})-[:SENT_BY]->()-[:BOUND_TO]->()<-[:RECEIVED_BY]-(:${MessageType.Received.ENVIRONMENT_RESPONSE}{id:\"" + messageId + "\"}) RETURN tn.id as id"
-        ).fetchAs(MessageId::class.java).mappedBy{_, record -> MessageId(UUID.fromString(record.get("id").asString()))}
+        ).fetchAs(MessageId::class.java)
+            .mappedBy { _, record -> MessageId(UUID.fromString(record.get("id").asString())) }
             .all().toList().distinct()
     }
 
-    fun updateInterfaceExpectationValidationPlanWithNewExecution(vp: InteractionExpectationValidationPlan, concreteTestCase: ConcreteTestCase) {
-        if(concreteTestCase.result != TestResult.SUCCESS) {
+    fun updateInterfaceExpectationValidationPlanWithNewExecution(
+        vp: InteractionExpectationValidationPlan,
+        concreteTestCase: ConcreteTestCase
+    ) {
+        if (concreteTestCase.result != TestResult.SUCCESS) {
             setValidationStatusOfValidationPlan(vp.id!!, false)
             return
         }
 
-        val nextTestManipulation = objectMapper.readValue(vp.interactionPathInfo, InteractionPathInfo::class.java).interactionTests.getOrNull(vp.testedPath.size+1)
+        val nextTestManipulation =
+            objectMapper.readValue(vp.interactionPathInfo, InteractionPathInfo::class.java).interactionTests.getOrNull(
+                vp.testedPath.size + 1
+            )
         val nextTestCaseId = nextTestManipulation?.testCaseId
         val testedPath = vp.testedPath + concreteTestCase.id!!
 
@@ -189,12 +200,13 @@ class IntegrationRepository(
             "MATCH (vp:$INTERACTION_EXPECTATION_VALIDATION_PLAN_NODE_LABEL{id:\"${vp.id}\"}) SET vp.testedPath=\$testedPath"
         ).bind(testedPath.map { it.toString() }).to("testedPath").run()
 
-        if(nextTestCaseId == null) {
+        if (nextTestCaseId == null) {
             setValidationStatusOfValidationPlan(vp.id!!, true)
             return
         }
 
-        val nextTest = objectMapper.writeValueAsString(determineTestInvocationDescriptor(nextTestManipulation, testedPath))
+        val nextTest =
+            objectMapper.writeValueAsString(determineTestInvocationDescriptor(nextTestManipulation, testedPath))
         neo4jClient.query(
             "MATCH (vp:$INTERACTION_EXPECTATION_VALIDATION_PLAN_NODE_LABEL{id:\"${vp.id}\"}) SET " +
                     "vp.nextTest=\$nextTest REMOVE vp.nextComponent"
@@ -202,7 +214,7 @@ class IntegrationRepository(
     }
 
     private fun setValidationStatusOfValidationPlan(vpId: InteractionExpectationValidationPlanId, valid: Boolean) {
-        if(valid) {
+        if (valid) {
             neo4jClient.query(
                 "MATCH (vp:$INTERACTION_EXPECTATION_VALIDATION_PLAN_NODE_LABEL{id:\"$vpId\"}) " +
                         "MATCH (ie:$INTERACTION_EXPECTATION_NODE_LABEL)-[:POTENTIALLY_VALIDATED_BY]->(vp) " +
