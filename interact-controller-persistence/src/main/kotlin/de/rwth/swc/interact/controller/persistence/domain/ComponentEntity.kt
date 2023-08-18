@@ -13,7 +13,7 @@ import java.util.*
 const val COMPONENT_NODE_LABEL = "Component"
 
 @Node(COMPONENT_NODE_LABEL)
-internal data class ComponentEntity (
+internal data class ComponentEntity(
     @Id
     val id: UUID = UUID.randomUUID(),
     val name: String,

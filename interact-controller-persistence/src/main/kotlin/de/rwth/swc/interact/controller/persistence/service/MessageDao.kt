@@ -22,9 +22,17 @@ interface MessageDao {
 
 @Service
 @Transactional
-internal class MessageDaoImpl(private val neo4jTemplate: Neo4jTemplate, private val messageRepository: MessageRepository): MessageDao {
+internal class MessageDaoImpl(
+    private val neo4jTemplate: Neo4jTemplate,
+    private val messageRepository: MessageRepository
+) : MessageDao {
     override fun save(message: Message): MessageId {
-        return MessageId(neo4jTemplate.saveAs(message.toEntity(), de.rwth.swc.interact.controller.persistence.domain.MessageEntityNoRelations::class.java).id)
+        return MessageId(
+            neo4jTemplate.saveAs(
+                message.toEntity(),
+                de.rwth.swc.interact.controller.persistence.domain.MessageEntityNoRelations::class.java
+            ).id
+        )
     }
 
     override fun setReceivedBy(messageId: MessageId, incomingInterfaceId: InterfaceId) {

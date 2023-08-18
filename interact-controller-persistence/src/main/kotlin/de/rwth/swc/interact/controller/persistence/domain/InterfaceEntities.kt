@@ -34,7 +34,7 @@ internal fun IncomingInterface.toEntity() = IncomingInterfaceEntity(
     this.protocolData.data
 )
 
-internal interface IncomingInterfaceEntityNoRelations{
+internal interface IncomingInterfaceEntityNoRelations {
     val id: UUID
     val protocol: String
     val protocolData: Map<String, String>
@@ -74,7 +74,7 @@ internal fun OutgoingInterface.toEntity() = OutgoingInterfaceEntity(
     this.protocolData.data
 )
 
-internal interface OutgoingInterfaceEntityNoRelations{
+internal interface OutgoingInterfaceEntityNoRelations {
     val id: UUID
     val protocol: String
     val protocolData: Map<String, String>

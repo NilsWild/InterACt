@@ -1,14 +1,14 @@
 package de.rwth.swc.interact.domain
 
-import java.util.UUID
+import java.util.*
 
-data class InteractionExpectationValidationPlan (
+data class InteractionExpectationValidationPlan(
     var interactionPathInfo: String,
     var nextTest: TestInvocationDescriptor?,
     var nextComponent: ComponentId?,
     var testedPath: List<ConcreteTestCaseId>,
     var validated: Boolean = false
-        ) {
+) {
     var id: InteractionExpectationValidationPlanId? = null
 }
 

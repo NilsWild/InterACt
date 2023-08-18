@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "ObservationController")
 @RestController
 @RequestMapping("/api/observations")
-class ObservationController(private val observationService: ObservationService): Logging {
+class ObservationController(private val observationService: ObservationService) : Logging {
 
     private val log = logger()
 

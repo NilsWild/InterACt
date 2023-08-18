@@ -9,7 +9,11 @@ class Component(val name: ComponentName, val version: ComponentVersion) {
     var providedInterfaces: MutableSet<IncomingInterface> = mutableSetOf()
     var requiredInterfaces: MutableSet<OutgoingInterface> = mutableSetOf()
 
-    fun abstractTestCase(source: AbstractTestCaseSource, name: AbstractTestCaseName, init: (AbstractTestCase.() -> Unit)? = null) =
+    fun abstractTestCase(
+        source: AbstractTestCaseSource,
+        name: AbstractTestCaseName,
+        init: (AbstractTestCase.() -> Unit)? = null
+    ) =
         AbstractTestCase(source, name).also {
             if (init != null) {
                 it.init()

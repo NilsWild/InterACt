@@ -11,7 +11,8 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-internal interface AbstractTestCaseRepository : org.springframework.data.repository.Repository<AbstractTestCaseEntity, UUID> {
+internal interface AbstractTestCaseRepository :
+    org.springframework.data.repository.Repository<AbstractTestCaseEntity, UUID> {
 
     @Query(
         value = "MATCH (c:$COMPONENT_NODE_LABEL)-[:TESTED_BY]->(atc:$ABSTRACT_TEST_CASE_NODE_LABEL) " +

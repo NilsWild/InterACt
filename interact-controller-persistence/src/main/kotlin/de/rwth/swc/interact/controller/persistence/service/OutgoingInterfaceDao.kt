@@ -20,9 +20,17 @@ interface OutgoingInterfaceDao {
 
 @Service
 @Transactional
-internal class OutgoingInterfaceDaoImpl(private val neo4jTemplate: Neo4jTemplate, private val outgoingInterfaceRepository: OutgoingInterfaceRepository) : OutgoingInterfaceDao {
+internal class OutgoingInterfaceDaoImpl(
+    private val neo4jTemplate: Neo4jTemplate,
+    private val outgoingInterfaceRepository: OutgoingInterfaceRepository
+) : OutgoingInterfaceDao {
     override fun save(outgoingInterface: OutgoingInterface): InterfaceId {
-        return InterfaceId(neo4jTemplate.saveAs(outgoingInterface.toEntity(), OutgoingInterfaceEntityNoRelations::class.java).id)
+        return InterfaceId(
+            neo4jTemplate.saveAs(
+                outgoingInterface.toEntity(),
+                OutgoingInterfaceEntityNoRelations::class.java
+            ).id
+        )
     }
 
     override fun findByMessage(messageId: MessageId): InterfaceId? {

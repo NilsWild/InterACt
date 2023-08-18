@@ -25,7 +25,10 @@ class IntegrationService(
     private val mapper: ObjectMapper
 ) {
 
-    fun findInteractionTestsToExecuteForComponent(name: ComponentName, version: ComponentVersion): List<TestInvocationDescriptor> {
+    fun findInteractionTestsToExecuteForComponent(
+        name: ComponentName,
+        version: ComponentVersion
+    ): List<TestInvocationDescriptor> {
 
         val componentId = componentDao.findIdByNameAndVersion(name, version) ?: return emptyList()
         return integrationRepository.findInteractionTestsToExecuteForComponent(componentId)
@@ -49,11 +52,20 @@ class IntegrationService(
         interactionExpectationId: InteractionExpectationId,
         validationCandidates: Collection<InteractionPathInfo>
     ) {
-        validationCandidates.filter { !interactionExpectationValidationPlanDao.existsByPathInfo(mapper.writeValueAsString(it)) }.forEach {
+        validationCandidates.filter {
+            !interactionExpectationValidationPlanDao.existsByPathInfo(
+                mapper.writeValueAsString(
+                    it
+                )
+            )
+        }.forEach {
             val validationPlanId = interactionExpectationValidationPlanDao.save(
                 InteractionExpectationValidationPlan(
                     mapper.writeValueAsString(it),
-                    integrationRepository.determineTestInvocationDescriptor(it.interactionTests[1], listOf(it.interactionTests[0].testCaseId)),
+                    integrationRepository.determineTestInvocationDescriptor(
+                        it.interactionTests[1],
+                        listOf(it.interactionTests[0].testCaseId)
+                    ),
                     null,
                     listOf(it.interactionTests[0].testCaseId)
                 )
@@ -169,7 +181,8 @@ class IntegrationService(
             atc,
             concreteTestCase.parameters.map { MessageValue(it.value) }
         )
-        val validationPlans = interactionExpectationValidationPlanDao.findByTestInvocationDescriptor(testInvocationDescriptor)
+        val validationPlans =
+            interactionExpectationValidationPlanDao.findByTestInvocationDescriptor(testInvocationDescriptor)
         validationPlans.forEach {
             integrationRepository.updateInterfaceExpectationValidationPlanWithNewExecution(
                 it,
@@ -181,12 +194,12 @@ class IntegrationService(
 
     private fun tryToValidateNextInteraction(validationPlanId: InteractionExpectationValidationPlanId) {
         val validationPlan = interactionExpectationValidationPlanDao.findById(validationPlanId)
-        if(validationPlan.nextTest != null) {
+        if (validationPlan.nextTest != null) {
             val concreteTestCase = concreteTestCaseDao.findByAbstractTestCaseIdAndParameters(
                 validationPlan.nextTest!!.abstractTestCase.id!!,
                 validationPlan.nextTest!!.testInvocations.map { TestCaseParameter(it.value) }
             )
-            if(concreteTestCase != null) {
+            if (concreteTestCase != null) {
                 integrationRepository.updateInterfaceExpectationValidationPlanWithNewExecution(
                     validationPlan,
                     concreteTestCase

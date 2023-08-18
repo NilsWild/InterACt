@@ -11,7 +11,7 @@ sealed interface ComponentInterface {
 data class IncomingInterface(
     override val protocol: Protocol,
     override val protocolData: ProtocolData,
-    ) : ComponentInterface{
+) : ComponentInterface {
     override var id: InterfaceId? = null
 }
 
@@ -29,6 +29,6 @@ value class InterfaceId(val id: UUID) {
 data class OutgoingInterface(
     override val protocol: Protocol,
     override val protocolData: ProtocolData
-    ): ComponentInterface {
+) : ComponentInterface {
     override var id: InterfaceId? = null
 }

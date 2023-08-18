@@ -211,12 +211,7 @@ class InterACtTestMethodContext(testMethod: Method) {
         fun resolve(parameterContext: ParameterContext, arguments: Array<Any?>, invocationIndex: Int): Any?
     }
 
-    internal class Converter(argumentConverter: ArgumentConverter) : Resolver {
-        private val argumentConverter: ArgumentConverter
-
-        init {
-            this.argumentConverter = argumentConverter
-        }
+    internal class Converter(private val argumentConverter: ArgumentConverter) : Resolver {
 
         override fun resolve(parameterContext: ParameterContext, arguments: Array<Any?>, invocationIndex: Int): Any? {
             val argument = arguments[parameterContext.index]
@@ -234,7 +229,8 @@ class InterACtTestMethodContext(testMethod: Method) {
 
     internal class Aggregator(private val argumentsAggregator: ArgumentsAggregator) : Resolver {
         override fun resolve(parameterContext: ParameterContext, arguments: Array<Any?>, invocationIndex: Int): Any? {
-            val accessor = DefaultArgumentsAccessor(parameterContext, invocationIndex, *arguments)
+            val args = arguments.copyOfRange(parameterContext.index, arguments.size)
+            val accessor = DefaultArgumentsAccessor(parameterContext, invocationIndex, *args)
             return try {
                 argumentsAggregator.aggregateArguments(accessor, parameterContext)
             } catch (ex: Exception) {

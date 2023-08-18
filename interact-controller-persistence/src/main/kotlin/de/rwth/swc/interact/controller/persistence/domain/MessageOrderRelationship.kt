@@ -8,7 +8,7 @@ import org.springframework.data.neo4j.core.schema.TargetNode
 internal data class MessageOrderRelationship(
     val order: Int,
     @TargetNode val message: MessageEntity
-): Comparable<MessageOrderRelationship> {
+) : Comparable<MessageOrderRelationship> {
     @RelationshipId
     var id: Long? = null
         private set

@@ -11,7 +11,7 @@ import java.util.*
 /**
  * The Integrator is used to manipulate the test cases to drive the interaction tests.
  */
-object Integrator: Logging {
+object Integrator : Logging {
     var componentInformationLoader: ComponentInformationLoader = PropertiesBasedComponentInformationLoader
 
     var interactionTestCases: List<TestInvocationDescriptor> = listOf()

@@ -2,11 +2,9 @@ package de.rwth.swc.interact.controller.persistence.domain
 
 import de.rwth.swc.interact.domain.*
 import org.springframework.data.annotation.Version
-import org.springframework.data.neo4j.core.schema.CompositeProperty
 import org.springframework.data.neo4j.core.schema.DynamicLabels
 import org.springframework.data.neo4j.core.schema.Id
 import org.springframework.data.neo4j.core.schema.Node
-import org.springframework.data.neo4j.core.schema.PostLoad
 import org.springframework.data.neo4j.core.schema.Relationship
 import java.util.*
 
@@ -49,7 +47,8 @@ internal data class ConcreteTestCaseEntity(
             it.init()
         }
         triggeredMessages.lastOrNull()?.message?.next = it
-        triggeredMessages = triggeredMessages.plusElement(MessageOrderRelationship(triggeredMessages.size,it)).toSortedSet()
+        triggeredMessages =
+            triggeredMessages.plusElement(MessageOrderRelationship(triggeredMessages.size, it)).toSortedSet()
     }
 
     fun message(
@@ -64,7 +63,8 @@ internal data class ConcreteTestCaseEntity(
             it.init()
         }
         triggeredMessages.lastOrNull()?.message?.next = it
-        triggeredMessages = triggeredMessages.plusElement(MessageOrderRelationship(triggeredMessages.size,it)).toSortedSet()
+        triggeredMessages =
+            triggeredMessages.plusElement(MessageOrderRelationship(triggeredMessages.size, it)).toSortedSet()
     }
 
     fun toDomain() = ConcreteTestCase(
@@ -86,7 +86,9 @@ internal fun ConcreteTestCase.toEntity() = ConcreteTestCaseEntity(
     this.mode,
     this.parameters.map { it.value },
 ).also { entity ->
-    entity.triggeredMessages = this.observedMessages.mapIndexed {index, message -> MessageOrderRelationship(index,message.toEntity()) }.toSortedSet()
+    entity.triggeredMessages =
+        this.observedMessages.mapIndexed { index, message -> MessageOrderRelationship(index, message.toEntity()) }
+            .toSortedSet()
 }
 
 internal interface ConcreteTestCaseEntityNoRelations {

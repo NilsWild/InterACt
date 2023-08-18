@@ -1,7 +1,6 @@
 package de.rwth.swc.interact.controller.persistence.service
 
 import de.rwth.swc.interact.controller.persistence.repository.InteractionExpectationRepository
-import de.rwth.swc.interact.domain.InteractionExpectation
 import de.rwth.swc.interact.domain.InteractionExpectationId
 import de.rwth.swc.interact.domain.InteractionExpectationValidationPlanId
 import org.springframework.stereotype.Service
@@ -17,7 +16,8 @@ interface InteractionExpectationDao {
 
 @Service
 @Transactional
-internal class InteractionExpectationDaoImpl(private val interactionExpectationRepository: InteractionExpectationRepository) : InteractionExpectationDao {
+internal class InteractionExpectationDaoImpl(private val interactionExpectationRepository: InteractionExpectationRepository) :
+    InteractionExpectationDao {
 
     override fun addValidationPlan(
         interactionExpectationId: InteractionExpectationId,

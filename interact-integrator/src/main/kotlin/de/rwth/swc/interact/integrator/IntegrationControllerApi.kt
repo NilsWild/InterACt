@@ -13,7 +13,7 @@ import io.vertx.ext.web.client.WebClient
  * The IntegrationControllerApi is used to get the interaction test case definitions that contain
  * the required manipulations for the interaction tests from the interact-controller.
  */
-class IntegrationControllerApi(private val url: String, vertx: Vertx): Logging {
+class IntegrationControllerApi(private val url: String, vertx: Vertx) : Logging {
 
     private val client: WebClient
     private val objectMapper = jacksonObjectMapper()
@@ -32,12 +32,13 @@ class IntegrationControllerApi(private val url: String, vertx: Vertx): Logging {
                     throw RuntimeException("Could not get integrations.")
                 }
                 val body = String(response.body().bytes, Charsets.UTF_8)
-                if(body.isEmpty()) {
+                if (body.isEmpty()) {
                     log.info("No integrations found for component $name:$version")
                 }
-                objectMapper.readerForListOf(TestInvocationDescriptor::class.java).readValue<List<TestInvocationDescriptor>?>(body).also {
-                    log.info("Found ${it?.size ?: 0} integrations for component $name:$version")
-                }
+                objectMapper.readerForListOf(TestInvocationDescriptor::class.java)
+                    .readValue<List<TestInvocationDescriptor>?>(body).also {
+                        log.info("Found ${it?.size ?: 0} integrations for component $name:$version")
+                    }
             }
     }
 }

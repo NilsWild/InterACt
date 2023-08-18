@@ -9,12 +9,13 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-internal interface InteractionExpectationRepository: org.springframework.data.repository.Repository<InteractionExpectationEntity, UUID> {
+internal interface InteractionExpectationRepository :
+    org.springframework.data.repository.Repository<InteractionExpectationEntity, UUID> {
 
     @Query(
         "MATCH (ie:$INTERACTION_EXPECTATION_NODE_LABEL{id:\$interactionExpectationId}) " +
-        "MATCH (vp:InteractionExpectationValidationPlan{id:\$validationPlanId}) " +
-        "MERGE (ie)-[:POTENTIALLY_VALIDATED_BY]->(vp)"
+                "MATCH (vp:InteractionExpectationValidationPlan{id:\$validationPlanId}) " +
+                "MERGE (ie)-[:POTENTIALLY_VALIDATED_BY]->(vp)"
     )
     fun addValidationPlan(
         interactionExpectationId: InteractionExpectationId,

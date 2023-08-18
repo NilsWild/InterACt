@@ -5,7 +5,8 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-internal interface IncomingInterfaceRepository : org.springframework.data.repository.Repository<IncomingInterfaceEntity, UUID> {
+internal interface IncomingInterfaceRepository :
+    org.springframework.data.repository.Repository<IncomingInterfaceEntity, UUID> {
 
     fun save(incomingInterface: IncomingInterfaceEntity): IncomingInterfaceEntity
 }

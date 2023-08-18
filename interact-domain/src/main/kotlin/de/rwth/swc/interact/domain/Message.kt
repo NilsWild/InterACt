@@ -3,7 +3,6 @@ package de.rwth.swc.interact.domain
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.util.*
-import java.util.function.BiFunction
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
@@ -16,12 +15,13 @@ sealed class Message {
     abstract val originalMessageId: MessageId?
     abstract val messageType: MessageType
 }
+
 data class SentMessage(
     override val messageType: MessageType.Sent,
     override val value: MessageValue,
     val sentBy: OutgoingInterface,
     override val originalMessageId: MessageId? = null
-): Message(){
+) : Message() {
     override var id: MessageId? = null
 }
 
@@ -36,7 +36,7 @@ data class ReceivedMessage(
     val receivedBy: IncomingInterface,
     val isParameter: Boolean = false,
     override val originalMessageId: MessageId? = null
-): Message(){
+) : Message() {
     override var id: MessageId? = null
 }
 
@@ -46,11 +46,12 @@ fun receivedBy(
 ) = IncomingInterface(Protocol, ProtocolData)
 
 sealed interface MessageType {
-    enum class Received: MessageType {
+    enum class Received : MessageType {
         STIMULUS,
         ENVIRONMENT_RESPONSE
     }
-    enum class Sent: MessageType {
+
+    enum class Sent : MessageType {
         COMPONENT_RESPONSE
     }
 }

@@ -12,7 +12,7 @@ internal class ProtocolDataTest {
         val objectMapper = jacksonObjectMapper()
         val protocolData = ProtocolData(
             mapOf(
-                "key"  to "value",
+                "key" to "value",
                 "key2" to "value2"
             )
         )

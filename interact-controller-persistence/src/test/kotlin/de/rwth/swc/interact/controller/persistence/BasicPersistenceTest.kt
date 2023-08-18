@@ -2,8 +2,6 @@ package de.rwth.swc.interact.controller.persistence
 
 import de.rwth.swc.interact.controller.persistence.domain.componentEntity
 import de.rwth.swc.interact.controller.persistence.repository.ComponentRepository
-import de.rwth.swc.interact.controller.persistence.service.ComponentDao
-import de.rwth.swc.interact.controller.persistence.service.ComponentDaoImpl
 import de.rwth.swc.interact.domain.TestMode
 import de.rwth.swc.interact.domain.TestResult
 import org.assertj.core.api.Assertions.assertThat
@@ -50,8 +48,10 @@ class BasicPersistenceTest : Neo4jBaseTest() {
         componentRepository.save(comp)
         val test = componentRepository.findAll()
         assertThat(test).withFailMessage("Expected 1 component, got ${test.size}").hasSize(1)
-        assertThat(test.first().providedInterfaces).withFailMessage("Expected 1 provided interface, got ${test.first().providedInterfaces.size}").hasSize(1)
-        assertThat(test.first().requiredInterfaces).withFailMessage("Expected 1 required interface, got ${test.first().requiredInterfaces.size}").hasSize(1)
+        assertThat(test.first().providedInterfaces).withFailMessage("Expected 1 provided interface, got ${test.first().providedInterfaces.size}")
+            .hasSize(1)
+        assertThat(test.first().requiredInterfaces).withFailMessage("Expected 1 required interface, got ${test.first().requiredInterfaces.size}")
+            .hasSize(1)
 
         componentRepository.deleteById(comp.id)
         val nodes = neo4jClient.query("MATCH (n) RETURN n").fetch().all()

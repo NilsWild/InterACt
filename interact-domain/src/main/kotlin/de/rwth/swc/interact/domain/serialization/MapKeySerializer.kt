@@ -13,7 +13,7 @@ import de.rwth.swc.interact.domain.ReceivedMessage
 import io.github.projectmapk.jackson.module.kogera.jacksonObjectMapper
 import java.util.*
 
-class MessageIdMapKeyDeserializer: KeyDeserializer() {
+class MessageIdMapKeyDeserializer : KeyDeserializer() {
     override fun deserializeKey(key: String, ctx: DeserializationContext): MessageId {
         return MessageId(UUID.fromString(key))
     }
@@ -25,13 +25,13 @@ class ConcreteTestCaseIdMapKeyDeserializer : KeyDeserializer() {
     }
 }
 
-class ComponentIdMapKeyDeserializer: KeyDeserializer() {
+class ComponentIdMapKeyDeserializer : KeyDeserializer() {
     override fun deserializeKey(key: String, ctx: DeserializationContext): ComponentId {
         return ComponentId(UUID.fromString(key))
     }
 }
 
-class ReceivedMessageMapKeyDeserializer: KeyDeserializer() {
+class ReceivedMessageMapKeyDeserializer : KeyDeserializer() {
 
     companion object {
         val objectMapper = jacksonObjectMapper()
@@ -42,17 +42,18 @@ class ReceivedMessageMapKeyDeserializer: KeyDeserializer() {
     }
 }
 
-class ReceivedMessageMapKeySerializer: JsonSerializer<ReceivedMessage>() {
+class ReceivedMessageMapKeySerializer : JsonSerializer<ReceivedMessage>() {
     companion object {
         val objectMapper = jacksonObjectMapper()
     }
+
     override fun serialize(message: ReceivedMessage, gen: JsonGenerator, sp: SerializerProvider) {
         gen.writeFieldName(objectMapper.writeValueAsString(message))
     }
 
 }
 
-object InteractModule: SimpleModule() {
+object InteractModule : SimpleModule() {
     init {
         this.addKeyDeserializer(MessageId::class.java, MessageIdMapKeyDeserializer())
         this.addKeyDeserializer(ConcreteTestCaseId::class.java, ConcreteTestCaseIdMapKeyDeserializer())

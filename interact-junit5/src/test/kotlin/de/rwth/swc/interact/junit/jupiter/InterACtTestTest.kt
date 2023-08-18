@@ -20,18 +20,18 @@ class InterACtTestTest {
                     AbstractTestCaseSource(InterACtTestCases::class.java.canonicalName),
                     AbstractTestCaseName("filled with null parameters in interaction test"),
                 ),
-                    listOf(
-                        MessageValue("Test3")
-                    )
+                listOf(
+                    MessageValue("Test3")
+                )
             ),
             TestInvocationDescriptor(
                 AbstractTestCase(
                     AbstractTestCaseSource(InterACtTestCases::class.java.canonicalName),
                     AbstractTestCaseName("works with aggregators"),
                 ),
-                    listOf(
-                        MessageValue("{\"name\":\"Test3\", \"name2\":\"Test\"}"),
-                    )
+                listOf(
+                    MessageValue("{\"name\":\"Test3\", \"name2\":\"Test\"}"),
+                )
             )
         )
 
@@ -40,7 +40,8 @@ class InterACtTestTest {
                 DiscoverySelectors.selectClass(InterACtTestCases::class.java)
             ).execute().testEvents()
         events.assertStatistics { stats -> stats.finished(6) }
-        assertThat(TestObserver.getObservations()).hasSize(6)
+        val observations = TestObserver.getObservations()
+        assertThat(observations).hasSize(6)
         Thread.sleep(5000)
     }
 }
