@@ -58,9 +58,9 @@ class IntegrationRepository(
                 }.first().orElseThrow() as Pair<ReceivedMessage, SentMessage>
         }.toMap()
         val atc = findAbstractTestCaseByConcreteTestCaseId(interactionTestInfo.testCaseId)
-        val messages = concreteTestCaseDao.findById(interactionTestInfo.testCaseId)!!.observedMessages
-        return TestInvocationDescriptor(
-            atc,
+        val originalTestCase = concreteTestCaseDao.findById(interactionTestInfo.testCaseId)!!
+        val messages = originalTestCase.observedMessages
+        var params =
             messages.filter { it.messageType != MessageType.Sent.COMPONENT_RESPONSE }.map {
                 val key = replacements.keys.firstOrNull { k -> k.value == it.value }
                 if (key == null) {
@@ -68,7 +68,12 @@ class IntegrationRepository(
                 } else {
                     replacements[key]!!.value
                 }
-            }.toList()
+            }
+        params = params + (0 until originalTestCase.parameters.size - params.size).map { MessageValue("null") }
+
+        return TestInvocationDescriptor(
+            atc,
+            params
         )
     }
 
@@ -95,7 +100,7 @@ class IntegrationRepository(
             .bind(componentId.toString()).to("componentId")
             .fetchAs(TestInvocationDescriptor::class.java).mappedBy { _, record ->
                 objectMapper.readValue(record.get("nextTest").asString(), TestInvocationDescriptor::class.java)
-            }.all().toList()
+            }.all().toList().distinct()
     }
 
     private fun mapToReceivedMessage(value: Value, _interface: Value): ReceivedMessage {

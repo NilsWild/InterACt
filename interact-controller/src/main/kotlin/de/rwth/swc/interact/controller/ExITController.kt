@@ -4,12 +4,14 @@ import de.rwth.swc.interact.domain.serialization.InteractModule
 import io.github.projectmapk.jackson.module.kogera.KotlinModule
 import io.swagger.v3.oas.annotations.OpenAPIDefinition
 import io.swagger.v3.oas.annotations.info.Info
+import org.neo4j.cypherdsl.core.renderer.Dialect
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.EnableScheduling
+
 
 @SpringBootApplication
 @ComponentScan(basePackages = ["de.rwth.swc.interact"])
@@ -41,4 +43,10 @@ class KotlinModuleConfiguration {
 
     @Bean
     fun interactModule() = InteractModule
+
+    @Bean
+    fun cypherDslConfiguration(): org.neo4j.cypherdsl.core.renderer.Configuration {
+        return org.neo4j.cypherdsl.core.renderer.Configuration.newConfig()
+            .withDialect(Dialect.NEO4J_5).build()
+    }
 }

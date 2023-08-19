@@ -21,7 +21,8 @@ class InterACtTestTest {
                     AbstractTestCaseName("filled with null parameters in interaction test"),
                 ),
                 listOf(
-                    MessageValue("Test3")
+                    MessageValue("Test"),
+                    MessageValue("null")
                 )
             ),
             TestInvocationDescriptor(
@@ -42,6 +43,5 @@ class InterACtTestTest {
         events.assertStatistics { stats -> stats.finished(6) }
         val observations = TestObserver.getObservations()
         assertThat(observations).hasSize(6)
-        Thread.sleep(5000)
     }
 }

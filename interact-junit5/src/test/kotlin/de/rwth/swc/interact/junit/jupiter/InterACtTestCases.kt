@@ -18,13 +18,13 @@ internal class InterACtTestCases {
     @InterACtTest
     @CsvSource(
         value = [
-            "Test, Test",
-            "Test2, Test2"
+            "Test, true",
+            "Test2, false"
         ]
     )
-    fun `filled with null parameters in interaction test`(name: String, expectedResult: String?) {
+    fun `filled with null parameters in interaction test`(name: String, expectedResult: Boolean?) {
         forExample {
-            assertThat(name).isEqualTo(expectedResult)
+            assertThat(expectedResult).isNotNull()
         }
         inherently {
             assertThat(name).isNotEmpty()

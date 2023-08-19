@@ -197,7 +197,7 @@ class IntegrationService(
         if (validationPlan.nextTest != null) {
             val concreteTestCase = concreteTestCaseDao.findByAbstractTestCaseIdAndParameters(
                 validationPlan.nextTest!!.abstractTestCase.id!!,
-                validationPlan.nextTest!!.testInvocations.map { TestCaseParameter(it.value) }
+                validationPlan.nextTest!!.parameters.map { TestCaseParameter(it.value) }
             )
             if (concreteTestCase != null) {
                 integrationRepository.updateInterfaceExpectationValidationPlanWithNewExecution(

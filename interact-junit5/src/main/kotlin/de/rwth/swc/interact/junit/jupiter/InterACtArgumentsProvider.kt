@@ -18,16 +18,9 @@ class InterACtArgumentsProvider {
         val testCases = Integrator.interactionTestCases
         return testCases.filter { it.abstractTestCase == abstractTestCase }.map { invocation ->
             Arguments.of(
-                *fillWithNull(
-                    invocation.testInvocations.map { it.value }.toTypedArray(),
-                    context.requiredTestMethod.parameters.size
-                )
+                *invocation.parameters.map { it?.value }.toTypedArray()
             )
         }.stream()
-    }
-
-    private fun fillWithNull(arguments: Array<String>, size: Int): Array<String?> {
-        return arguments.copyOf(size)
     }
 
     private fun getContextWithRequiredTestClass(context: ExtensionContext): ExtensionContext {

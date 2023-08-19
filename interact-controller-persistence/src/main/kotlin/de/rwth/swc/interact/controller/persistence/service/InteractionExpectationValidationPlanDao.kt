@@ -33,7 +33,8 @@ internal class InteractionExpectationValidationPlanDaoImpl(
     }
 
     override fun findByTestInvocationDescriptor(testInvocationDescriptor: TestInvocationDescriptor): List<InteractionExpectationValidationPlan> {
-        return repository.findByNextTest(mapper.writeValueAsString(testInvocationDescriptor)).map { it.toDomain() }
+        val td = mapper.writeValueAsString(testInvocationDescriptor)
+        return repository.findByNextTest(td).map { it.toDomain() }
     }
 
     override fun findById(validationPlanId: InteractionExpectationValidationPlanId): InteractionExpectationValidationPlan {
