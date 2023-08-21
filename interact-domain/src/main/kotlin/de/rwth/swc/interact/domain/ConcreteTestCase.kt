@@ -5,7 +5,7 @@ import java.util.*
 data class ConcreteTestCase(
     val name: ConcreteTestCaseName,
     val mode: TestMode,
-    val parameters: List<TestCaseParameter>
+    val parameters: List<TestCaseParameter?>
 ) {
     var id: ConcreteTestCaseId? = null
     var result: TestResult = TestResult.NOT_EXECUTED
@@ -60,6 +60,8 @@ value class ConcreteTestCaseName(val name: String) {
     }
 }
 
+
+//TODO when https://github.com/ProjectMapK/jackson-module-kogera/issues/42 is resolved, value should be nullable
 @JvmInline
 value class TestCaseParameter(val value: String) {
     override fun toString(): String {

@@ -85,7 +85,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>de.rwth.swc.interact.controller.ExITControllerKt</mainClass>
+                    <mainClass>de.rwth.swc.interact.controller.InterACtControllerKt</mainClass>
                     <executable>true</executable>
                     <layout>ZIP</layout>
                     <skip>false</skip>

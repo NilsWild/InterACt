@@ -1,6 +1,7 @@
 package de.rwth.swc.interact.controller.persistence.domain
 
 import de.rwth.swc.interact.domain.*
+import de.rwth.swc.interact.domain.serialization.SerializationConstants
 import org.springframework.data.annotation.Version
 import org.springframework.data.neo4j.core.schema.DynamicLabels
 import org.springframework.data.neo4j.core.schema.Id
@@ -17,7 +18,7 @@ internal data class ConcreteTestCaseEntity(
     val name: String,
     val result: TestResult,
     val mode: TestMode,
-    val parameters: List<String> = listOf(),
+    val parameters: String = "",
     @DynamicLabels
     val labels: MutableList<String> = mutableListOf()
 ) {
@@ -70,7 +71,7 @@ internal data class ConcreteTestCaseEntity(
     fun toDomain() = ConcreteTestCase(
         ConcreteTestCaseName(name),
         mode,
-        parameters.map { TestCaseParameter(it) }
+        SerializationConstants.mapper.readerForListOf(TestCaseParameter::class.java).readValue(parameters)
     ).also { testCase ->
         testCase.id = ConcreteTestCaseId(id)
         testCase.result = result
@@ -84,7 +85,7 @@ internal fun ConcreteTestCase.toEntity() = ConcreteTestCaseEntity(
     this.name.name,
     this.result,
     this.mode,
-    this.parameters.map { it.value },
+    SerializationConstants.mapper.writeValueAsString(this.parameters)
 ).also { entity ->
     entity.triggeredMessages =
         this.observedMessages.mapIndexed { index, message -> MessageOrderRelationship(index, message.toEntity()) }

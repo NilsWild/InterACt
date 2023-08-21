@@ -179,7 +179,7 @@ class IntegrationService(
         val atc = integrationRepository.findAbstractTestCaseByConcreteTestCaseId(concreteTestCase.id!!)
         val testInvocationDescriptor = TestInvocationDescriptor(
             atc,
-            concreteTestCase.parameters.map { MessageValue(it.value) }
+            concreteTestCase.parameters
         )
         val validationPlans =
             interactionExpectationValidationPlanDao.findByTestInvocationDescriptor(testInvocationDescriptor)
@@ -197,7 +197,7 @@ class IntegrationService(
         if (validationPlan.nextTest != null) {
             val concreteTestCase = concreteTestCaseDao.findByAbstractTestCaseIdAndParameters(
                 validationPlan.nextTest!!.abstractTestCase.id!!,
-                validationPlan.nextTest!!.parameters.map { TestCaseParameter(it.value) }
+                validationPlan.nextTest!!.parameters
             )
             if (concreteTestCase != null) {
                 integrationRepository.updateInterfaceExpectationValidationPlanWithNewExecution(

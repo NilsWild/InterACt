@@ -1,7 +1,7 @@
 package de.rwth.swc.interact.controller.persistence.domain
 
 import de.rwth.swc.interact.domain.*
-import io.github.projectmapk.jackson.module.kogera.jacksonObjectMapper
+import de.rwth.swc.interact.domain.serialization.SerializationConstants
 import org.springframework.data.annotation.Version
 import org.springframework.data.neo4j.core.schema.Id
 import org.springframework.data.neo4j.core.schema.Node
@@ -26,7 +26,7 @@ internal data class InteractionExpectationValidationPlanEntity(
 
     fun toDomain() = InteractionExpectationValidationPlan(
         this.interactionPathInfo,
-        this.nextTest?.let { jacksonObjectMapper().readValue(it, TestInvocationDescriptor::class.java) },
+        this.nextTest?.let { SerializationConstants.mapper.readValue(it, TestInvocationDescriptor::class.java) },
         this.nextComponent?.let { ComponentId(it) },
         this.testedPath?.map { ConcreteTestCaseId(it) } ?: emptyList(),
         this.validated
@@ -39,7 +39,7 @@ internal fun InteractionExpectationValidationPlan.toEntity() = InteractionExpect
     this.id?.id ?: UUID.randomUUID(),
     this.interactionPathInfo
 ).also { entity ->
-    entity.nextTest = this.nextTest?.let { jacksonObjectMapper().writeValueAsString(it) }
+    entity.nextTest = this.nextTest?.let { SerializationConstants.mapper.writeValueAsString(it) }
     entity.nextComponent = this.nextComponent?.id
     entity.testedPath = this.testedPath.map { it.id }
     entity.validated = this.validated

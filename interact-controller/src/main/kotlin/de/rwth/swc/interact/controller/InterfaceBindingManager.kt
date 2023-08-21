@@ -1,10 +1,12 @@
 package de.rwth.swc.interact.controller
 
+import de.rwth.swc.interact.controller.persistence.events.InterfaceAddedEvent
 import de.rwth.swc.interact.utbi.InterfaceBinder
 import jakarta.annotation.PostConstruct
 import org.springframework.data.neo4j.core.Neo4jClient
-import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
+import org.springframework.transaction.event.TransactionalEventListener
 import java.util.stream.Collectors
 
 @Service
@@ -26,17 +28,14 @@ class InterfaceBindingManager(
                             + matcher.version
                 )
             }
-            neo4jClient.query(
-                "MATCH (i:InboundInterface)-[b:BOUND_TO]->(o:OutboundInterface) WHERE NOT b.createdBy IN [" + matchers.stream()
-                    .map { "'" + it.name + ":" + it.version + "'" }.collect(Collectors.joining(",")) + "] DELETE b"
-            ).run()
-            matchers.forEach { it.bindInterfaces() }
         }
         println("\n-------------------------------")
     }
 
-    @Scheduled(fixedDelay = 30000)
-    fun match() {
-        matchers.forEach { it.bindInterfaces() }
+    @Async
+    @TransactionalEventListener
+    fun onInterfaceAddedEvent(event: InterfaceAddedEvent) {
+        matchers.firstOrNull{ it.canHandle(event.componentInterface) }?.bindInterfaces(event.componentInterface)
+            ?: throw IllegalStateException("No matcher found for ${event.componentInterface}")
     }
 }

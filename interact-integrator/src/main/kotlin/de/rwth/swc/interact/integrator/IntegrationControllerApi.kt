@@ -1,10 +1,9 @@
 package de.rwth.swc.interact.integrator
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import de.rwth.swc.interact.domain.TestInvocationDescriptor
-import de.rwth.swc.interact.domain.serialization.InteractModule
 import de.rwth.swc.interact.utils.Logging
 import de.rwth.swc.interact.utils.logger
-import io.github.projectmapk.jackson.module.kogera.jacksonObjectMapper
 import io.vertx.core.Future
 import io.vertx.core.Vertx
 import io.vertx.ext.web.client.WebClient
@@ -13,15 +12,13 @@ import io.vertx.ext.web.client.WebClient
  * The IntegrationControllerApi is used to get the interaction test case definitions that contain
  * the required manipulations for the interaction tests from the interact-controller.
  */
-class IntegrationControllerApi(private val url: String, vertx: Vertx) : Logging {
+class IntegrationControllerApi(private val url: String, private val mapper: ObjectMapper, vertx: Vertx) : Logging {
 
     private val client: WebClient
-    private val objectMapper = jacksonObjectMapper()
     private val log = logger()
 
     init {
         client = WebClient.create(vertx)
-        objectMapper.registerModule(InteractModule)
     }
 
     fun getIntegrationsForComponent(name: String, version: String): Future<List<TestInvocationDescriptor>> {
@@ -35,7 +32,7 @@ class IntegrationControllerApi(private val url: String, vertx: Vertx) : Logging 
                 if (body.isEmpty()) {
                     log.info("No integrations found for component $name:$version")
                 }
-                objectMapper.readerForListOf(TestInvocationDescriptor::class.java)
+                mapper.readerForListOf(TestInvocationDescriptor::class.java)
                     .readValue<List<TestInvocationDescriptor>?>(body).also {
                         log.info("Found ${it?.size ?: 0} integrations for component $name:$version")
                     }

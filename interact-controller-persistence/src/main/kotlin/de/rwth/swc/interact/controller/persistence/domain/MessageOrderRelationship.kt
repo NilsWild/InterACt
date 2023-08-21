@@ -10,7 +10,7 @@ internal data class MessageOrderRelationship(
     @TargetNode val message: MessageEntity
 ) : Comparable<MessageOrderRelationship> {
     @RelationshipId
-    var id: Long? = null
+    var id: String? = null
         private set
 
     override fun compareTo(other: MessageOrderRelationship): Int {

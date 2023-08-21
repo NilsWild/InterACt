@@ -1,9 +1,9 @@
 package de.rwth.swc.interact.junit.jupiter
 
 import de.rwth.swc.interact.domain.TestMode
+import de.rwth.swc.interact.domain.serialization.SerializationConstants
 import de.rwth.swc.interact.junit.jupiter.annotation.InterACtTest
 import de.rwth.swc.interact.junit.jupiter.annotation.Offset
-import io.github.projectmapk.jackson.module.kogera.jacksonObjectMapper
 import org.junit.jupiter.api.Named
 import org.junit.jupiter.api.extension.*
 import org.junit.jupiter.params.converter.DefaultArgumentConverter
@@ -12,13 +12,14 @@ import java.lang.reflect.ParameterizedType
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-
 class InterACtTestParameterResolver(
     private val methodContext: InterACtTestMethodContext,
     private val arguments: Array<Any?>,
     private val invocationIndex: Int,
     private val mode: TestMode
 ) : ParameterResolver, AfterTestExecutionCallback {
+
+    private val mapper = SerializationConstants.mapper
 
     companion object {
         private val NAMESPACE: ExtensionContext.Namespace =
@@ -72,14 +73,13 @@ class InterACtTestParameterResolver(
         } else {
             val type = parameterContext.parameter.parameterizedType
             if (type is ParameterizedType) {
-                val mapper = jacksonObjectMapper()
                 val genericTypes = type.actualTypeArguments.map { mapper.typeFactory.constructType(it) }.toTypedArray()
                 mapper.readValue(
                     argument.toString(),
                     mapper.typeFactory.constructParametricType(parameterContext.parameter.type, *genericTypes)
                 )
             } else {
-                jacksonObjectMapper().readValue(argument.toString(), parameterContext.parameter.type)
+                mapper.readValue(argument.toString(), parameterContext.parameter.type)
             }
         }
     }

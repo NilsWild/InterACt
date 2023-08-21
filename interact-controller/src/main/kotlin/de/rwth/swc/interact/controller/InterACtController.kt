@@ -1,6 +1,8 @@
 package de.rwth.swc.interact.controller
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import de.rwth.swc.interact.domain.serialization.InteractModule
+import de.rwth.swc.interact.domain.serialization.SerializationConstants
 import io.github.projectmapk.jackson.module.kogera.KotlinModule
 import io.swagger.v3.oas.annotations.OpenAPIDefinition
 import io.swagger.v3.oas.annotations.info.Info
@@ -17,16 +19,16 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @ComponentScan(basePackages = ["de.rwth.swc.interact"])
 @OpenAPIDefinition(
     info = Info(
-        title = "ExItController",
+        title = "InterACtController",
         description = "Controller for ExIT",
         version = "1.0.0"
     )
 )
 @EnableScheduling
-class ExITController
+class InterACtController
 
 fun main(args: Array<String>) {
-    runApplication<ExITController>(*args)
+    runApplication<InterACtController>(*args)
 }
 
 
@@ -48,5 +50,10 @@ class KotlinModuleConfiguration {
     fun cypherDslConfiguration(): org.neo4j.cypherdsl.core.renderer.Configuration {
         return org.neo4j.cypherdsl.core.renderer.Configuration.newConfig()
             .withDialect(Dialect.NEO4J_5).build()
+    }
+
+    @Bean
+    fun jacksonObjectMapper(): ObjectMapper {
+        return SerializationConstants.mapper
     }
 }

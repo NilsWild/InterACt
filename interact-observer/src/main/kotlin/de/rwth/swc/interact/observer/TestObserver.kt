@@ -1,6 +1,7 @@
 package de.rwth.swc.interact.observer
 
 import de.rwth.swc.interact.domain.*
+import de.rwth.swc.interact.domain.serialization.SerializationConstants
 import de.rwth.swc.interact.test.ComponentInformationLoader
 import de.rwth.swc.interact.test.PropertiesBasedComponentInformationLoader
 import de.rwth.swc.interact.utils.Logging
@@ -29,7 +30,7 @@ object TestObserver : Logging {
     fun startObservation(
         testClass: Class<*>,
         testMethod: Method,
-        testParameters: List<TestCaseParameter>,
+        testParameters: List<TestCaseParameter?>,
         mode: TestMode
     ) {
         if (testParameters.isEmpty()) {
@@ -48,7 +49,7 @@ object TestObserver : Logging {
         testClass: Class<*>,
         abstractTestName: AbstractTestCaseName,
         concreteTestName: ConcreteTestCaseName,
-        testParameters: List<TestCaseParameter>,
+        testParameters: List<TestCaseParameter?>,
         mode: TestMode
     ) {
         component = Component(
@@ -98,7 +99,11 @@ object TestObserver : Logging {
 
     fun pushObservations() {
         val client =
-            ObservationControllerApi(props.getProperty("broker.url", "http://localhost:8080"), vertx = Vertx.vertx())
+            ObservationControllerApi(
+                props.getProperty("broker.url", "http://localhost:8080"),
+                SerializationConstants.mapper,
+                Vertx.vertx()
+            )
 
         client.storeObservations(observations).onSuccess {
             clear()

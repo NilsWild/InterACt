@@ -60,16 +60,16 @@ class IntegrationRepository(
         val atc = findAbstractTestCaseByConcreteTestCaseId(interactionTestInfo.testCaseId)
         val originalTestCase = concreteTestCaseDao.findById(interactionTestInfo.testCaseId)!!
         val messages = originalTestCase.observedMessages
-        var params =
+        var params: List<TestCaseParameter?> =
             messages.filter { it.messageType != MessageType.Sent.COMPONENT_RESPONSE }.map {
                 val key = replacements.keys.firstOrNull { k -> k.value == it.value }
                 if (key == null) {
-                    it.value
+                    TestCaseParameter(it.value.value)
                 } else {
-                    replacements[key]!!.value
+                    TestCaseParameter(replacements[key]!!.value.value)
                 }
             }
-        params = params + (0 until originalTestCase.parameters.size - params.size).map { MessageValue("null") }
+        params = params + (0 until originalTestCase.parameters.size - params.size).map { null }
 
         return TestInvocationDescriptor(
             atc,

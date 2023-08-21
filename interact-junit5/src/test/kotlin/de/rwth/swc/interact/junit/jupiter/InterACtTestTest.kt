@@ -21,8 +21,8 @@ class InterACtTestTest {
                     AbstractTestCaseName("filled with null parameters in interaction test"),
                 ),
                 listOf(
-                    MessageValue("Test"),
-                    MessageValue("null")
+                    TestCaseParameter("Test"),
+                    null
                 )
             ),
             TestInvocationDescriptor(
@@ -31,7 +31,7 @@ class InterACtTestTest {
                     AbstractTestCaseName("works with aggregators"),
                 ),
                 listOf(
-                    MessageValue("{\"name\":\"Test3\", \"name2\":\"Test\"}"),
+                    TestCaseParameter("{\"name\":\"Test3\", \"name2\":\"Test\"}"),
                 )
             )
         )

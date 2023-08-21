@@ -40,7 +40,7 @@ class InterACtTestInvocationInterceptor(
         }
     }
 
-    private fun observeTest(context: ExtensionContext, arguments: List<TestCaseParameter>, mode: TestMode) {
+    private fun observeTest(context: ExtensionContext, arguments: List<TestCaseParameter?>, mode: TestMode) {
         val c = getContextWithRequiredTestClass(context)
         val annotation = c.requiredTestClass.getAnnotation(ComponentInformationLoader::class.java)
         val observer = TestObserver
@@ -62,7 +62,8 @@ class InterACtTestInvocationInterceptor(
         }
     }
 
-    private fun argumentsFrom(context: ReflectiveInvocationContext<Method>): List<TestCaseParameter> {
-        return context.arguments.map { TestCaseParameter(ObjectMapper().writeValueAsString(it)) }
+    private fun argumentsFrom(context: ReflectiveInvocationContext<Method>): List<TestCaseParameter?> {
+        //TODO when https://github.com/ProjectMapK/jackson-module-kogera/issues/42 is resolved, TestCaseParameter should wrap nullable
+        return context.arguments.map { it?.let { TestCaseParameter(ObjectMapper().writeValueAsString(it))} }
     }
 }

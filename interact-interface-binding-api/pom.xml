@@ -33,6 +33,11 @@
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>de.rwth.swc.interact</groupId>
+            <artifactId>interact-domain</artifactId>
+            <version>${revision}</version>
+        </dependency>
     </dependencies>
 
     <build>

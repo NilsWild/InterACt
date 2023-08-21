@@ -86,6 +86,6 @@ internal data class InterfaceBinding(
     @TargetNode private val boundTo: IncomingInterfaceEntity
 ) {
     @RelationshipId
-    var id: Long? = null
+    var id: String? = null
         private set
 }

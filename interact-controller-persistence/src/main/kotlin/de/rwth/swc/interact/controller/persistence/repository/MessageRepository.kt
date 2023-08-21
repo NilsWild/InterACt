@@ -14,29 +14,25 @@ internal interface MessageRepository : org.springframework.data.repository.Repos
     fun save(message: MessageEntity): MessageEntity
 
     @Query(
-        value = "MATCH (m:$MESSAGE_NODE_LABEL), (ii:$INCOMING_INTERFACE_NODE_LABEL) " +
-                "WHERE m.id=\$messageId AND ii.id=\$interfaceId " +
+        value = "MATCH (m:$MESSAGE_NODE_LABEL{id:\$messageId}), (ii:$INCOMING_INTERFACE_NODE_LABEL{id:\$interfaceId}) " +
                 "MERGE (m)-[:RECEIVED_BY]->(ii)"
     )
     fun setReceivedBy(@Param("messageId") messageId: UUID, @Param("interfaceId") interfaceId: UUID)
 
     @Query(
-        value = "MATCH (m:$MESSAGE_NODE_LABEL), (oi:$OUTGOING_INTERFACE_NODE_LABEL) " +
-                "WHERE m.id=\$messageId AND oi.id=\$interfaceId " +
+        value = "MATCH (m:$MESSAGE_NODE_LABEL{id:\$messageId}), (oi:$OUTGOING_INTERFACE_NODE_LABEL{id:\$interfaceId}) " +
                 "MERGE (m)-[:SENT_BY]->(oi)"
     )
     fun setSentBy(@Param("messageId") messageId: UUID, @Param("interfaceId") interfaceId: UUID)
 
     @Query(
-        value = "MATCH (m1:$MESSAGE_NODE_LABEL), (m2:$MESSAGE_NODE_LABEL) " +
-                "WHERE m1.id=\$messageId AND m2.id=\$next " +
+        value = "MATCH (m1:$MESSAGE_NODE_LABEL{id:\$messageId}), (m2:$MESSAGE_NODE_LABEL{id:\$next}) " +
                 "MERGE (m1)-[:NEXT]->(m2)"
     )
     fun setNext(@Param("messageId") messageId: UUID, @Param("next") next: UUID)
 
     @Query(
-        value = "MATCH (m1:$MESSAGE_NODE_LABEL), (m2:$MESSAGE_NODE_LABEL) " +
-                "WHERE m1.id=\$messageId AND m2.id=\$copyOfId " +
+        value = "MATCH (m1:$MESSAGE_NODE_LABEL{id:\$messageId}), (m2:$MESSAGE_NODE_LABEL{id:\$copyOfId}) " +
                 "MERGE (m1)-[:COPY_OF]->(m2)"
     )
     fun setCopyOf(@Param("messageId") messageId: UUID, @Param("copyOfId") copyOfId: UUID)

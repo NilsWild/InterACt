@@ -1,5 +1,6 @@
 package de.rwth.swc.interact.controller.persistence.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import de.rwth.swc.interact.controller.persistence.domain.ConcreteTestCaseEntityNoRelations
 import de.rwth.swc.interact.controller.persistence.domain.toEntity
 import de.rwth.swc.interact.controller.persistence.repository.ConcreteTestCaseRepository
@@ -18,7 +19,7 @@ interface ConcreteTestCaseDao {
     fun findIdByTriggeredMessage(id: MessageId): ConcreteTestCaseId?
     fun findByAbstractTestCaseIdAndParameters(
         abstractTestCaseId: AbstractTestCaseId,
-        parameters: List<TestCaseParameter>
+        parameters: List<TestCaseParameter?>
     ): ConcreteTestCase?
 }
 
@@ -26,17 +27,18 @@ interface ConcreteTestCaseDao {
 @Transactional
 internal class ConcreteTestCaseDaoImpl(
     private val neo4jTemplate: Neo4jTemplate,
-    private val repository: ConcreteTestCaseRepository
+    private val repository: ConcreteTestCaseRepository,
+    private val mapper: ObjectMapper
 ) : ConcreteTestCaseDao {
 
     @Transactional(readOnly = true)
     override fun findByAbstractTestCaseIdAndParameters(
         abstractTestCaseId: AbstractTestCaseId,
-        parameters: List<TestCaseParameter>
+        parameters: List<TestCaseParameter?>
     ): ConcreteTestCase? {
         return repository.findByAbstractTestCaseIdAndParameters(
             abstractTestCaseId.id,
-            parameters.map { it.value }
+            mapper.writeValueAsString(parameters)
         )?.toDomain()
     }
 

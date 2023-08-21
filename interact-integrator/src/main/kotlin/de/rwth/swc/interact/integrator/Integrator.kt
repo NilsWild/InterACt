@@ -1,6 +1,7 @@
 package de.rwth.swc.interact.integrator
 
 import de.rwth.swc.interact.domain.TestInvocationDescriptor
+import de.rwth.swc.interact.domain.serialization.SerializationConstants
 import de.rwth.swc.interact.test.ComponentInformationLoader
 import de.rwth.swc.interact.test.PropertiesBasedComponentInformationLoader
 import de.rwth.swc.interact.utils.Logging
@@ -28,7 +29,8 @@ object Integrator : Logging {
             val client =
                 IntegrationControllerApi(
                     props.getProperty("broker.url", "http://localhost:8080"),
-                    vertx = Vertx.vertx()
+                    SerializationConstants.mapper,
+                    Vertx.vertx()
                 )
 
             client.getIntegrationsForComponent(

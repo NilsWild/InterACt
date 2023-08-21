@@ -21,7 +21,7 @@ internal interface ConcreteTestCaseRepository :
     )
     fun findByAbstractTestCaseIdAndParameters(
         @Param("id") abstractTestCaseId: UUID,
-        @Param("parameters") parameters: List<String>,
+        @Param("parameters") parameters: String,
     ): ConcreteTestCaseEntity?
 
     fun save(concreteTestCase: ConcreteTestCaseEntity): ConcreteTestCaseEntity
@@ -29,8 +29,7 @@ internal interface ConcreteTestCaseRepository :
     @Query(
         value = "UNWIND range(0, size(\$messageIds)-1) as idx " +
                 "WITH idx, \$messageIds[idx] as mId " +
-                "MATCH (ctc:$CONCRETE_TEST_CASE_NODE_LABEL), (m:$MESSAGE_NODE_LABEL) " +
-                "WHERE ctc.id=\$concreteTestCaseId AND m.id=mId " +
+                "MATCH (ctc:$CONCRETE_TEST_CASE_NODE_LABEL{id:\$concreteTestCaseId}), (m:$MESSAGE_NODE_LABEL{id:mId}) " +
                 "MERGE (ctc)-[:TRIGGERED{order:idx}]->(m)"
     )
     fun addMessages(

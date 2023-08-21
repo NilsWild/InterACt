@@ -1,5 +1,9 @@
 package de.rwth.swc.interact.utbi
 
+import de.rwth.swc.interact.domain.ComponentInterface
+import de.rwth.swc.interact.domain.IncomingInterface
+import de.rwth.swc.interact.domain.OutgoingInterface
+
 /**
  * Interface to be implemented by interface binders to bind interfaces of components to one another
  * in the unit test based integration (utbi) model.
@@ -10,7 +14,8 @@ interface InterfaceBinder {
 
     val version: InterfaceBinderVersion
 
-    fun bindInterfaces()
+    fun bindInterfaces(componentInterface: ComponentInterface)
+    fun canHandle(componentInterface: ComponentInterface) : Boolean
 
 }
 
