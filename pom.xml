@@ -36,6 +36,8 @@
         <failsafe.version>2.22.2</failsafe.version>
         <jackson.kogera.version>2.15.2-beta0</jackson.kogera.version>
         <source.plugin.version>3.3.0</source.plugin.version>
+        <mockk.version>1.13.7</mockk.version>
+        <vertx.version>4.4.4</vertx.version>
     </properties>
 
     <dependencyManagement>
@@ -76,6 +78,16 @@
                 <groupId>com.github.ProjectMapK</groupId>
                 <artifactId>jackson-module-kogera</artifactId>
                 <version>${jackson.kogera.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.mockk</groupId>
+                <artifactId>mockk-jvm</artifactId>
+                <version>${mockk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-web-client</artifactId>
+                <version>${vertx.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -184,6 +196,10 @@
     </build>
 
     <repositories>
+        <repository>
+            <id>mvncentral</id>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
         <repository>
             <id>jitpack</id>
             <url>https://jitpack.io</url>

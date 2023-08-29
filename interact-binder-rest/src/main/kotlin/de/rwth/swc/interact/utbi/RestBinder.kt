@@ -1,9 +1,10 @@
 package de.rwth.swc.interact.utbi
 
+import de.rwth.swc.interact.controller.persistence.domain.INCOMING_INTERFACE_NODE_LABEL
+import de.rwth.swc.interact.controller.persistence.domain.OUTGOING_INTERFACE_NODE_LABEL
 import de.rwth.swc.interact.domain.ComponentInterface
 import de.rwth.swc.interact.domain.IncomingInterface
 import de.rwth.swc.interact.domain.OutgoingInterface
-import de.rwth.swc.interact.domain.Protocol
 import org.springframework.data.neo4j.core.Neo4jClient
 import org.springframework.stereotype.Component
 
@@ -24,7 +25,9 @@ class RestBinder(private val neo4jClient: Neo4jClient) : InterfaceBinder {
 
     private fun bindOutgoingInterface(outgoingInterface: OutgoingInterface) {
         neo4jClient.query(
-            "MATCH (o:OutgoingInterface{id:\$outId}), (i:IncomingInterface) " +
+            "MATCH (o:$OUTGOING_INTERFACE_NODE_LABEL{id:\$outId}) " +
+                    "WITH o " +
+                    "MATCH (i:$INCOMING_INTERFACE_NODE_LABEL) " +
                     "WHERE i.protocol = \"REST\" " +
                     "AND o.protocol = \"REST\" " +
                     "AND i.`protocolData.url` = o.`protocolData.url` " +
@@ -37,7 +40,9 @@ class RestBinder(private val neo4jClient: Neo4jClient) : InterfaceBinder {
 
     private fun bindIncomingInterface(incomingInterface: IncomingInterface) {
         neo4jClient.query(
-            "MATCH (o:OutgoingInterface), (i:IncomingInterface{id:\$inId}) " +
+            "MATCH (i:$INCOMING_INTERFACE_NODE_LABEL{id:\$inId}) " +
+                    "WITH i " +
+                    "MATCH (o:$OUTGOING_INTERFACE_NODE_LABEL) " +
                     "WHERE i.protocol = \"REST\" " +
                     "AND o.protocol = \"REST\" " +
                     "AND i.`protocolData.url` = o.`protocolData.url` " +

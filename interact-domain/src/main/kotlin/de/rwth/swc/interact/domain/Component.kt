@@ -2,7 +2,7 @@ package de.rwth.swc.interact.domain
 
 import java.util.*
 
-class Component(val name: ComponentName, val version: ComponentVersion) {
+data class Component(val name: ComponentName, val version: ComponentVersion) {
 
     var id: ComponentId? = null
     var abstractTestCases: MutableSet<AbstractTestCase> = mutableSetOf()

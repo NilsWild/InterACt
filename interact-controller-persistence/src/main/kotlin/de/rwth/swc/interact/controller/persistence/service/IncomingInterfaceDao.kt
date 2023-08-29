@@ -3,7 +3,6 @@ package de.rwth.swc.interact.controller.persistence.service
 import de.rwth.swc.interact.controller.persistence.domain.IncomingInterfaceEntityNoRelations
 import de.rwth.swc.interact.controller.persistence.domain.toEntity
 import de.rwth.swc.interact.controller.persistence.events.InterfaceAddedEvent
-import de.rwth.swc.interact.controller.persistence.repository.IncomingInterfaceRepository
 import de.rwth.swc.interact.domain.IncomingInterface
 import de.rwth.swc.interact.domain.InterfaceId
 import org.springframework.context.ApplicationEventPublisher
@@ -15,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional
  * Service to access IncomingInterfaceEntity needed to support Kotlin value classes and to hide the repository
  */
 interface IncomingInterfaceDao {
-    fun save(incomingInterface: IncomingInterface): InterfaceId
+    fun save(incomingInterface: IncomingInterface): IncomingInterface
 }
 
 @Service
@@ -24,7 +23,7 @@ internal class IncomingInterfaceDaoImpl(
     private val neo4jTemplate: Neo4jTemplate,
     private val applicationEventPublisher: ApplicationEventPublisher
 ) : IncomingInterfaceDao {
-    override fun save(incomingInterface: IncomingInterface): InterfaceId {
+    override fun save(incomingInterface: IncomingInterface): IncomingInterface {
         val entity = neo4jTemplate.saveAs(
             incomingInterface.toEntity(),
             IncomingInterfaceEntityNoRelations::class.java)
@@ -33,8 +32,6 @@ internal class IncomingInterfaceDaoImpl(
         applicationEventPublisher.publishEvent(
             InterfaceAddedEvent(this, result)
         )
-        return InterfaceId(
-            entity.id
-        )
+        return result
     }
 }

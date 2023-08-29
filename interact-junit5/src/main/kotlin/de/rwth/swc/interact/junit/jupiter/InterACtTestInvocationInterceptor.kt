@@ -1,10 +1,10 @@
 package de.rwth.swc.interact.junit.jupiter
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import de.rwth.swc.interact.domain.AbstractTestCaseName
 import de.rwth.swc.interact.domain.ConcreteTestCaseName
 import de.rwth.swc.interact.domain.TestCaseParameter
 import de.rwth.swc.interact.domain.TestMode
+import de.rwth.swc.interact.domain.serialization.SerializationConstants
 import de.rwth.swc.interact.observer.TestObserver
 import de.rwth.swc.interact.test.ExampleBasedAssertionError
 import de.rwth.swc.interact.test.annotation.ComponentInformationLoader
@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.InvocationInterceptor
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext
 import java.lang.reflect.Method
+import java.lang.reflect.ParameterizedType
 import kotlin.reflect.full.createInstance
 
 class InterACtTestInvocationInterceptor(
@@ -64,6 +65,37 @@ class InterACtTestInvocationInterceptor(
 
     private fun argumentsFrom(context: ReflectiveInvocationContext<Method>): List<TestCaseParameter?> {
         //TODO when https://github.com/ProjectMapK/jackson-module-kogera/issues/42 is resolved, TestCaseParameter should wrap nullable
-        return context.arguments.map { it?.let { TestCaseParameter(ObjectMapper().writeValueAsString(it))} }
+        val result = mutableListOf<TestCaseParameter?>()
+        context.arguments.forEachIndexed { index, _ ->
+            result.add(getTestCaseParameterFromArgument(context, index))
+        }
+        return result
+    }
+
+    private fun getTestCaseParameterFromArgument(
+        context: ReflectiveInvocationContext<Method>,
+        index: Int
+    ): TestCaseParameter? {
+        if (context.arguments[index] == null) {
+            return null
+        }
+        val type = context.executable.genericParameterTypes[index]
+        val result = if (type is ParameterizedType) {
+            val genericTypes =
+                type.actualTypeArguments.map { SerializationConstants.mapper.typeFactory.constructType(it) }
+                    .toTypedArray()
+            SerializationConstants.mapper.writerFor(
+                SerializationConstants.mapper.typeFactory.constructParametricType(
+                    context.executable.parameterTypes[index],
+                    *genericTypes
+                )
+            )
+                .writeValueAsString(
+                    context.arguments[index]
+                )
+        } else {
+            SerializationConstants.mapper.writeValueAsString(context.arguments[index])
+        }
+        return TestCaseParameter(result)
     }
 }

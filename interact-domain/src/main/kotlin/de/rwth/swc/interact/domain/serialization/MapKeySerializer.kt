@@ -1,15 +1,13 @@
 package de.rwth.swc.interact.domain.serialization
 
 import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonSerializer
-import com.fasterxml.jackson.databind.KeyDeserializer
-import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.databind.module.SimpleModule
 import de.rwth.swc.interact.domain.ComponentId
 import de.rwth.swc.interact.domain.ConcreteTestCaseId
 import de.rwth.swc.interact.domain.MessageId
 import de.rwth.swc.interact.domain.ReceivedMessage
+import io.github.projectmapk.jackson.module.kogera.KotlinModule
 import io.github.projectmapk.jackson.module.kogera.jacksonObjectMapper
 import java.util.*
 
@@ -34,7 +32,7 @@ class ComponentIdMapKeyDeserializer : KeyDeserializer() {
 class ReceivedMessageMapKeyDeserializer : KeyDeserializer() {
 
     companion object {
-        val objectMapper = jacksonObjectMapper()
+        val objectMapper: ObjectMapper = jacksonObjectMapper().registerModules(KotlinModule.Builder().build())
     }
 
     override fun deserializeKey(key: String, ctx: DeserializationContext): ReceivedMessage {
@@ -44,7 +42,7 @@ class ReceivedMessageMapKeyDeserializer : KeyDeserializer() {
 
 class ReceivedMessageMapKeySerializer : JsonSerializer<ReceivedMessage>() {
     companion object {
-        val objectMapper = jacksonObjectMapper()
+        val objectMapper: ObjectMapper = jacksonObjectMapper().registerModules(KotlinModule.Builder().build())
     }
 
     override fun serialize(message: ReceivedMessage, gen: JsonGenerator, sp: SerializerProvider) {
@@ -54,6 +52,8 @@ class ReceivedMessageMapKeySerializer : JsonSerializer<ReceivedMessage>() {
 }
 
 object InteractModule : SimpleModule() {
+    private fun readResolve(): Any = InteractModule
+
     init {
         this.addKeyDeserializer(MessageId::class.java, MessageIdMapKeyDeserializer())
         this.addKeyDeserializer(ConcreteTestCaseId::class.java, ConcreteTestCaseIdMapKeyDeserializer())

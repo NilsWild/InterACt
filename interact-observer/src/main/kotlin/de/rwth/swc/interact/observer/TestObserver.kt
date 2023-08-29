@@ -7,7 +7,6 @@ import de.rwth.swc.interact.test.PropertiesBasedComponentInformationLoader
 import de.rwth.swc.interact.utils.Logging
 import de.rwth.swc.interact.utils.logger
 import io.vertx.core.Vertx
-import java.lang.reflect.Method
 import java.util.*
 
 /**
@@ -16,6 +15,8 @@ import java.util.*
 object TestObserver : Logging {
 
     var componentInformationLoader: ComponentInformationLoader = PropertiesBasedComponentInformationLoader
+    var client: ObservationControllerApi
+
     private var component: Component? = null
     private var currentTestCase: ConcreteTestCase? = null
     private var observations: MutableList<Component> = mutableListOf()
@@ -25,23 +26,10 @@ object TestObserver : Logging {
 
     init {
         props.load(this.javaClass.classLoader.getResourceAsStream("interact.properties"))
-    }
-
-    fun startObservation(
-        testClass: Class<*>,
-        testMethod: Method,
-        testParameters: List<TestCaseParameter?>,
-        mode: TestMode
-    ) {
-        if (testParameters.isEmpty()) {
-            throw java.lang.RuntimeException("A concrete test case name needs to be provided if no parameterized tests are used")
-        }
-        startObservation(
-            testClass,
-            AbstractTestCaseName(testMethod.name),
-            ConcreteTestCaseName("(" + testParameters.joinToString(",") + ")"),
-            testParameters,
-            mode
+        this.client = ObservationControllerApi(
+            props.getProperty("broker.url", "http://localhost:8080"),
+            SerializationConstants.mapper,
+            Vertx.vertx()
         )
     }
 
@@ -71,7 +59,8 @@ object TestObserver : Logging {
     }
 
     fun recordMessage(observedMessage: Message) {
-        currentTestCase?.observedMessages?.add(observedMessage) ?: throw RuntimeException("No test case started")
+        currentTestCase?.observedMessages?.add(observedMessage)
+            ?: throw IllegalStateException("No test was registered for observation.")
 
         when (observedMessage.messageType) {
             is MessageType.Sent -> (observedMessage as SentMessage).let { message ->
@@ -83,10 +72,6 @@ object TestObserver : Logging {
         }
     }
 
-    fun getObservations(): List<Component> {
-        return observations
-    }
-
     fun clear() {
         observations = mutableListOf()
         currentTestCase = null
@@ -94,20 +79,19 @@ object TestObserver : Logging {
     }
 
     fun setTestResult(result: TestResult) {
-        currentTestCase?.also { it.result = result } ?: throw RuntimeException("No test case started")
+        currentTestCase?.also { it.result = result }
+            ?: throw IllegalStateException("No test was registered for observation.")
     }
 
     fun pushObservations() {
-        val client =
-            ObservationControllerApi(
-                props.getProperty("broker.url", "http://localhost:8080"),
-                SerializationConstants.mapper,
-                Vertx.vertx()
-            )
+        try {
 
-        client.storeObservations(observations).onSuccess {
-            clear()
-        }.toCompletionStage().toCompletableFuture().join()
+            client.storeObservations(observations).onSuccess {
+                clear()
+            }.toCompletionStage().toCompletableFuture().join()
+        } catch (e: Exception) {
+            log.error("Error while pushing observations", e)
+        }
     }
 
     fun dropObservation() {

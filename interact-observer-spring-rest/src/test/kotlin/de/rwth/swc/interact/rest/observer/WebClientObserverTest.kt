@@ -54,7 +54,6 @@ internal class WebClientObserverTest {
             .build()
         val booksService = httpServiceProxyFactory.createClient(BooksService::class.java)
         val book = booksService.saveBook(book1)
-        val observations = TestObserver.getObservations()
         server.stop()
     }
 }

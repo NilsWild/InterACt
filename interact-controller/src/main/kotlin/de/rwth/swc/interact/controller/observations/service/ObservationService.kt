@@ -117,7 +117,7 @@ class ObservationService(
                     interfaceId =
                         incomingInterfaceDao.save(
                             m.receivedBy
-                        )
+                        ).id!!
                     componentDao.addProvidedInterface(componentId, interfaceId)
                 }
                 messageId =
@@ -137,7 +137,7 @@ class ObservationService(
                     interfaceId =
                         outgoingInterfaceDao.save(
                             m.sentBy
-                        )
+                        ).id!!
                     componentDao.addRequiredInterface(componentId, interfaceId)
                 }
                 messageId =

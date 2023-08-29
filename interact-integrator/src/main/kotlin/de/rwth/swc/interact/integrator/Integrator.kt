@@ -26,21 +26,26 @@ object Integrator : Logging {
 
     fun pullReplacements() {
         if (!initialized) {
-            val client =
-                IntegrationControllerApi(
-                    props.getProperty("broker.url", "http://localhost:8080"),
-                    SerializationConstants.mapper,
-                    Vertx.vertx()
-                )
+            try {
+                val client =
+                    IntegrationControllerApi(
+                        props.getProperty("broker.url", "http://localhost:8080"),
+                        SerializationConstants.mapper,
+                        Vertx.vertx()
+                    )
 
-            client.getIntegrationsForComponent(
-                componentInformationLoader.getComponentName().name,
-                componentInformationLoader.getComponentVersion().version
-            ).onSuccess {
-                logger.info("Found ${it.size} integrations for component: $it")
-                interactionTestCases = it
+                client.getIntegrationsForComponent(
+                    componentInformationLoader.getComponentName().name,
+                    componentInformationLoader.getComponentVersion().version
+                ).onSuccess {
+                    logger.info("Found ${it.size} integrations for component: $it")
+                    interactionTestCases = it
+                    initialized = true
+                }.toCompletionStage().toCompletableFuture().join()
+            } catch (e: Exception) {
+                logger.error("Could not pull replacements from broker!", e)
                 initialized = true
-            }.toCompletionStage().toCompletableFuture().join()
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional
  * Service to access OutgoingInterfaceEntity needed to support Kotlin value classes and to hide the repository
  */
 interface OutgoingInterfaceDao {
-    fun save(outgoingInterface: OutgoingInterface): InterfaceId
+    fun save(outgoingInterface: OutgoingInterface): OutgoingInterface
     fun findByMessage(messageId: MessageId): InterfaceId?
 }
 
@@ -27,7 +27,7 @@ internal class OutgoingInterfaceDaoImpl(
     private val outgoingInterfaceRepository: OutgoingInterfaceRepository,
     private val applicationEventPublisher: ApplicationEventPublisher
 ) : OutgoingInterfaceDao {
-    override fun save(outgoingInterface: OutgoingInterface): InterfaceId {
+    override fun save(outgoingInterface: OutgoingInterface): OutgoingInterface {
         val entity = neo4jTemplate.saveAs(
             outgoingInterface.toEntity(),
             OutgoingInterfaceEntityNoRelations::class.java
@@ -37,9 +37,7 @@ internal class OutgoingInterfaceDaoImpl(
         applicationEventPublisher.publishEvent(
             InterfaceAddedEvent(this, result)
         )
-        return InterfaceId(
-            entity.id
-        )
+        return result
     }
 
     override fun findByMessage(messageId: MessageId): InterfaceId? {

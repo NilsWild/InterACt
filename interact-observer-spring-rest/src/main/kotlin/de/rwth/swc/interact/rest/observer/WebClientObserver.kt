@@ -2,9 +2,9 @@ package de.rwth.swc.interact.rest.observer
 
 import com.fasterxml.jackson.core.JacksonException
 import de.rwth.swc.interact.domain.*
+import de.rwth.swc.interact.domain.serialization.SerializationConstants
 import de.rwth.swc.interact.observer.TestObserver
 import de.rwth.swc.interact.rest.StringRestMessage
-import io.github.projectmapk.jackson.module.kogera.jacksonObjectMapper
 import org.reactivestreams.Publisher
 import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.core.io.buffer.DataBufferUtils
@@ -113,7 +113,7 @@ class WebClientObserver(private val isTestHarness: Boolean) : ExchangeFilterFunc
     }
 
     object ObservationHelper {
-        private val mapper = jacksonObjectMapper()
+        private val mapper = SerializationConstants.mapper
 
         fun recordRequest(
             isTestHarness: Boolean,

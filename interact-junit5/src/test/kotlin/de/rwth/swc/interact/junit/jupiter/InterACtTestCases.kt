@@ -1,12 +1,9 @@
 package de.rwth.swc.interact.junit.jupiter
 
-import de.rwth.swc.interact.domain.*
 import de.rwth.swc.interact.junit.jupiter.annotation.InterACtTest
 import de.rwth.swc.interact.test.forExample
 import de.rwth.swc.interact.test.inherently
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.extension.ParameterContext
 import org.junit.jupiter.params.aggregator.AggregateWith
 import org.junit.jupiter.params.aggregator.ArgumentsAccessor
