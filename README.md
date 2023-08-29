@@ -35,11 +35,6 @@ here: [InteractionTestExample](https://github.com/NilsWild/InteractionTestExampl
             <artifactId>interact-observer-spring-rest</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>de.rwth.swc.interact</groupId>
-            <artifactId>interact-integrator-spring-rest</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
 
 5. Replace ```@Test``` with ```@InterACtTest``` as done in the example project and parameterize your tests by the
    stimulus and environment_response messages
