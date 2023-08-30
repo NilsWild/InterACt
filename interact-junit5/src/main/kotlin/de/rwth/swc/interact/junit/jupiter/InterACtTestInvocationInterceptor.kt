@@ -36,8 +36,8 @@ class InterACtTestInvocationInterceptor(
         } catch (e: Throwable) {
             if (mode == TestMode.UNIT) {
                 TestObserver.dropObservation()
-                throw e
             }
+            throw e
         }
     }
 
