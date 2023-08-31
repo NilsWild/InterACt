@@ -11,14 +11,11 @@ import org.springframework.core.io.buffer.DataBufferUtils
 import org.springframework.http.HttpMethod
 import org.springframework.http.client.reactive.ClientHttpRequest
 import org.springframework.http.client.reactive.ClientHttpRequestDecorator
-import org.springframework.http.server.PathContainer
 import org.springframework.web.reactive.function.BodyInserter
 import org.springframework.web.reactive.function.client.ClientRequest
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction
 import org.springframework.web.reactive.function.client.ExchangeFunction
-import org.springframework.web.util.pattern.PathPattern
-import org.springframework.web.util.pattern.PathPatternParser
 import reactor.core.publisher.Mono
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicBoolean
@@ -31,7 +28,7 @@ class WebClientObserver(private val isTestHarness: Boolean) : ExchangeFilterFunc
             .attribute("org.springframework.web.reactive.function.client.WebClient.uriTemplate").getOrElse {
                 request.url()
             }.toString()
-        val pathVariables = getPathVariables(interfaceUrl, request.url().toString())?.uriVariables
+        val pathVariables = PathVariableExtractor.extractPathVariablesFromUrl(interfaceUrl, request.url())?.uriVariables
         val method = request.method()
         val headers = request.headers().entries
         val originalBodyInserter: BodyInserter<*, in ClientHttpRequest?> = request.body()
@@ -65,14 +62,6 @@ class WebClientObserver(private val isTestHarness: Boolean) : ExchangeFilterFunc
 
         return result
     }
-
-    private fun getPathVariables(interfaceUrl: String, url: String): PathPattern.PathMatchInfo? {
-        val parser = PathPatternParser()
-        val pathPattern = parser.parse(interfaceUrl)
-        val container = PathContainer.parsePath(url)
-        return pathPattern.matchAndExtract(container)
-    }
-
 
     private class RequestObserverDecorator(
         val request: ClientHttpRequest,
