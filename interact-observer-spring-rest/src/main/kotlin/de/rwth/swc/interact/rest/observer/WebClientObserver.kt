@@ -95,7 +95,14 @@ class WebClientObserver(private val isTestHarness: Boolean) : ExchangeFilterFunc
         override fun setComplete(): Mono<Void> { // This is for requests with no body (e.g. GET).
             val needToLog = alreadyLogged.compareAndSet(false, true)
             if (needToLog) {
-                //No body to log
+                ObservationHelper.recordRequest(
+                    isTestHarness,
+                    interfaceUrl,
+                    pathVariables,
+                    httpMethod,
+                    headers,
+                    ""
+                )
             }
             return super.setComplete()
         }
