@@ -16,6 +16,7 @@ object TestObserver : Logging {
 
     var componentInformationLoader: ComponentInformationLoader = PropertiesBasedComponentInformationLoader
     var client: ObservationControllerApi
+    var beforeStoringLatch: ObservationLatch? = null
 
     private var component: Component? = null
     private var currentTestCase: ConcreteTestCase? = null
@@ -98,4 +99,11 @@ object TestObserver : Logging {
         observations.removeLast()
     }
 
+    fun dropLastMessage() {
+        currentTestCase?.observedMessages?.removeLast()
+    }
+}
+
+interface ObservationLatch {
+    fun isReleased(): Boolean
 }

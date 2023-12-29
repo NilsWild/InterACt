@@ -13,7 +13,8 @@ class StoreObservationsExtension : AfterTestExecutionCallback {
 
     override fun afterTestExecution(context: ExtensionContext) {
         TestObserver.setTestResult(if (context.executionException.isEmpty) TestResult.SUCCESS else TestResult.FAILED)
-        TestObserver.pushObservations()
+        if (TestObserver.beforeStoringLatch?.isReleased() == true)
+            TestObserver.pushObservations()
     }
 
 }

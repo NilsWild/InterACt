@@ -21,6 +21,9 @@
         <module>interact-observer-spring-rest</module>
         <module>interact-integrator</module>
         <module>interact-test</module>
+        <module>interact-binder-amqp</module>
+        <module>interact-domain-amqp</module>
+        <module>interact-observer-spring-amqp</module>
     </modules>
 
     <properties>
