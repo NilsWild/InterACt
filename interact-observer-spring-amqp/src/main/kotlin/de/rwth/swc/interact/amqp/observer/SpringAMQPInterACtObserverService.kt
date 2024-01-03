@@ -14,11 +14,11 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener
 import java.net.URL
 import java.nio.charset.StandardCharsets
 
-class SpringAMQPInterACtObserverService(rabbitUrl: URL, rabbitUser: String, rabbitPassword: String) : Logging {
+class SpringAMQPInterACtObserverService(rabbitUrl: String, rabbitUser: String, rabbitPassword: String) : Logging {
 
     private val log = logger()
     private var lastRecordedMessage: de.rwth.swc.interact.domain.Message? = null
-    private val rabbitClient = Client(rabbitUrl, rabbitUser, rabbitPassword)
+    private val rabbitClient = Client(URL("$rabbitUrl/api"), rabbitUser, rabbitPassword)
 
     @RabbitListener(queues = ["observe_queue"])
     private fun observe(message: Message) {
@@ -38,7 +38,7 @@ class SpringAMQPInterACtObserverService(rabbitUrl: URL, rabbitUser: String, rabb
         routingKey = routingKey.substring(1, routingKey.length - 1)
         val exchangeInfo: ExchangeInfo = rabbitClient.getExchange("/", exchange)
         val exchangeType = exchangeInfo.type
-        val messageHeaders = (message.messageProperties.headers["properties"] as HashMap<*, *>)["headers"] as HashMap<*,*>
+        val messageHeaders = (message.messageProperties.headers["properties"] as HashMap<String, Any>)["headers"] as HashMap<String, Any>
         val routingHeaders = HashMap<Any, Any>()
         if (exchangeType == "headers") {
             for (bindingInfo in rabbitClient.getBindings("/").filter { it.source == exchange }) {
@@ -74,7 +74,7 @@ class SpringAMQPInterACtObserverService(rabbitUrl: URL, rabbitUser: String, rabb
 
     private fun observeDeliver(message: Message) {
         val queue = message.messageProperties.receivedRoutingKey.substring("deliver.".length)
-        val messageHeaders = (message.messageProperties.headers["properties"] as HashMap<*, *>)["headers"] as HashMap<*,*>
+        val messageHeaders = (message.messageProperties.headers["properties"] as HashMap<String, Any>)["headers"] as HashMap<String, Any>
         val payload = StringAMQPMessage(
             messageHeaders,
             "\"${String(message.body, StandardCharsets.UTF_8)}\""

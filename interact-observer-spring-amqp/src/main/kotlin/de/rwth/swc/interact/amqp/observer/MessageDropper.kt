@@ -17,7 +17,11 @@ object MessageDropper {
     }
 
     fun shouldMessageBeDropped(): Boolean {
-        return messagesToBeDroppedQueue.pop()
+        return try {
+            messagesToBeDroppedQueue.pop()
+        } catch (e: NoSuchElementException) {
+            false
+        }
     }
 
 }

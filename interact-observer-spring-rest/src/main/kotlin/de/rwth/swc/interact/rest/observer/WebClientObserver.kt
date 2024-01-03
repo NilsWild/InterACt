@@ -11,6 +11,8 @@ import org.springframework.core.io.buffer.DataBufferUtils
 import org.springframework.http.HttpMethod
 import org.springframework.http.client.reactive.ClientHttpRequest
 import org.springframework.http.client.reactive.ClientHttpRequestDecorator
+import org.springframework.util.CollectionUtils
+import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.BodyInserter
 import org.springframework.web.reactive.function.client.ClientRequest
 import org.springframework.web.reactive.function.client.ClientResponse
@@ -28,9 +30,9 @@ class WebClientObserver(private val isTestHarness: Boolean) : ExchangeFilterFunc
             .attribute("org.springframework.web.reactive.function.client.WebClient.uriTemplate").getOrElse {
                 request.url()
             }.toString()
-        val pathVariables = PathVariableExtractor.extractPathVariablesFromUrl(interfaceUrl, request.url())?.uriVariables
+        val pathVariables = PathVariableExtractor.extractPathVariablesFromUrl(interfaceUrl, request.url())?.uriVariables?.entries?.map { it.value } ?: emptyList()
         val method = request.method()
-        val headers = request.headers().entries
+        val headers = request.headers()
         val originalBodyInserter: BodyInserter<*, in ClientHttpRequest?> = request.body()
 
         val loggingClientRequest = ClientRequest.from(request)
@@ -67,9 +69,9 @@ class WebClientObserver(private val isTestHarness: Boolean) : ExchangeFilterFunc
         val request: ClientHttpRequest,
         val isTestHarness: Boolean,
         val interfaceUrl: String,
-        val pathVariables: MutableMap<String, String>?,
+        val pathVariables: List<String>,
         val httpMethod: HttpMethod,
-        val headers: MutableSet<MutableMap.MutableEntry<String, MutableList<String>>>,
+        val headers: MultiValueMap<String, String>,
     ) : ClientHttpRequestDecorator(request) {
         private val alreadyLogged = AtomicBoolean(false)
         override fun writeWith(body: Publisher<out DataBuffer>): Mono<Void> {
@@ -114,14 +116,14 @@ class WebClientObserver(private val isTestHarness: Boolean) : ExchangeFilterFunc
         fun recordRequest(
             isTestHarness: Boolean,
             interfaceUrl: String,
-            pathVariables: MutableMap<String, String>?,
+            pathVariables: List<String>,
             method: HttpMethod,
-            headers: MutableSet<MutableMap.MutableEntry<String, MutableList<String>>>,
+            headers: MultiValueMap<String, String>,
             body: String
         ) {
 
             val message = StringRestMessage(
-                pathVariables ?: mutableMapOf(),
+                pathVariables,
                 headers,
                 if (isValidJson(body)) body else "\"$body\""
             )
@@ -166,13 +168,13 @@ class WebClientObserver(private val isTestHarness: Boolean) : ExchangeFilterFunc
         fun recordResponse(
             isTestHarness: Boolean,
             interfaceUrl: String,
-            pathVariables: MutableMap<String, String>?,
+            pathVariables: List<String>,
             method: HttpMethod,
-            headers: MutableSet<MutableMap.MutableEntry<String, MutableList<String>>>,
+            headers: MultiValueMap<String, String>,
             body: String
         ) {
             val message = StringRestMessage(
-                pathVariables ?: mutableMapOf(),
+                pathVariables,
                 headers,
                 if (isValidJson(body)) body else "\"$body\""
             )

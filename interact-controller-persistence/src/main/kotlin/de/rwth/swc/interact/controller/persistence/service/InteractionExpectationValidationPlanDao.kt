@@ -1,12 +1,12 @@
 package de.rwth.swc.interact.controller.persistence.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import de.rwth.swc.interact.controller.persistence.domain.toEntity
 import de.rwth.swc.interact.controller.persistence.repository.InteractionExpectationValidationPlanRepository
 import de.rwth.swc.interact.domain.ComponentId
 import de.rwth.swc.interact.domain.InteractionExpectationValidationPlan
 import de.rwth.swc.interact.domain.InteractionExpectationValidationPlanId
 import de.rwth.swc.interact.domain.TestInvocationDescriptor
+import de.rwth.swc.interact.domain.serialization.SerializationConstants
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -21,8 +21,7 @@ interface InteractionExpectationValidationPlanDao {
 @Service
 @Transactional
 internal class InteractionExpectationValidationPlanDaoImpl(
-    private val repository: InteractionExpectationValidationPlanRepository,
-    private val mapper: ObjectMapper
+    private val repository: InteractionExpectationValidationPlanRepository
 ) : InteractionExpectationValidationPlanDao {
     override fun existsByPathInfo(pathInfo: String): Boolean {
         return repository.existsByInteractionPathInfo(pathInfo)
@@ -33,7 +32,7 @@ internal class InteractionExpectationValidationPlanDaoImpl(
     }
 
     override fun findByTestInvocationDescriptor(testInvocationDescriptor: TestInvocationDescriptor): List<InteractionExpectationValidationPlan> {
-        val td = mapper.writeValueAsString(testInvocationDescriptor)
+        val td = SerializationConstants.mapper.writeValueAsString(testInvocationDescriptor)
         return repository.findByNextTest(td).map { it.toDomain() }
     }
 
