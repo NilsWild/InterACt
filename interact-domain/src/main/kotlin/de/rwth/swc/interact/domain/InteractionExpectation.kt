@@ -4,10 +4,10 @@ import java.util.*
 
 data class InteractionExpectation(
     val from: SentMessage,
-    val to: List<ReceivedMessage>,
-    val validated: Boolean = false
+    val to: List<ReceivedMessage>
 ) {
     var id: InteractionExpectationId? = null
+    var validated: Boolean? = null
 }
 
 @JvmInline

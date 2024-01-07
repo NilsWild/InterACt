@@ -8,6 +8,7 @@ data class Component(val name: ComponentName, val version: ComponentVersion) {
     var abstractTestCases: MutableSet<AbstractTestCase> = mutableSetOf()
     var providedInterfaces: MutableSet<IncomingInterface> = mutableSetOf()
     var requiredInterfaces: MutableSet<OutgoingInterface> = mutableSetOf()
+    var systemPropertyExpectations: MutableSet<SystemPropertyExpectation> = mutableSetOf()
 
     fun abstractTestCase(
         source: AbstractTestCaseSource,

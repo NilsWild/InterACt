@@ -1,11 +1,30 @@
 package de.rwth.swc.interact.utbi
 
+import de.rwth.swc.interact.domain.ProtocolData
+import de.rwth.swc.interact.domain.amqp.AmqpData
+import de.rwth.swc.interact.domain.amqp.toAmqpData
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
 @Suppress("UNCHECKED_CAST")
 internal class HeaderExchangeMatcherTest {
+
+    @Test
+    fun test() {
+        val a = ProtocolData(
+            mapOf(
+                "exchangeName" to "exchangeName",
+                "exchangeType" to "HEADERS",
+                "routingKey" to "routingKey",
+                "headers" to """{"argument1":"1","argument2":"2"}""",
+                "queueBindings" to """[{"source":"exchangeName","routingKey":"routingKey","arguments":{"x-match":"any","argument1":"1","argument2":"2"}}]"""
+            )
+        )
+        val b = a.toAmqpData()
+        assertThat(a).isEqualTo(b.toProtocolData())
+    }
 
     @ParameterizedTest
     @CsvSource(

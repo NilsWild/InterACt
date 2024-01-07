@@ -17,13 +17,9 @@ class ObservationController(private val observationService: ObservationService) 
 
     private val log = logger()
 
-    fun storeObservation(@RequestBody component: Component) {
-        observationService.storeObservation(component)
-    }
-
     @PostMapping
     fun storeObservations(@RequestBody components: List<Component>) {
         log.info("Storing ${components.size} observations")
-        components.forEach { storeObservation(it) }
+        components.forEach { observationService.storeObservation(it) }
     }
 }

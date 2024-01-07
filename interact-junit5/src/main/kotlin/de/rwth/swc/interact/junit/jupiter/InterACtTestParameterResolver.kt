@@ -19,8 +19,6 @@ class InterACtTestParameterResolver(
     private val mode: TestMode
 ) : ParameterResolver, AfterTestExecutionCallback {
 
-    private val mapper = SerializationConstants.mapper
-
     companion object {
         private val NAMESPACE: ExtensionContext.Namespace =
             ExtensionContext.Namespace.create(InterACtTestParameterResolver::class.java)
@@ -64,24 +62,7 @@ class InterACtTestParameterResolver(
 
     private fun resolveInteractionMessage(parameterContext: ParameterContext, arguments: Array<Any?>): Any? {
         val argument = arguments[parameterContext.index]
-        return if (argument == null) {
-            null
-        } else if (parameterContext.parameter.type == argument.javaClass) {
-            argument
-        } else if (parameterContext.parameter.type.isPrimitive) {
-            DefaultArgumentConverter.INSTANCE.convert(argument, parameterContext)
-        } else {
-            val type = parameterContext.parameter.parameterizedType
-            if (type is ParameterizedType) {
-                val genericTypes = type.actualTypeArguments.map { mapper.typeFactory.constructType(it) }.toTypedArray()
-                mapper.readValue(
-                    argument.toString(),
-                    mapper.typeFactory.constructParametricType(parameterContext.parameter.type, *genericTypes)
-                )
-            } else {
-                mapper.readValue(argument.toString(), parameterContext.parameter.type)
-            }
-        }
+        return ParameterTypeResolution.resolveArgumentToParameterType(parameterContext, argument)
     }
 
     override fun afterTestExecution(context: ExtensionContext) {

@@ -1,21 +1,20 @@
 package de.rwth.swc.interact.controller
 
 import de.rwth.swc.interact.controller.persistence.events.InterfaceAddedEvent
-import de.rwth.swc.interact.utbi.InterfaceBinder
+import de.rwth.swc.interact.controller.persistence.events.InterfaceExpectationAddedEvent
+import de.rwth.swc.interact.utbi.InterfaceExpectationMatcher
 import jakarta.annotation.PostConstruct
-import org.springframework.data.neo4j.core.Neo4jClient
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.event.TransactionalEventListener
-import java.util.stream.Collectors
 
 @Service
-class InterfaceBindingManager(
-    private val matchers: List<InterfaceBinder> = emptyList()
+class InterfaceExpectationMatcherManager(
+    private val matchers: List<InterfaceExpectationMatcher> = emptyList()
 ) {
     @PostConstruct
     fun listAdapters() {
-        println("\n\n-------Interface Binders ------\n")
+        println("\n\n-------Interface Expectation Matchers ------\n")
         if (matchers.isEmpty()) {
             println("None")
         } else {
@@ -34,7 +33,15 @@ class InterfaceBindingManager(
     @Async
     @TransactionalEventListener
     fun onInterfaceAddedEvent(event: InterfaceAddedEvent) {
-        matchers.firstOrNull{ it.canHandle(event.componentInterface) }?.bindInterfaces(event.componentInterface)
-            ?: throw IllegalStateException("No matcher found for ${event.componentInterface}")
+        matchers.firstOrNull{ it.canHandle(event.componentInterface) }?.match(event.componentInterface)
+            ?: throw IllegalStateException("No interface expectation matcher found for ${event.componentInterface}")
     }
+
+    @Async
+    @TransactionalEventListener
+    fun onInterfaceAddedEvent(event: InterfaceExpectationAddedEvent) {
+        matchers.firstOrNull{ it.canHandle(event.interfaceExpectation) }?.match(event.interfaceExpectation)
+            ?: throw IllegalStateException("No interface expectation matcher found for ${event.interfaceExpectation}")
+    }
+
 }

@@ -28,6 +28,9 @@ internal data class ComponentEntity(
     @Relationship(type = "REQUIRES")
     var requiredInterfaces: Set<OutgoingInterfaceEntity> = emptySet()
 
+    @Relationship(type = "EXPECTS")
+    var systemPropertyExpectations: Set<SystemPropertyExpectationEntity> = emptySet()
+
     @Version
     var neo4jVersion: Long = 0
         private set
@@ -68,6 +71,7 @@ internal data class ComponentEntity(
         component.abstractTestCases = abstractTestCases.map { it.toDomain() }.toMutableSet()
         component.providedInterfaces = providedInterfaces.map { it.toDomain() }.toMutableSet()
         component.requiredInterfaces = requiredInterfaces.map { it.toDomain() }.toMutableSet()
+        component.systemPropertyExpectations = systemPropertyExpectations.map { it.toDomain() }.toMutableSet()
     }
 
 }
@@ -91,6 +95,7 @@ internal fun Component.toEntity() = ComponentEntity(
     component.abstractTestCases = this.abstractTestCases.map { it.toEntity() }.toMutableSet()
     component.providedInterfaces = this.providedInterfaces.map { it.toEntity() }.toMutableSet()
     component.requiredInterfaces = this.requiredInterfaces.map { it.toEntity() }.toMutableSet()
+    component.systemPropertyExpectations = this.systemPropertyExpectations.map { it.toEntity() }.toMutableSet()
 }
 
 internal interface ComponentEntityNoRelations {

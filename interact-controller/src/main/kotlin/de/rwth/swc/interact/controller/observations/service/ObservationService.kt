@@ -84,7 +84,7 @@ class ObservationService(
     ): List<AbstractTestCase> {
         return abstractTestCases.map {
             it.apply {
-                val id = abstractTestCaseDao.findIdByComponentIdSourceAndName(
+                val id = abstractTestCaseDao.findIdByComponentIdAndSourceAndName(
                     componentId,
                     this.source,
                     this.name

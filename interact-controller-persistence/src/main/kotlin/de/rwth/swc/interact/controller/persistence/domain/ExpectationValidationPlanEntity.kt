@@ -10,7 +10,7 @@ import java.util.*
 const val INTERACTION_EXPECTATION_VALIDATION_PLAN_NODE_LABEL = "InteractionExpectationValidationPlan"
 
 @Node(INTERACTION_EXPECTATION_VALIDATION_PLAN_NODE_LABEL)
-internal data class InteractionExpectationValidationPlanEntity(
+internal data class ExpectationValidationPlanEntity(
     @Id
     val id: UUID = UUID.randomUUID(),
     var interactionPathInfo: String
@@ -18,24 +18,24 @@ internal data class InteractionExpectationValidationPlanEntity(
     var nextTest: String? = null
     var nextComponent: UUID? = null
     var testedPath: List<UUID>? = null
-    var validated: Boolean = false
+    var validated: Boolean? = null
 
     @Version
     var neo4jVersion: Long = 0
         private set
 
-    fun toDomain() = InteractionExpectationValidationPlan(
+    fun toDomain() = ExpectationValidationPlan(
         this.interactionPathInfo,
         this.nextTest?.let { SerializationConstants.mapper.readValue(it, TestInvocationDescriptor::class.java) },
         this.nextComponent?.let { ComponentId(it) },
-        this.testedPath?.map { ConcreteTestCaseId(it) } ?: emptyList(),
-        this.validated
+        this.testedPath?.map { ConcreteTestCaseId(it) } ?: emptyList()
     ).also {
-        it.id = InteractionExpectationValidationPlanId(this.id)
+        it.id = ExpectationValidationPlanId(this.id)
+        it.validated = this.validated
     }
 }
 
-internal fun InteractionExpectationValidationPlan.toEntity() = InteractionExpectationValidationPlanEntity(
+internal fun ExpectationValidationPlan.toEntity() = ExpectationValidationPlanEntity(
     this.id?.id ?: UUID.randomUUID(),
     this.interactionPathInfo
 ).also { entity ->

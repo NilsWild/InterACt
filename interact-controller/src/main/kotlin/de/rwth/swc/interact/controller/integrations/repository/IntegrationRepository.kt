@@ -186,7 +186,7 @@ class IntegrationRepository(
     }
 
     fun updateInterfaceExpectationValidationPlanWithNewExecution(
-        vp: InteractionExpectationValidationPlan,
+        vp: ExpectationValidationPlan,
         concreteTestCase: ConcreteTestCase
     ) {
         if (concreteTestCase.result != TestResult.SUCCESS) {
@@ -218,7 +218,7 @@ class IntegrationRepository(
         ).bind(nextTest).to("nextTest").run()
     }
 
-    private fun setValidationStatusOfValidationPlan(vpId: InteractionExpectationValidationPlanId, valid: Boolean) {
+    private fun setValidationStatusOfValidationPlan(vpId: ExpectationValidationPlanId, valid: Boolean) {
         if (valid) {
             neo4jClient.query(
                 "MATCH (vp:$INTERACTION_EXPECTATION_VALIDATION_PLAN_NODE_LABEL{id:\"$vpId\"}) " +

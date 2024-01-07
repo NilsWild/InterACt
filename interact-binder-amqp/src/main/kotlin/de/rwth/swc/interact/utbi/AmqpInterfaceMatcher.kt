@@ -1,28 +1,27 @@
 package de.rwth.swc.interact.utbi
 
-import de.rwth.swc.interact.domain.IncomingInterface
-import de.rwth.swc.interact.domain.OutgoingInterface
+import de.rwth.swc.interact.domain.ProtocolData
+import de.rwth.swc.interact.domain.amqp.AmqpData
 import de.rwth.swc.interact.domain.amqp.ExchangeType
+import de.rwth.swc.interact.domain.amqp.QueueBinding
 import de.rwth.swc.interact.domain.amqp.toAmqpData
+import de.rwth.swc.interact.domain.serialization.SerializationConstants
 import org.springframework.stereotype.Component
 
 @Component
-class AMQPInterfaceMatcher(
+class AmqpInterfaceMatcher(
     private val topicExchangeMatcher: TopicExchangeMatcher,
     private val headerExchangeMatcher: HeaderExchangeMatcher
 ) {
 
-    fun matchAMQPInterfaces(outgoingInterface: OutgoingInterface, incomingInterface: IncomingInterface): Boolean {
-        if (!(outgoingInterface.protocol.toString() == "AMQP" && incomingInterface.protocol.toString() == "AMQP")) {
-            return false
-        }
+    fun matchAMQPInterfaces(outgoingInterface: ProtocolData, incomingInterface: ProtocolData): Boolean {
 
-        val incomingInterfaceProtocolData = incomingInterface.protocolData.toAmqpData()
-        val outgoingInterfaceProtocolData = outgoingInterface.protocolData.toAmqpData()
+        val incomingInterfaceProtocolData: AmqpData = incomingInterface.toAmqpData()
+        val outgoingInterfaceProtocolData: AmqpData = outgoingInterface.toAmqpData()
 
         for (queueBinding in incomingInterfaceProtocolData.queueBindings) {
             if (outgoingInterfaceProtocolData.exchangeName == queueBinding.source) {
-                when (outgoingInterfaceProtocolData.exchangeType) {
+                when (outgoingInterfaceProtocolData.exchangeType!!) {
                     ExchangeType.DIRECT ->
                         if (outgoingInterfaceProtocolData.routingKey == queueBinding.routingKey)
                             return true
@@ -32,7 +31,7 @@ class AMQPInterfaceMatcher(
 
                     ExchangeType.TOPIC ->
                         if (topicExchangeMatcher.match(
-                                outgoingInterfaceProtocolData.routingKey,
+                                outgoingInterfaceProtocolData.routingKey!!,
                                 queueBinding.routingKey
                             )
                         )

@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional
  * Service to access AbstractTestCaseEntity needed to support Kotlin value classes and to hide the repository
  */
 interface AbstractTestCaseDao {
-    fun findIdByComponentIdSourceAndName(
+    fun findIdByComponentIdAndSourceAndName(
         componentId: ComponentId,
         source: AbstractTestCaseSource,
         name: AbstractTestCaseName
@@ -31,7 +31,7 @@ internal class AbstractTestCaseDaoImpl(
 ) : AbstractTestCaseDao {
 
     @Transactional(readOnly = true)
-    override fun findIdByComponentIdSourceAndName(
+    override fun findIdByComponentIdAndSourceAndName(
         componentId: ComponentId,
         source: AbstractTestCaseSource,
         name: AbstractTestCaseName

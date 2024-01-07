@@ -170,7 +170,7 @@ class InterACtTestsExtension : TestTemplateInvocationContextProvider {
         pattern = Preconditions.notBlank(pattern.trim { it <= ' ' }
         ) {
             String.format(
-                "Configuration error: @ParameterizedTest on method [%s] must be declared with a non-empty name.",
+                "Configuration error: @InterACtTest on method [%s] must be declared with a non-empty name.",
                 templateMethod
             )
         }

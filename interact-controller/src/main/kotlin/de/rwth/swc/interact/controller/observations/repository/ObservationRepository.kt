@@ -18,16 +18,13 @@ class ObservationRepository(
         protocol: Protocol,
         protocolData: ProtocolData
     ): InterfaceId? {
-        var query = ""
-        protocolData.data.forEach { (k, v) ->
-            query += "AND ii.`protocolData.$k`=\"$v\" "
-        }
         return neo4jClient.query(
             "MATCH (c:Component)-[:PROVIDES]->(ii:IncomingInterface) " +
-                    "WHERE c.id=\$componentId AND ii.protocol=\$protocol $query " +
+                    "WHERE c.id=\$componentId AND ii.protocol=\$protocol AND ii.protocolData=\$protocolData " +
                     "RETURN ii.id as id"
         ).bind(componentId.toString()).to("componentId")
             .bind(protocol.toString()).to("protocol")
+            .bind(protocolData.data).to("protocolData")
             .fetchAs(InterfaceId::class.java).mappedBy { _, record ->
                 InterfaceId(UUID.fromString(record.get("id").asString()))
             }.first().orElse(null)
@@ -38,16 +35,13 @@ class ObservationRepository(
         protocol: Protocol,
         protocolData: ProtocolData
     ): InterfaceId? {
-        var query = ""
-        protocolData.data.forEach { (k, v) ->
-            query += "AND oi.`protocolData.$k`=\"$v\" "
-        }
         return neo4jClient.query(
             "MATCH (c:Component)-[:REQUIRES]->(oi:OutgoingInterface) " +
-                    "WHERE c.id=\$componentId AND oi.protocol=\$protocol $query " +
+                    "WHERE c.id=\$componentId AND oi.protocol=\$protocol AND oi.protocolData=\$protocolData " +
                     "RETURN oi.id as id"
         ).bind(componentId.toString()).to("componentId")
             .bind(protocol.toString()).to("protocol")
+            .bind(protocolData.data).to("protocolData")
             .fetchAs(InterfaceId::class.java).mappedBy { _, record ->
                 InterfaceId(UUID.fromString(record.get("id").asString()))
             }.first().orElse(null)

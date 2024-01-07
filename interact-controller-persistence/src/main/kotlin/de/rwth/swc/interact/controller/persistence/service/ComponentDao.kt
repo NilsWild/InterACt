@@ -21,6 +21,7 @@ interface ComponentDao {
     fun deleteAll()
     fun addProvidedInterface(componentId: ComponentId, interfaceId: InterfaceId)
     fun addRequiredInterface(componentId: ComponentId, interfaceId: InterfaceId)
+    fun addSystemPropertyExpectation(componentId: ComponentId, newId: SystemPropertyExpectationId)
 
 }
 
@@ -64,5 +65,9 @@ internal class ComponentDaoImpl(
 
     override fun addRequiredInterface(componentId: ComponentId, interfaceId: InterfaceId) {
         componentRepository.addRequiredInterface(componentId.id, interfaceId.id)
+    }
+
+    override fun addSystemPropertyExpectation(componentId: ComponentId, newId: SystemPropertyExpectationId) {
+        componentRepository.addSystemPropertyExpectation(componentId.id, newId.id)
     }
 }

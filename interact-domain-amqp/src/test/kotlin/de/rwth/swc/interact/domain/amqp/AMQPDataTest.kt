@@ -3,7 +3,7 @@ package de.rwth.swc.interact.domain.amqp
 internal class AMQPDataTest {
 
     fun `AMQPData to ProtocolData and back`() {
-        val amqpData = AMQPData(
+        val amqpData = AmqpData(
             exchangeName = "exchangeName",
             exchangeType = ExchangeType.TOPIC,
             routingKey = "routingKey",

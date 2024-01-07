@@ -21,7 +21,7 @@ class IntegrationService(
     private val concreteTestCaseDao: ConcreteTestCaseDao,
     private val outgoingInterfaceDao: OutgoingInterfaceDao,
     private val componentDao: ComponentDao,
-    private val interactionExpectationValidationPlanDao: InteractionExpectationValidationPlanDao,
+    private val expectationValidationPlanDao: ExpectationValidationPlanDao,
     private val mapper: ObjectMapper
 ) {
 
@@ -53,14 +53,14 @@ class IntegrationService(
         validationCandidates: Collection<InteractionPathInfo>
     ) {
         validationCandidates.filter {
-            !interactionExpectationValidationPlanDao.existsByPathInfo(
+            !expectationValidationPlanDao.existsByPathInfo(
                 mapper.writeValueAsString(
                     it
                 )
             )
         }.forEach {
-            val validationPlanId = interactionExpectationValidationPlanDao.save(
-                InteractionExpectationValidationPlan(
+            val validationPlanId = expectationValidationPlanDao.save(
+                ExpectationValidationPlan(
                     mapper.writeValueAsString(it),
                     integrationRepository.determineTestInvocationDescriptor(
                         it.interactionTests[1],
@@ -182,7 +182,7 @@ class IntegrationService(
             concreteTestCase.parameters
         )
         val validationPlans =
-            interactionExpectationValidationPlanDao.findByTestInvocationDescriptor(testInvocationDescriptor)
+            expectationValidationPlanDao.findByTestInvocationDescriptor(testInvocationDescriptor)
         validationPlans.forEach {
             integrationRepository.updateInterfaceExpectationValidationPlanWithNewExecution(
                 it,
@@ -192,8 +192,8 @@ class IntegrationService(
         }
     }
 
-    private fun tryToValidateNextInteraction(validationPlanId: InteractionExpectationValidationPlanId) {
-        val validationPlan = interactionExpectationValidationPlanDao.findById(validationPlanId)
+    private fun tryToValidateNextInteraction(validationPlanId: ExpectationValidationPlanId) {
+        val validationPlan = expectationValidationPlanDao.findById(validationPlanId)
         if (validationPlan.nextTest != null) {
             val concreteTestCase = concreteTestCaseDao.findByAbstractTestCaseIdAndParameters(
                 validationPlan.nextTest!!.abstractTestCase.id!!,
@@ -206,7 +206,7 @@ class IntegrationService(
                 )
                 tryToValidateNextInteraction(validationPlanId)
             } else {
-                interactionExpectationValidationPlanDao.setNextComponent(
+                expectationValidationPlanDao.setNextComponent(
                     validationPlanId,
                     integrationRepository.findComponentForAbstractTestCaseId(validationPlan.nextTest!!.abstractTestCase.id!!)
                 )

@@ -33,6 +33,7 @@ class SpringAMQPInterACtObserverConfiguration {
         connectionFactory: ConnectionFactory?,
     ): ObserverLatchRabbitListenerContainerFactory {
         val factory = ObserverLatchRabbitListenerContainerFactory()
+        factory.setObservationEnabled(true)
         configurer.configure(factory, connectionFactory)
         return factory
     }
@@ -50,6 +51,7 @@ class SpringAMQPInterACtObserverConfiguration {
         customizers: ObjectProvider<RabbitTemplateCustomizer>
     ): RabbitTemplate {
         val template = RabbitTemplate()
+        template.setObservationEnabled(true)
         configurer.configure(template, connectionFactory)
         customizers.orderedStream()
             .forEach { customizer -> customizer.customize(template) }
@@ -65,6 +67,7 @@ class SpringAMQPInterACtObserverConfiguration {
         customizers: ObjectProvider<RabbitTemplateCustomizer>
     ): RabbitTemplate {
         val template = RabbitTemplate()
+        template.setObservationEnabled(true)
         configurer.configure(template, connectionFactory)
         customizers.orderedStream()
             .filter { it !is RabbitObserverLatchCustomizer }

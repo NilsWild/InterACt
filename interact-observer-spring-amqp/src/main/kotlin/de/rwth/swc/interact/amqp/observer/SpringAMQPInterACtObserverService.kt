@@ -4,6 +4,7 @@ import com.rabbitmq.http.client.Client
 import com.rabbitmq.http.client.domain.ExchangeInfo
 import de.rwth.swc.interact.amqp.StringAMQPMessage
 import de.rwth.swc.interact.domain.*
+import de.rwth.swc.interact.domain.amqp.ExchangeType
 import de.rwth.swc.interact.domain.amqp.QueueBinding
 import de.rwth.swc.interact.domain.serialization.SerializationConstants
 import de.rwth.swc.interact.observer.TestObserver
@@ -61,7 +62,7 @@ class SpringAMQPInterACtObserverService(rabbitUrl: String, rabbitUser: String, r
                 Protocol("AMQP"),
                 ProtocolData(
                     mapOf(
-                        Pair("exchangeType", exchangeType),
+                        Pair("exchangeType", exchangeType.uppercase()),
                         Pair("exchangeName", exchange),
                         Pair("routingKey", routingKey),
                         Pair("headers", SerializationConstants.mapper.writeValueAsString(routingHeaders).replace("\"", "'"))

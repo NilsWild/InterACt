@@ -64,4 +64,11 @@ internal interface ComponentRepository : org.springframework.data.repository.Rep
                 "MERGE (c)-[:REQUIRES]->(oi)"
     )
     fun addRequiredInterface(@Param("componentId") componentId: UUID, @Param("interfaceId") interfaceId: UUID)
+
+    @Query(
+        value = "MATCH (c:$COMPONENT_NODE_LABEL), (spe:$SYSTEM_PROPERTY_EXPECTATION_NODE_LABEL) " +
+                "WHERE c.id=\$componentId AND spe.id=\$speId " +
+                "MERGE (c)-[:EXPECTS]->(spe)"
+    )
+    fun addSystemPropertyExpectation(@Param("componentId") componentId: UUID, @Param("speId") systemPropertyExpectationId: UUID)
 }

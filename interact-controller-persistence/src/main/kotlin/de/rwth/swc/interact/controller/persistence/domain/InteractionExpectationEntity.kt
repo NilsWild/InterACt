@@ -1,6 +1,5 @@
 package de.rwth.swc.interact.controller.persistence.domain
 
-import de.rwth.swc.interact.domain.*
 import org.springframework.data.annotation.Version
 import org.springframework.data.neo4j.core.schema.Id
 import org.springframework.data.neo4j.core.schema.Node
@@ -19,10 +18,10 @@ internal data class InteractionExpectationEntity(
 
     @Relationship(type = "EXPECT_TO")
     var to: SortedSet<MessageOrderRelationship> = sortedSetOf()
-    var validated: Boolean = false
+    var validated: Boolean? = null
 
     @Relationship(type = "POTENTIALLY_VALIDATED_BY")
-    var validationPlans: Set<InteractionExpectationValidationPlanEntity> = emptySet()
+    var validationPlans: Set<ExpectationValidationPlanEntity> = emptySet()
 
     @Version
     var neo4jVersion: Long = 0

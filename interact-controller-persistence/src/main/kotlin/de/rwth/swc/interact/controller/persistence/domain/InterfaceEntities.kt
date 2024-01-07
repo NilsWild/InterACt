@@ -9,20 +9,28 @@ import java.util.*
 const val INCOMING_INTERFACE_NODE_LABEL = "IncomingInterface"
 const val INTERFACE_NODE_LABEL = "Interface"
 
-@Node(INCOMING_INTERFACE_NODE_LABEL, INTERFACE_NODE_LABEL)
-internal class IncomingInterfaceEntity(
+@Node(INTERFACE_NODE_LABEL)
+internal abstract class InterfaceEntity<T: ComponentInterface> (
     @Id
-    val id: UUID = UUID.randomUUID(),
+    val id: UUID,
     val protocol: String,
     @CompositeProperty(prefix = "protocolData")
     val protocolData: Map<String, String>
 ) {
-
     @Version
     var neo4jVersion: Long = 0
         private set
+    abstract fun toDomain(): T
+}
 
-    fun toDomain() = IncomingInterface(
+@Node(INCOMING_INTERFACE_NODE_LABEL)
+internal class IncomingInterfaceEntity(
+    id: UUID = UUID.randomUUID(),
+    protocol: String,
+    protocolData: Map<String, String>
+): InterfaceEntity<IncomingInterface>(id, protocol, protocolData) {
+
+    override fun toDomain() = IncomingInterface(
         Protocol(protocol),
         ProtocolData(protocolData)
     ).also { it.id = InterfaceId(id) }
@@ -42,27 +50,21 @@ internal interface IncomingInterfaceEntityNoRelations {
 
 const val OUTGOING_INTERFACE_NODE_LABEL = "OutgoingInterface"
 
-@Node(OUTGOING_INTERFACE_NODE_LABEL, INTERFACE_NODE_LABEL)
+@Node(OUTGOING_INTERFACE_NODE_LABEL)
 internal class OutgoingInterfaceEntity(
-    @Id
-    val id: UUID = UUID.randomUUID(),
-    val protocol: String,
-    @CompositeProperty(prefix = "protocolData")
-    val protocolData: Map<String, String>
-) {
+    id: UUID = UUID.randomUUID(),
+    protocol: String,
+    protocolData: Map<String, String>
+) : InterfaceEntity<OutgoingInterface>(id, protocol, protocolData){
     @Relationship(type = "BOUND_TO")
     var boundTo: Set<InterfaceBinding> = emptySet()
-        private set
-
-    @Version
-    var neo4jVersion: Long = 0
         private set
 
     fun bind(createdBy: String, incomingInterface: IncomingInterfaceEntity) {
         boundTo = boundTo.plusElement(InterfaceBinding(createdBy, incomingInterface))
     }
 
-    fun toDomain() = OutgoingInterface(
+    override fun toDomain() = OutgoingInterface(
         Protocol(protocol),
         ProtocolData(protocolData)
     ).also { it.id = InterfaceId(id) }
