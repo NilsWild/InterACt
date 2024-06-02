@@ -5,14 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>interact</artifactId>
-        <groupId>de.rwth.swc.interact</groupId>
+        <groupId>de.interact</groupId>
         <version>${revision}</version>
     </parent>
 
-    <groupId>de.rwth.swc.interact</groupId>
     <artifactId>interact-domain</artifactId>
-    <version>${revision}</version>
-    <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>${kotlin.compiler.jvmTarget}</maven.compiler.source>
@@ -37,19 +34,41 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.arrow-kt</groupId>
+            <artifactId>arrow-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.arrow-kt</groupId>
+            <artifactId>arrow-optics</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.arrow-kt</groupId>
+            <artifactId>arrow-fx-coroutines</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>de.rwth.swc.interact</groupId>
+            <groupId>de.interact</groupId>
             <artifactId>interact-utils</artifactId>
             <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-assertions-core-jvm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.mockk</groupId>
+            <artifactId>mockk-jvm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.uuid</groupId>
+            <artifactId>java-uuid-generator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.instancio</groupId>
+            <artifactId>instancio-junit</artifactId>
         </dependency>
     </dependencies>
 

@@ -4,15 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>de.rwth.swc.interact</groupId>
+        <groupId>de.interact</groupId>
         <artifactId>interact</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <groupId>de.rwth.swc.interact</groupId>
     <artifactId>interact-observer-spring-amqp</artifactId>
-    <version>${revision}</version>
-    <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>${kotlin.compiler.jvmTarget}</maven.compiler.source>
@@ -29,17 +26,7 @@
             <artifactId>kotlin-stdlib-jdk8</artifactId>
         </dependency>
         <dependency>
-            <groupId>de.rwth.swc.interact</groupId>
-            <artifactId>interact-observer</artifactId>
-            <version>${revision}</version>
-        </dependency>
-        <dependency>
-            <groupId>de.rwth.swc.interact</groupId>
-            <artifactId>interact-domain-amqp</artifactId>
-            <version>${revision}</version>
-        </dependency>
-        <dependency>
-            <groupId>de.rwth.swc.interact</groupId>
+            <groupId>de.interact</groupId>
             <artifactId>interact-test</artifactId>
             <version>${revision}</version>
         </dependency>

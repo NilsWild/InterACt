@@ -1,0 +1,177 @@
+package de.interact.controller.observations.repository
+
+import de.interact.controller.persistence.domain.*
+import de.interact.domain.shared.ComponentId
+import de.interact.domain.shared.VersionId
+import de.interact.domain.testtwin.Version
+import de.interact.domain.testtwin.abstracttest.concretetest.InteractionTest
+import de.interact.domain.testtwin.abstracttest.concretetest.UnitTest
+import de.interact.domain.testtwin.abstracttest.concretetest.message.ComponentResponseMessage
+import de.interact.domain.testtwin.abstracttest.concretetest.message.EnvironmentResponseMessage
+import de.interact.domain.testtwin.abstracttest.concretetest.message.StimulusMessage
+import de.interact.domain.testtwin.spi.Versions
+import org.springframework.data.neo4j.core.Neo4jTemplate
+import org.springframework.stereotype.Repository
+import org.springframework.stereotype.Service
+import java.util.*
+
+@Repository
+interface VersionRepository : org.springframework.data.repository.Repository<VersionEntity, UUID> {
+    fun findProjByVersionOfId(componentId: UUID): List<VersionProjection>
+    fun findProjByVersionOfIdAndId(componentId: UUID, versionId: UUID): VersionProjection?
+}
+
+@Service
+class VersionsDao(
+    private val repository: VersionRepository,
+    private val neo4jTemplate: Neo4jTemplate
+) : Versions {
+    override fun findVersionByComponentAndId(
+        componentId: ComponentId,
+        versionId: VersionId
+    ): Version? {
+        val projection = repository.findProjByVersionOfIdAndId(componentId.value, versionId.value)
+        return projection?.toVersion()
+    }
+
+    override fun findAllByComponent(id: ComponentId): List<Version> {
+        return repository.findProjByVersionOfId(id.value).map { it.toVersion() }
+    }
+
+    override fun save(version: Version): Version {
+        val listenTo = mutableSetOf<IncomingInterfaceEntity>()
+        val sendTo = mutableSetOf<OutgoingInterfaceEntity>()
+        val entity = VersionEntity(
+            version.id,
+            version.identifier.value,
+            ComponentEntity(
+                version.versionOf.id,
+                version.versionOf.version
+            ),
+            version.version
+        ).apply {
+            val versionEntity = this
+            testedBy = version.testedBy.map { abstractTest ->
+                abstractTestCaseEntity(abstractTest.id, abstractTest.identifier,
+                    abstractTest.templateFor.map { concreteTest ->
+                        val convertedMessages = mutableListOf<MessageEntity>()
+                        val status = concreteTest.status.toString()
+                        concreteTest.triggeredMessages.forEach { it ->
+                            when (it) {
+                                is StimulusMessage -> {
+                                    val receivedBy = incomingInterfaceEntity(
+                                        it.receivedBy.id,
+                                        it.receivedBy.version,
+                                        it.receivedBy.protocol,
+                                        it.receivedBy.protocolData
+                                    )
+                                    stimulusEntity(
+                                        it.id,
+                                        it.version,
+                                        it.value.toString(),
+                                        it.order,
+                                        listenTo.firstOrNull { it == receivedBy } ?: receivedBy.also {
+                                            listenTo.add(
+                                                it
+                                            )
+                                        }
+                                    ).also {
+                                        convertedMessages += it
+                                    }
+                                }
+
+                                is ComponentResponseMessage -> {
+                                    val sentTo = outgoingInterfaceEntity(
+                                        it.sentBy.id,
+                                        it.sentBy.version,
+                                        it.sentBy.protocol,
+                                        it.sentBy.protocolData
+                                    )
+                                    componentResponseEntity(
+                                        it.id,
+                                        it.version,
+                                        it.value.toString(),
+                                        it.order,
+                                        sendTo.firstOrNull { it == sentTo } ?: sentTo.also { sendTo.add(it) }
+                                    ).apply {
+                                        dependsOn =
+                                            it.dependsOn.map { convertedMessages[it.order] as ReceivedMessageEntity }
+                                                .toSortedSet()
+                                    }.also {
+                                        convertedMessages += it
+                                    }
+                                }
+
+                                is EnvironmentResponseMessage -> {
+                                    val receivedBy = incomingInterfaceEntity(
+                                        it.receivedBy.id,
+                                        it.receivedBy.version,
+                                        it.receivedBy.protocol,
+                                        it.receivedBy.protocolData
+                                    )
+                                    environmentResponseEntity(
+                                        it.id,
+                                        it.version,
+                                        it.value.toString(),
+                                        it.order,
+                                        listenTo.firstOrNull { it == receivedBy } ?: receivedBy.also {
+                                            listenTo.add(
+                                                it
+                                            )
+                                        }
+                                    ).apply {
+                                        reactionTo =
+                                            convertedMessages[it.reactionTo.order] as ComponentResponseEntity
+                                    }.also {
+                                        convertedMessages += it
+                                    }
+                                }
+                            }
+                        }
+
+                        when (concreteTest) {
+                            is UnitTest ->
+                                unitTestEntity(
+                                    concreteTest.id,
+                                    concreteTest.version,
+                                    concreteTest.identifier,
+                                    concreteTest.parameters,
+                                    convertedMessages.toSortedSet(),
+                                    status
+                                )
+                            is InteractionTest ->
+                                interactionTestEntity(
+                                    concreteTest.id,
+                                    concreteTest.version,
+                                    concreteTest.identifier,
+                                    concreteTest.parameters,
+                                    convertedMessages.toSortedSet(),
+                                    status
+                                )
+                        }
+                    }.toSet()
+                )
+            }.toSet()
+            listeningTo = version.listeningTo.map {
+                val receivedBy = incomingInterfaceEntity(
+                    it.id,
+                    it.version,
+                    it.protocol,
+                    it.protocolData
+                )
+                listenTo.firstOrNull { it.id == receivedBy.id } ?: receivedBy.also { listenTo.add(it) }
+            }.toSet()
+            sendingTo = version.sendingTo.map {
+                val sentTo = outgoingInterfaceEntity(
+                    it.id,
+                    it.version,
+                    it.protocol,
+                    it.protocolData
+                )
+                sendTo.firstOrNull { it.id == sentTo.id } ?: sentTo.also { sendTo.add(it) }
+            }.toSet()
+        }
+        val ent = neo4jTemplate.saveAs(entity, VersionProjection::class.java)
+        return ent.toVersion()
+    }
+}

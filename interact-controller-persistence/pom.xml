@@ -4,15 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>de.rwth.swc.interact</groupId>
+        <groupId>de.interact</groupId>
         <artifactId>interact</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <groupId>de.rwth.swc.interact</groupId>
     <artifactId>interact-controller-persistence</artifactId>
-    <version>${revision}</version>
-    <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>${kotlin.compiler.jvmTarget}</maven.compiler.source>
@@ -48,7 +45,7 @@
             <artifactId>spring-data-neo4j</artifactId>
         </dependency>
         <dependency>
-            <groupId>de.rwth.swc.interact</groupId>
+            <groupId>de.interact</groupId>
             <artifactId>interact-domain</artifactId>
             <version>${revision}</version>
         </dependency>
@@ -56,6 +53,15 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.uuid</groupId>
+            <artifactId>java-uuid-generator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper</artifactId>
+            <version>3.1.1</version>
         </dependency>
     </dependencies>
 
@@ -66,28 +72,19 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.version}</version>
                 <configuration>
                     <compilerPlugins>
-                        <plugin>jpa</plugin>
                         <plugin>spring</plugin>
+                        <plugin>no-arg</plugin>
+                        <compilerPlugin>ksp</compilerPlugin>
                     </compilerPlugins>
                     <args>
                         <arg>-Xjsr305=strict</arg>
                     </args>
+                    <pluginOptions>
+                        <option>no-arg:annotation=org.springframework.data.neo4j.core.schema.Node</option>
+                    </pluginOptions>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.jetbrains.kotlin</groupId>
-                        <artifactId>kotlin-maven-noarg</artifactId>
-                        <version>${kotlin.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.jetbrains.kotlin</groupId>
-                        <artifactId>kotlin-maven-allopen</artifactId>
-                        <version>${kotlin.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

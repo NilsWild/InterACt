@@ -4,15 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>de.rwth.swc.interact</groupId>
+        <groupId>de.interact</groupId>
         <artifactId>interact</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <groupId>de.rwth.swc.interact</groupId>
     <artifactId>interact-junit5</artifactId>
-    <version>${revision}</version>
-    <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>${kotlin.compiler.jvmTarget}</maven.compiler.source>
@@ -29,14 +26,25 @@
             <artifactId>kotlin-stdlib</artifactId>
         </dependency>
         <dependency>
-            <groupId>de.rwth.swc.interact</groupId>
-            <artifactId>interact-observer</artifactId>
+            <groupId>de.interact</groupId>
+            <artifactId>interact-domain</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>
-            <groupId>de.rwth.swc.interact</groupId>
+            <groupId>de.interact</groupId>
             <artifactId>interact-integrator</artifactId>
             <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>de.interact</groupId>
+            <artifactId>interact-controller-api</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>de.interact</groupId>
+            <artifactId>interact-observation-context-simple</artifactId>
+            <version>${revision}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -69,6 +77,18 @@
             <groupId>io.mockk</groupId>
             <artifactId>mockk-jvm</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-assertions-core-jvm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
         </dependency>
     </dependencies>
 

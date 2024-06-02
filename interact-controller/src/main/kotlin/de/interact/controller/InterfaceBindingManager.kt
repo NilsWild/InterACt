@@ -1,0 +1,38 @@
+package de.interact.controller
+
+import de.interact.domain.testtwin.api.event.InterfaceAddedToVersionEvent
+import de.interact.utbi.InterfaceBinder
+import jakarta.annotation.PostConstruct
+import org.springframework.context.event.EventListener
+import org.springframework.scheduling.annotation.Async
+import org.springframework.stereotype.Service
+
+@Service
+class InterfaceBindingManager(
+    private val matchers: List<InterfaceBinder> = emptyList()
+) {
+    @PostConstruct
+    fun listAdapters() {
+        println("\n\n-------Interface Binders ------\n")
+        if (matchers.isEmpty()) {
+            println("None")
+        } else {
+            for (matcher in matchers) {
+                println(
+                    "...Loaded Matcher: "
+                            + matcher.name
+                            + ": "
+                            + matcher.version
+                )
+            }
+        }
+        println("\n-------------------------------")
+    }
+
+    @Async
+    @EventListener
+    fun onInterfaceAddedEvent(event: InterfaceAddedToVersionEvent) {
+        matchers.firstOrNull { it.canHandle(event) }?.bindInterfaces(event)
+            ?: throw IllegalStateException("No matcher found for $event")
+    }
+}

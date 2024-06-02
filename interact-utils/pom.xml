@@ -4,15 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>de.rwth.swc.interact</groupId>
+        <groupId>de.interact</groupId>
         <artifactId>interact</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <groupId>de.rwth.swc.interact</groupId>
     <artifactId>interact-utils</artifactId>
-    <version>${revision}</version>
-    <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>${kotlin.compiler.jvmTarget}</maven.compiler.source>
@@ -32,6 +29,19 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.30</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-assertions-core-jvm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ProjectMapK</groupId>
+            <artifactId>jackson-module-kogera</artifactId>
         </dependency>
     </dependencies>
 

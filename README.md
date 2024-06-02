@@ -15,7 +15,7 @@ here: [InteractionTestExample](https://github.com/NilsWild/InteractionTestExampl
 ### Starting InterACt controller server
 
 2. Start a neo4j database E.g. using
-   docker: ```docker run --rm -d -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/somePassword -e 'NEO4JLABS_PLUGINS=[\"apoc\"]' -e 'NEO4J_dbms_security_procedures_unrestricted=apoc.*,algo.*' neo4j:5.7-community```
+   docker: ```docker run --rm -p 7474:7474 -p 7687:7687 -d --name neo4j -e NEO4J_apoc.export.file.enabled=true -e NEO4J_apoc.import.file.enabled=true -e NEO4J_apoc.import.file.use_neo4j_config=true -e 'NEO4J_PLUGINS=[\"apoc\"]' -e NEO4J_AUTH=neo4j/somePassword neo4j:5.19.0```
 
 3. Start the InterACt controller
    server ```java --% -Dloader.path=interact-binder-rest\target\interact-binder-rest-1.0-SNAPSHOT.jar -Dloader.debug=true -jar .\interact-controller\target\interact-controller-1.0-SNAPSHOT.jar```
@@ -26,12 +26,12 @@ here: [InteractionTestExample](https://github.com/NilsWild/InteractionTestExampl
    Clients.
 
         <dependency>
-            <groupId>de.rwth.swc.interact</groupId>
+            <groupId>de.interact</groupId>
             <artifactId>interact-junit5</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>de.rwth.swc.interact</groupId>
+            <groupId>de.interact</groupId>
             <artifactId>interact-observer-spring-rest</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
