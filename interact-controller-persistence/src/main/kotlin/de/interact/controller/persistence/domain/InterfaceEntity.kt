@@ -29,7 +29,7 @@ class IncomingInterfaceEntity : InterfaceEntity() {
         labels += setOf(INCOMING_INTERFACE_NODE_LABEL)
     }
 
-    @Relationship(type = BOUNT_TO_RELATIONSHIP_LABEL)
+    @Relationship(type = BOUNT_TO_RELATIONSHIP_LABEL, direction = Relationship.Direction.INCOMING)
     var boundTo: Set<IncomingToOutgoingInterfaceBindingRelationship> = emptySet()
 }
 

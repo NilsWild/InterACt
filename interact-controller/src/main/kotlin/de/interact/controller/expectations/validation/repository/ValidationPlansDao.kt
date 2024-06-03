@@ -24,7 +24,7 @@ interface ValidationPlansRepository :
     )
     fun findValidationPlanWaitingForTest(
         derivedFrom: UUID,
-        testParameters: List<String>
+        parameters: List<String>
     ): List<ValidationPlanProjection>
 }
 
@@ -89,7 +89,13 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
             interactionGraph.id,
             interactionGraph.version,
             interactionGraph.interactions.map { interaction ->
-                interactionEntity(
+                val creator = when(interaction) {
+                    is Interaction.Pending -> ::pendingInteractionEntity
+                    is Interaction.Executable -> ::executableInteractionEntity
+                    is Interaction.Finished.Validated -> ::validatedInteractionEntity
+                    is Interaction.Finished.Failed -> ::failedInteractionEntity
+                }
+                creator(
                     interaction.id,
                     interaction.version,
                     interactionGraph.reverseAdjacencyMap[interaction]!!.map { interactionEntityReference(it.id, it.version) }.toSet(),
@@ -104,12 +110,13 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
                                 replacementEntity(
                                     it.id,
                                     it.version,
-                                    it.messageToReplace.messageIdInOriginalUnitTest.toEntity(),
+                                    it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
+                                        m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
+                                    },
                                     it.replacement.interfaceToCopyFrom.toEntity()
                                 )
                             }.toSet(),
-                            (interaction.testCase as TestCase.IncompleteTestCase).deriveFrom.toEntity(),
-                            emptyList()
+                            (interaction.testCase as TestCase.IncompleteTestCase).deriveFrom.toEntity()
                         )
 
                         is TestCase.ExecutableTestCase -> executableTestCaseEntity(
@@ -119,7 +126,9 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
                                 replacementEntity(
                                     it.id,
                                     it.version,
-                                    it.messageToReplace.messageIdInOriginalUnitTest.toEntity(),
+                                    it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
+                                        m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
+                                    },
                                     it.replacement.interfaceToCopyFrom.toEntity()
                                 )
                             }.toSet(),
@@ -134,7 +143,9 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
                                 replacementEntity(
                                     it.id,
                                     it.version,
-                                    it.messageToReplace.messageIdInOriginalUnitTest.toEntity(),
+                                    it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
+                                        m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
+                                    },
                                     it.replacement.interfaceToCopyFrom.toEntity()
                                 )
                             }.toSet(),
@@ -150,7 +161,9 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
                                 replacementEntity(
                                     it.id,
                                     it.version,
-                                    it.messageToReplace.messageIdInOriginalUnitTest.toEntity(),
+                                    it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
+                                        m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
+                                    },
                                     it.replacement.interfaceToCopyFrom.toEntity()
                                 )
                             }.toSet(),

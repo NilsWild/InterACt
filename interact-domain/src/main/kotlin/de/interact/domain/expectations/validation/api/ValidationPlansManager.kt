@@ -1,6 +1,6 @@
 package de.interact.domain.expectations.validation.api
 
-import arrow.fx.coroutines.unit
+import arrow.optics.copy
 import de.interact.domain.expectations.derivation.events.InteractionExpectationAddedEvent
 import de.interact.domain.expectations.derivation.spi.UnitTestBasedInteractionExpectationAddedEventListener
 import de.interact.domain.expectations.validation.`interface`.toEntityReference
@@ -13,15 +13,13 @@ import de.interact.domain.expectations.validation.test.ComponentResponseMessage
 import de.interact.domain.expectations.validation.test.Message
 import de.interact.domain.expectations.validation.test.StimulusMessage
 import de.interact.domain.expectations.validation.test.toEntityReference
-import de.interact.domain.shared.EntityReference
-import de.interact.domain.shared.IncomingInterfaceId
-import de.interact.domain.shared.TestId
-import de.interact.domain.shared.UnitTestId
+import de.interact.domain.shared.*
 import de.interact.domain.testtwin.api.event.InteractionTestAddedEvent
 import de.interact.domain.testtwin.api.event.UnitTestAddedEvent
 import de.interact.domain.testtwin.spi.InteractionTestAddedEventListener
 import de.interact.domain.testtwin.spi.UnitTestAddedEventListener
 import java.util.LinkedList
+import java.util.UUID
 
 class ValidationPlansManager(
     private val tests: Tests,
@@ -30,6 +28,7 @@ class ValidationPlansManager(
     private val interfaces: Interfaces
 ): UnitTestAddedEventListener, InteractionTestAddedEventListener, UnitTestBasedInteractionExpectationAddedEventListener {
     override fun onUnitTestCaseAdded(event: UnitTestAddedEvent) {
+        //find interaction expectations that might have new validation plans available due to this testcase
         onTestAdded(event.test)
     }
 
@@ -37,8 +36,8 @@ class ValidationPlansManager(
         onTestAdded(event.test)
     }
 
-    private fun onTestAdded(test: EntityReference<TestId>) {
-        val test = tests.find(test.id)!!
+    private fun onTestAdded(testReference: EntityReference<TestId>) {
+        val test = tests.find(testReference.id)!!
         val dependantValidationPlans = validationPlans.waitingFor(test)
         val updatedValidationPlans = dependantValidationPlans.map {
             val updatedPlan = it.handle(test)
@@ -52,7 +51,7 @@ class ValidationPlansManager(
     override fun onUnitTestBasedInteractionExpectationAdded(
         event: InteractionExpectationAddedEvent.UnitTestBasedInteractionExpectationAddedEvent
     ) {
-        val interactionExpectation = unitTestBasedInteractionExpectations.find(event.interactionExpectationId)!!
+        val interactionExpectation = unitTestBasedInteractionExpectations.find(event.interactionExpectation.id)!!
         val derivedFromTest = tests.find(interactionExpectation.derivedFrom.id)!!
         val interactionGraphs = mutableSetOf<InteractionGraph>()
         val interactionGraphsToExpand = LinkedList<InteractionGraph>()
@@ -88,6 +87,14 @@ class ValidationPlansManager(
                 }
             }
         }
+
+        interactionGraphs.forEach { interactionGraph ->
+            val validationPlan = ValidationPlan.PendingValidationPlan(
+                event.interactionExpectation,
+                interactionGraph
+            )
+            validationPlans.save(validationPlan)
+        }
     }
 
     private fun expandInteractionGraph(interactionGraph: InteractionGraph): List<InteractionGraph> {
@@ -101,7 +108,7 @@ class ValidationPlansManager(
                 val nextSegmentGroups = getSegmentSubsets(segments)
                 expandedInteractionGraphs = nextSegmentGroups.flatMap { groupSegments ->
                     expandedInteractionGraphs.map { graph ->
-                        var updatedGraph = graph
+                        var updatedGraph = graph.copy(id = InteractionGraphId(UUID.randomUUID()) )
                         groupSegments.forEach { segment ->
                             updatedGraph = updatedGraph.addInteraction(segment, setOf(sink))
                         }

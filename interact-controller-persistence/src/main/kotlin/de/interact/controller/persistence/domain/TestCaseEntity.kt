@@ -39,16 +39,17 @@ fun testCaseEntityReference(id: TestDefinitionId, version: Long?): TestCaseEntit
     }
 }
 
-fun incompleteTestCaseEntity(id: TestDefinitionId, version: Long?, replacements: Set<ReplacementEntity>, derivedFrom: AbstractTestCaseEntity, parameters: List<String>): TestCaseEntity {
+fun incompleteTestCaseEntity(id: TestDefinitionId, version: Long?, replacements: Set<ReplacementEntity>, derivedFrom: AbstractTestCaseEntity): TestCaseEntity {
     return testCaseEntityReference(id, version).also {
         it.replacements = replacements
         it.derivedFrom = derivedFrom
-        it.parameters = parameters
+        it.labels = setOf(INCOMPLETE_TEST_CASE_NODE_LABEL)
     }
 }
 
 fun executableTestCaseEntity(id: TestDefinitionId, version: Long?, replacements: Set<ReplacementEntity>, derivedFrom: AbstractTestCaseEntity, parameters: List<String>): TestCaseEntity {
-    return incompleteTestCaseEntity(id, version, replacements, derivedFrom, parameters).also {
+    return incompleteTestCaseEntity(id, version, replacements, derivedFrom).also {
+        it.parameters = parameters
         it.labels = setOf(EXECUTABLE_TEST_CASE_NODE_LABEL)
     }
 }

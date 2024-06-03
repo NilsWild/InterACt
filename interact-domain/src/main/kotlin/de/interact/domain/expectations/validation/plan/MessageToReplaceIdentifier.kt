@@ -5,6 +5,6 @@ import de.interact.domain.shared.IncomingInterfaceId
 import de.interact.domain.shared.ReceivedMessageId
 
 data class MessageToReplaceIdentifier(
-    val messageIdInOriginalUnitTest: EntityReference<ReceivedMessageId>,
-    val interfaceId: EntityReference<IncomingInterfaceId>
+    val messageInOriginalUnitTest: EntityReference<ReceivedMessageId>,
+    val interfaceReference: EntityReference<IncomingInterfaceId>
 )

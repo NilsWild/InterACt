@@ -53,13 +53,47 @@ fun interactionEntityReference(id: InteractionId, version: Long?): InteractionEn
     }
 }
 
-fun interactionEntity(id: InteractionId, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
+fun pendingInteractionEntity(id: InteractionId, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
     return interactionEntityReference(id, version).also {
         it.previous = previous
         it.derivedFrom = derivedFrom
         it.from = from
         it.to = to
         it.testCase = testCase
+        it.labels = setOf(PENDING_INTERACTION_NODE_LABEL)
+    }
+}
+
+fun executableInteractionEntity(id: InteractionId, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
+    return interactionEntityReference(id, version).also {
+        it.previous = previous
+        it.derivedFrom = derivedFrom
+        it.from = from
+        it.to = to
+        it.testCase = testCase
+        it.labels = setOf(EXECUTABLE_INTERACTION_NODE_LABEL)
+    }
+}
+
+fun validatedInteractionEntity(id: InteractionId, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
+    return interactionEntityReference(id, version).also {
+        it.previous = previous
+        it.derivedFrom = derivedFrom
+        it.from = from
+        it.to = to
+        it.testCase = testCase
+        it.labels = setOf(VALIDATED_INTERACTION_NODE_LABEL)
+    }
+}
+
+fun failedInteractionEntity(id: InteractionId, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
+    return interactionEntityReference(id, version).also {
+        it.previous = previous
+        it.derivedFrom = derivedFrom
+        it.from = from
+        it.to = to
+        it.testCase = testCase
+        it.labels = setOf(FAILED_INTERACTION_NODE_LABEL)
     }
 }
 

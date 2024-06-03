@@ -2,6 +2,7 @@ package de.interact.domain.expectations.derivation.interactionexpectation
 
 import com.fasterxml.uuid.Generators
 import de.interact.domain.shared.*
+import java.util.*
 
 sealed class InteractionExpectation: Entity<InteractionExpectationId>() {
 
@@ -14,24 +15,18 @@ sealed class InteractionExpectation: Entity<InteractionExpectationId>() {
         override val expectFrom: EntityReference<ComponentResponseMessageId>,
         override val expectTo: Set<EntityReference<IncomingInterfaceId>>,
         override val requires: Set<EntityReference<InteractionExpectationId>> = emptySet(),
+        override val id: UnitTestBasedInteractionExpectationId = UnitTestBasedInteractionExpectationId(UUID.randomUUID()),
         override val version: Long? = null
-    ) : InteractionExpectation() {
-        override val id: UnitTestBasedInteractionExpectationId = UnitTestBasedInteractionExpectationId(Generators.nameBasedGenerator().generate(
-            hashedSha256(derivedFrom, expectFrom, expectTo, requires)
-        ))
-    }
+    ) : InteractionExpectation()
 
     data class SystemInteractionExpectation(
         val derivedFrom: EntityReference<SystemPropertyExpectationId>,
         override val expectFrom: EntityReference<MessageId>,
         override val expectTo: Set<EntityReference<InterfaceId>>,
         override val requires: Set<EntityReference<InteractionExpectationId>> = emptySet(),
+        override val id: SystemInteractionExpectationId = SystemInteractionExpectationId(UUID.randomUUID()),
         override val version: Long? = null
-    ) : InteractionExpectation() {
-        override val id: SystemInteractionExpectationId = SystemInteractionExpectationId(Generators.nameBasedGenerator().generate(
-            hashedSha256(derivedFrom, expectFrom, expectTo, requires)
-        ))
-    }
+    ) : InteractionExpectation()
 
 }
 

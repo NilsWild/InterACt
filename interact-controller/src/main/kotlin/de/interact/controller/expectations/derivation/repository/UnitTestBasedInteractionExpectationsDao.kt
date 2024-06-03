@@ -5,6 +5,8 @@ import de.interact.domain.expectations.derivation.interactionexpectation.Interac
 import de.interact.domain.expectations.derivation.spi.UnitTestBasedInteractionExpectations
 import de.interact.domain.shared.UnitTestBasedInteractionExpectationId
 import org.springframework.data.neo4j.core.Neo4jTemplate
+import org.springframework.data.repository.NoRepositoryBean
+import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -41,7 +43,7 @@ private fun InteractionExpectation.UnitTestBasedInteractionExpectation.toEntity(
     )
 }
 
-interface UnitTestBasedInteractionExpectationProjection {
+interface UnitTestBasedInteractionExpectationProjection: UnitTestBasedInteractionExpectationReferenceProjection {
     val derivedFrom: UnitTestReferenceProjection
     val expectFrom: ComponentResponseReferenceProjection
     val expectTo: Set<IncomingInterfaceReferenceProjection>
@@ -57,6 +59,8 @@ private fun UnitTestBasedInteractionExpectationProjection.toDomain(): Interactio
         }.toSet(),
         requires.map {
             it.toEntityReference()
-        }.toSet()
+        }.toSet(),
+        UnitTestBasedInteractionExpectationId(id),
+        version
     )
 }

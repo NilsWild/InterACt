@@ -7,6 +7,7 @@ import de.interact.domain.expectations.derivation.spi.Interactions
 import de.interact.domain.expectations.derivation.spi.SystemInteractionExpectations
 import de.interact.domain.expectations.derivation.spi.UnitTestBasedInteractionExpectations
 import de.interact.domain.expectations.specification.events.SystemPropertyExpectationAddedEvent
+import de.interact.domain.shared.EntityReference
 import de.interact.domain.testtwin.api.event.UnitTestAddedEvent
 import de.interact.domain.testtwin.spi.UnitTestAddedEventListener
 
@@ -25,7 +26,8 @@ class InteractionExpectationDerivationService(
                 interaction.reactions.map { it.interfaceId }.toSet()
             )
             newExpectation = unitTestBasedInteractionExpectations.save(newExpectation)
-            eventPublisher.publish(InteractionExpectationAddedEvent.UnitTestBasedInteractionExpectationAddedEvent(newExpectation.id))
+            eventPublisher.publish(InteractionExpectationAddedEvent.UnitTestBasedInteractionExpectationAddedEvent(
+                EntityReference(newExpectation.id, newExpectation.version)))
         }
     }
 

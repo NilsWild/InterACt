@@ -42,29 +42,29 @@ class TestTwinManager(
         partialVersion = Version.versionOf.modify(partialVersion) {EntityReference(component)}
 
         if (version == null) {
-            versions save partialVersion
-            newInterfaces = partialVersion.listeningTo + partialVersion.sendingTo
+            version = versions save partialVersion
+            newInterfaces = version.listeningTo + version.sendingTo
             newUnitTestCases =
-                partialVersion.testedBy.flatMap { it.templateFor.filterIsInstance<UnitTest>() }.toSet()
+                version.testedBy.flatMap { it.templateFor.filterIsInstance<UnitTest>() }.toSet()
             newInteractionTestCases =
-                partialVersion.testedBy.flatMap { it.templateFor.filterIsInstance<InteractionTest>() }
+                version.testedBy.flatMap { it.templateFor.filterIsInstance<InteractionTest>() }
                     .toSet()
         } else {
             val originalInterfaces = version.listeningTo + version.sendingTo
             val originalUnitTestCases =
-                version.testedBy.flatMap { it.templateFor.filterIsInstance<UnitTest>() }.toSet()
+                version.testedBy.flatMap { it.templateFor.filterIsInstance<UnitTest>() }.map{ it.id }.toSet()
             val originalInteractionTestCases =
-                version.testedBy.flatMap { it.templateFor.filterIsInstance<InteractionTest>() }.toSet()
+                version.testedBy.flatMap { it.templateFor.filterIsInstance<InteractionTest>() }.map{ it.id }.toSet()
             version = version.mergeWithVersionInfo(partialVersion)
-            versions save version
+            version = versions save version
             val interfacesAfterUpdate = version.listeningTo + version.sendingTo
             newInterfaces = interfacesAfterUpdate - originalInterfaces
             val unitTestCasesAfterUpdate =
                 version.testedBy.flatMap { it.templateFor.filterIsInstance<UnitTest>() }.toSet()
             val interactionTestCasesAfterUpdate =
                 version.testedBy.flatMap { it.templateFor.filterIsInstance<InteractionTest>() }.toSet()
-            newUnitTestCases = unitTestCasesAfterUpdate - originalUnitTestCases
-            newInteractionTestCases = interactionTestCasesAfterUpdate - originalInteractionTestCases
+            newUnitTestCases = unitTestCasesAfterUpdate.filter { !originalUnitTestCases.contains(it.id) }.toSet()
+            newInteractionTestCases = interactionTestCasesAfterUpdate.filter { !originalInteractionTestCases.contains(it.id) }.toSet()
         }
         newInterfaces.forEach {
             interfaceAddedEventPublisher.publishNewInterface(

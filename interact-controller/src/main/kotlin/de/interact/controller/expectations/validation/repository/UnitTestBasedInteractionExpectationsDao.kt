@@ -4,6 +4,7 @@ import de.interact.controller.persistence.domain.*
 import de.interact.domain.expectations.validation.interactionexpectation.InteractionExpectation
 import de.interact.domain.expectations.validation.spi.UnitTestBasedInteractionExpectations
 import de.interact.domain.shared.UnitTestBasedInteractionExpectationId
+import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.util.*
 

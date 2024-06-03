@@ -26,8 +26,8 @@ fun InteractionGraph.leadsTo(interfaceId: InterfaceId): Boolean {
     val toTraverse: Queue<Interaction> = LinkedList()
     toTraverse.addAll(sinks)
     while (toTraverse.isNotEmpty()) {
-        val current = toTraverse.remove()
-        if (current.to.map { it.id }.contains(interfaceId)) {
+        val current = toTraverse.poll()
+        if (current.from.map { it.id }.contains(interfaceId)) {
             return true
         }
         toTraverse.addAll(reverseAdjacencyMap[current]!!)
@@ -133,10 +133,10 @@ private fun InteractionGraph.findFirstTraversingReverseAdjacencyMap(start: Inter
 
 fun InteractionGraph.addInteraction(newInteraction: Interaction, prevInteractions: Set<Interaction> = emptySet()): InteractionGraph {
     val newInteractions = interactions + newInteraction
-    val newAdjacencyMap =
-        adjacencyMap + prevInteractions.map { it to (adjacencyMap[it] ?: emptySet()) + newInteraction }
+    val newAdjacencyMap = adjacencyMap +
+        prevInteractions.map { it to (adjacencyMap[it] ?: emptySet()) + newInteraction }
             .toMap() + (newInteraction to emptySet())
-    val newReverseAdjacencyMap = newAdjacencyMap.entries.fold(reverseAdjacencyMap) { acc, (k, v) ->
+    val newReverseAdjacencyMap = mapOf(newInteraction to prevInteractions) + newAdjacencyMap.entries.fold(reverseAdjacencyMap) { acc, (k, v) ->
         v.fold(acc) { acc2, it ->
             acc2 + (it to (acc[it] ?: emptySet()) + k)
         }

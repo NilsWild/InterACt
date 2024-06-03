@@ -5,6 +5,7 @@ import de.interact.domain.shared.Entity
 import de.interact.domain.shared.EntityReference
 import de.interact.domain.shared.InteractionExpectationId
 import de.interact.domain.shared.ValidationPlanId
+import java.util.*
 
 sealed class ValidationPlan: Entity<ValidationPlanId>() {
     abstract val candidateFor: EntityReference<InteractionExpectationId>
@@ -13,7 +14,7 @@ sealed class ValidationPlan: Entity<ValidationPlanId>() {
     data class PendingValidationPlan(
         override val candidateFor: EntityReference<InteractionExpectationId>,
         override val interactionGraph: InteractionGraph,
-        override val id: ValidationPlanId,
+        override val id: ValidationPlanId = ValidationPlanId(UUID.randomUUID()),
         override val version: Long? = null
     ) : ValidationPlan()
 
