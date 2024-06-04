@@ -64,11 +64,7 @@ internal fun InteractionGraph.handle(test: Test): InteractionGraph {
 fun InteractionGraph.replaceInteractions(replacements: Map<Interaction, Interaction>): InteractionGraph {
     val newInteractions = interactions.map { replacements[it]!! }.toSet()
     val newAdjacencyMap = adjacencyMap.map { (k, v) -> replacements[k]!! to v.map { replacements[it]!! }.toSet() }.toMap()
-    val newReverseAdjacencyMap = newAdjacencyMap.entries.fold(reverseAdjacencyMap) { acc, (k, v) ->
-        v.fold(acc) { acc2, it ->
-            acc2 + (it to (acc[it] ?: emptySet()) + k)
-        }
-    }
+    val newReverseAdjacencyMap = reverseAdjacencyMap.map { (k, v) -> replacements[k]!! to v.map { replacements[it]!! }.toSet() }.toMap()
 
     return this.copy(
         interactions = newInteractions,

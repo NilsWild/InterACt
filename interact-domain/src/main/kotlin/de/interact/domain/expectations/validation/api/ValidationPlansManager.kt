@@ -225,13 +225,12 @@ class ValidationPlansManager(
         val nextInteractionsToTest = interactionGraph.interactions.filterIsInstance<Interaction.Finished.Validated>().flatMap {
             interactionGraph.adjacencyMap[it]!!
         }.filterIsInstance<Interaction.Pending>().filter {
-            !interactionGraph.reverseAdjacencyMap[it]!!.any { it !is Interaction.Finished.Validated }
+            interactionGraph.reverseAdjacencyMap[it]!!.all { it is Interaction.Finished.Validated }
         }
 
         return if (nextInteractionsToTest.isEmpty()) {
             validationPlan
         } else {
-            // traverse reverseAdjacencymatrix for each nextInteractionToTest to find last occurence of TestCase. Copy the replacements and add the replacements caused by preceeding validated tests
             val replacements = interactionGraph.interactions.map {
                 if(it is Interaction.Pending && nextInteractionsToTest.contains(it)) {
                     val lastManipulation = interactionGraph.findFirstInteractionTraversingReverseAdjacencyMap(it){ interaction ->
@@ -262,7 +261,8 @@ class ValidationPlansManager(
                         ),
                         it.from,
                         it.to,
-                        it.id
+                        it.id,
+                        it.version
                     )
                 } else {
                     it to it
