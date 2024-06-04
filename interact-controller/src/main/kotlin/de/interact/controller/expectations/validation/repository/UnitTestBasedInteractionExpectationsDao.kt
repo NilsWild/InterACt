@@ -3,13 +3,28 @@ package de.interact.controller.expectations.validation.repository
 import de.interact.controller.persistence.domain.*
 import de.interact.domain.expectations.validation.interactionexpectation.InteractionExpectation
 import de.interact.domain.expectations.validation.spi.UnitTestBasedInteractionExpectations
+import de.interact.domain.shared.EntityReference
+import de.interact.domain.shared.InteractionExpectationId
 import de.interact.domain.shared.UnitTestBasedInteractionExpectationId
+import de.interact.domain.shared.UnitTestId
+import org.springframework.data.neo4j.repository.query.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.util.*
 
 interface UnitTestBasedInteractionExpectationsRepository{
     fun findExpectationById(id: UUID): UnitTestBasedInteractionExpectationProjection?
+    @Query("MATCH (c:$UNIT_TEST_NODE_LABEL{id:\$test}) " +
+            "WITH COLLECT {CALL apoc.path.subgraphNodes(c,{relationshipFilter:\"" +
+            ">$TRIGGERED_MESSAGES_RELATIONSHIP_LABEL|>$RECEIVED_BY_RELATIONSHIP_LABEL|" +
+            "<$BOUNT_TO_RELATIONSHIP_LABEL|<$SENT_BY_RELATIONSHIP_LABEL|<$TRIGGERED_MESSAGES_RELATIONSHIP_LABEL\"}) " +
+            "YIELD node} as nodes " +
+            "WITH [n in nodes WHERE n:Message] AS messages " +
+            "UNWIND messages as message " +
+            "MATCH (message)<-[:EXPECT_FROM]-(exp) " +
+            "RETURN exp"
+    )
+    fun findExpectationPotentiallyDependantOn(test: UUID): Set<UnitTestBasedInteractionExpectationReferenceProjection>
 }
 
 @Service
@@ -18,6 +33,11 @@ class UnitTestBasedInteractionExpectationsDao(
 ): UnitTestBasedInteractionExpectations {
     override fun find(id: UnitTestBasedInteractionExpectationId): InteractionExpectation.UnitTestBasedInteractionExpectation? {
         return repository.findExpectationById(id.value)?.toDomain()
+    }
+
+    override fun findInteractionExpectationsPotentiallyDependantOn(test: EntityReference<UnitTestId>): Set<EntityReference<UnitTestBasedInteractionExpectationId>> {
+        //nimm den test stimulus und gehe rückwärts bis das from interface einer expectation getroffen wird
+        return repository.findExpectationPotentiallyDependantOn(test.id.value).map { it.toEntityReference() }.toSet()
     }
 }
 

@@ -132,3 +132,7 @@ fun InteractionExpectationReferenceProjection.toEntityReference(): EntityReferen
         else -> throw IllegalArgumentException("Unknown InteractionExpectationReference")
     }
 }
+
+fun UnitTestBasedInteractionExpectationReferenceProjection.toEntityReference(): EntityReference<UnitTestBasedInteractionExpectationId> {
+    return EntityReference(UnitTestBasedInteractionExpectationId(id),version)
+}

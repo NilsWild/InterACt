@@ -185,7 +185,7 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
 
 private fun ValidationPlanProjection.toDomain(): ValidationPlan {
 
-    val mappedGraph = InteractionGraph(id = InteractionGraphId(interactionGraph.id), version = interactionGraph.version)
+    var mappedGraph = InteractionGraph(version = interactionGraph.version)
     val interactions = interactionGraph.interactions.map { interaction ->
         when {
             interaction.labels.contains(PENDING_INTERACTION_NODE_LABEL) -> Interaction.Pending(
@@ -322,7 +322,7 @@ private fun ValidationPlanProjection.toDomain(): ValidationPlan {
             interactions.find { it.id.value == previous.id }!!
         }.toSet()
         val mappedInteraction = interactions.first { it.id.value == interaction.id }
-        mappedGraph.addInteraction(mappedInteraction, previous)
+        mappedGraph = mappedGraph.addInteraction(mappedInteraction, previous)
     }
 
     return when {

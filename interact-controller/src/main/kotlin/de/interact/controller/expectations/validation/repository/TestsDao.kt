@@ -25,6 +25,11 @@ interface TestsRepository: org.springframework.data.repository.Repository<Concre
     fun findUnitTestThatReceivedMessageByInterface(
         receivedByInterfaceId: UUID
     ): Set<TestProjection>
+
+    fun findTestByTemplateIdAndParameters(
+        derivedFrom: UUID,
+        parameters: List<String>
+    ): TestProjection?
 }
 
 @Service
@@ -37,6 +42,10 @@ class TestsDao(
 
     override fun findUnitTestsReceivingBy(nextInterface: Interface.IncomingInterface): Set<Test> {
         return repository.findUnitTestThatReceivedMessageByInterface(nextInterface.id.value).map { it.toDomain() }.toSet()
+    }
+
+    override fun findTestByDerivedFromAndParameters(derivedFrom: AbstractTestId, parameters: List<TestParameter>): Test? {
+        return repository.findTestByTemplateIdAndParameters(derivedFrom.value, parameters.map { it.value.toString() })?.toDomain()
     }
 }
 

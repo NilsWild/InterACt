@@ -1,10 +1,9 @@
 package de.interact.domain.expectations.validation.plan
 
+import com.fasterxml.uuid.Generators
 import de.interact.domain.expectations.validation.test.Test
 import de.interact.domain.expectations.validation.test.isEqualTo
-import de.interact.domain.shared.Entity
-import de.interact.domain.shared.InteractionGraphId
-import de.interact.domain.shared.InterfaceId
+import de.interact.domain.shared.*
 import java.util.*
 import java.util.function.Predicate
 
@@ -12,11 +11,24 @@ data class InteractionGraph(
     val interactions: Set<Interaction> = emptySet(),
     val adjacencyMap: Map<Interaction, Set<Interaction>> = emptyMap(),
     val reverseAdjacencyMap: Map<Interaction, Set<Interaction>> = emptyMap(),
-    override val id: InteractionGraphId = InteractionGraphId(UUID.randomUUID()),
     override val version: Long? = null
-):  Entity<InteractionGraphId>()
+):  Entity<InteractionGraphId>() {
+    override val id: InteractionGraphId = InteractionGraphId(
+        if(source != null) Generators.nameBasedGenerator().generate(hash(source!!)) else UUID.randomUUID()
+    )
+}
 
 val InteractionGraph.sinks: Set<Interaction> get() = interactions.filter { adjacencyMap[it]!!.isEmpty() }.toSet()
+
+val InteractionGraph.source: Interaction? get() = interactions.firstOrNull() { reverseAdjacencyMap[it]!!.isEmpty() }
+
+private fun InteractionGraph.hash(interaction: Interaction) : String {
+    return if(adjacencyMap[interaction]!!.isEmpty()) {
+        hashedSha256(interaction.from.sortedBy { it.id.value }, interaction.to.sortedBy { it.id.value })
+    } else {
+        hashedSha256(interaction.from.sortedBy { it.id.value }, interaction.to.sortedBy { it.id.value }, adjacencyMap[interaction]!!.map { hash(it) }.sorted())
+    }
+}
 
 fun InteractionGraph.leadsTo(interfaceIds: Set<InterfaceId>): Boolean {
     return interfaceIds.all { leadsTo(it) }
@@ -27,7 +39,7 @@ fun InteractionGraph.leadsTo(interfaceId: InterfaceId): Boolean {
     toTraverse.addAll(sinks)
     while (toTraverse.isNotEmpty()) {
         val current = toTraverse.poll()
-        if (current.from.map { it.id }.contains(interfaceId)) {
+        if (current.from.map { it.id }.contains(interfaceId) || current.to.map { it.id }.contains(interfaceId)) {
             return true
         }
         toTraverse.addAll(reverseAdjacencyMap[current]!!)
@@ -46,12 +58,10 @@ internal fun InteractionGraph.handle(test: Test): InteractionGraph {
         }
     }.toMap()
 
-    val newGraph = this.replaceInteractions(replacements)
-
-    return newGraph.updateInteractions()
+    return this.replaceInteractions(replacements)
 }
 
-private fun InteractionGraph.replaceInteractions(replacements: Map<Interaction, Interaction>): InteractionGraph {
+fun InteractionGraph.replaceInteractions(replacements: Map<Interaction, Interaction>): InteractionGraph {
     val newInteractions = interactions.map { replacements[it]!! }.toSet()
     val newAdjacencyMap = adjacencyMap.map { (k, v) -> replacements[k]!! to v.map { replacements[it]!! }.toSet() }.toMap()
     val newReverseAdjacencyMap = newAdjacencyMap.entries.fold(reverseAdjacencyMap) { acc, (k, v) ->
@@ -67,58 +77,7 @@ private fun InteractionGraph.replaceInteractions(replacements: Map<Interaction, 
     )
 }
 
-private fun InteractionGraph.updateInteractions(): InteractionGraph {
-    val nextInteractionsToTest = interactions.filterIsInstance<Interaction.Finished.Validated>().flatMap {
-        adjacencyMap[it]!!
-    }.filterIsInstance<Interaction.Pending>().filter {
-        !reverseAdjacencyMap[it]!!.any { it !is Interaction.Finished.Validated }
-    }
-
-    return if (nextInteractionsToTest.isEmpty()) {
-        this
-    } else {
-        // traverse reverseAdjacencymatrix for each nextInteractionToTest to find last occurence of TestCase. Copy the replacements and add the replacements caused by preceeding validated tests
-        val replacements = interactions.map {
-            if(it is Interaction.Pending && nextInteractionsToTest.contains(it)) {
-                val lastManipulation = this.findFirstTraversingReverseAdjacencyMap(it){ interaction ->
-                    interaction is Interaction.Finished.Validated && interaction.testCase.derivedFrom == it.testCase.deriveFrom
-                }
-                if(lastManipulation != null){
-                    it to Interaction.Executable(
-                        it.derivedFrom,
-                        TestCase.ExecutableTestCase(
-                            it.testCase.deriveFrom,
-                            it.testCase.replacements,
-                            TODO(),
-                            it.testCase.id
-                        ),
-                        it.from,
-                        it.to,
-                        it.id
-                    )
-                } else {
-                  it to Interaction.Executable(
-                      it.derivedFrom,
-                      TestCase.ExecutableTestCase(
-                          it.testCase.deriveFrom,
-                          it.testCase.replacements,
-                          TODO(),
-                          it.testCase.id
-                      ),
-                      it.from,
-                      it.to,
-                      it.id
-                  )
-                }
-            } else {
-                it to it
-            }
-        }.toMap()
-        this.replaceInteractions(replacements)
-    }
-}
-
-private fun InteractionGraph.findFirstTraversingReverseAdjacencyMap(start: Interaction, predicate: Predicate<Interaction>): Interaction?{
+fun InteractionGraph.findFirstInteractionTraversingReverseAdjacencyMap(start: Interaction, predicate: Predicate<Interaction>): Interaction?{
     val toTraverse: Queue<Interaction> = LinkedList()
     toTraverse.add(start)
     while(toTraverse.isNotEmpty()) {
