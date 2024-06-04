@@ -1,12 +1,10 @@
 package de.interact.domain.testtwin.abstracttest.concretetest
 
+import arrow.optics.optics
 import com.fasterxml.jackson.annotation.JsonIdentityInfo
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.ObjectIdGenerators
-import de.interact.domain.shared.InteractionTestId
-import de.interact.domain.shared.TestId
-import de.interact.domain.shared.UnitTestId
-import de.interact.domain.shared.TestState
+import de.interact.domain.shared.*
 import de.interact.domain.testtwin.abstracttest.concretetest.message.Message
 import java.util.*
 import de.interact.domain.testobservation.model.ConcreteTestCase as ObservedTestCase
@@ -16,15 +14,17 @@ import de.interact.domain.testobservation.model.ConcreteTestCase as ObservedTest
     property = "@id"
 )
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
-sealed class ConcreteTestCase(
-    open val id: TestId,
-    open val identifier: ConcreteTestCaseIdentifier,
-    open val parameters: List<TestParameter>,
-    open val triggeredMessages: SortedSet<Message>,
-    open val status: TestState,
-    open val version: Long? = null
-)
+@optics
+sealed class ConcreteTestCase: Entity<TestId>(){
+    abstract val identifier: ConcreteTestCaseIdentifier
+    abstract val parameters: List<TestParameter>
+    abstract val triggeredMessages: SortedSet<Message>
+    abstract val status: TestState
 
+    companion object {}
+}
+
+@optics
 data class UnitTest(
     override val id: UnitTestId,
     override val identifier: ConcreteTestCaseIdentifier,
@@ -32,8 +32,11 @@ data class UnitTest(
     override val triggeredMessages: SortedSet<Message>,
     override val status: TestState,
     override val version: Long? = null
-) : ConcreteTestCase(id, identifier, parameters, triggeredMessages, status)
+) : ConcreteTestCase() {
+    companion object {}
+}
 
+@optics
 data class InteractionTest(
     override val id: InteractionTestId,
     override val identifier: ConcreteTestCaseIdentifier,
@@ -41,7 +44,9 @@ data class InteractionTest(
     override val triggeredMessages: SortedSet<Message>,
     override val status: TestState,
     override val version: Long? = null
-) : ConcreteTestCase(id, identifier, parameters, triggeredMessages, status)
+) : ConcreteTestCase() {
+    companion object {}
+}
 
 @JvmInline
 value class ConcreteTestCaseIdentifier(val value: String) {

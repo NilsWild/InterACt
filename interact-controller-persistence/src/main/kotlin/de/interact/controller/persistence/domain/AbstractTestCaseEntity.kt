@@ -29,9 +29,8 @@ fun abstractTestCaseEntityReference(id: AbstractTestId, version: Long?): Abstrac
     }
 }
 
-fun abstractTestCaseEntity(id: AbstractTestId, identifier: AbstractTestCaseIdentifier, templateFor: Set<ConcreteTestCaseEntity>): AbstractTestCaseEntity{
-    return AbstractTestCaseEntity().also {
-        it.id = id.value
+fun abstractTestCaseEntity(id: AbstractTestId, identifier: AbstractTestCaseIdentifier, templateFor: Set<ConcreteTestCaseEntity>,version: Long?): AbstractTestCaseEntity{
+    return abstractTestCaseEntityReference(id, version).also {
         it.identifier = identifier.value
         it.templateFor = templateFor
     }

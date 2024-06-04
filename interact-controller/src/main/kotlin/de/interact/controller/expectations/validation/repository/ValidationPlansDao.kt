@@ -19,13 +19,14 @@ interface ValidationPlansRepository :
         "MATCH p = (vp:$INTERACTION_EXPECTATION_VALIDATION_PLAN_NODE_LABEL)-[:$INTERACTION_GRAPH_RELATIONSHIP_LABEL]->" +
                 "(:$INTERACTION_GRAPH_NODE_LABEL)-[:$CONSISTS_OF_RELATIONSHIP_LABEL]->" +
                 "(:$INTERACTION_NODE_LABEL)-[:$VALIDATED_BY_RELATIONSHIP_LABEL]->" +
-                "(:$EXECUTABLE_TEST_CASE_NODE_LABEL{derivedFrom:\$derivedFrom, parameters:\$parameters})-[]->() " +
-                "RETURN vp, collect(nodes(p)), collect(relationships(p))"
+                "(:$EXECUTABLE_TEST_CASE_NODE_LABEL{parameters:\$parameters})-[:$DERIVED_FROM_ABSTRACT_TEST_CASE_RELATIONSHIP_LABEL]->(:$ABSTRACT_TEST_CASE_NODE_LABEL{id:\$derivedFrom}) " +
+                "RETURN vp.id"
     )
     fun findValidationPlanWaitingForTest(
         derivedFrom: UUID,
         parameters: List<String>
-    ): List<ValidationPlanProjection>
+    ): List<UUID>
+    fun findValidationPlanById(id: UUID): ValidationPlanProjection?
 }
 
 @Service
@@ -37,7 +38,7 @@ class ValidationPlansDao(
         return repository.findValidationPlanWaitingForTest(
             test.derivedFrom.id.value,
             test.parameters.map { it.toString() }
-        ).map { it.toDomain() as ValidationPlan.PendingValidationPlan }.toSet()
+        ).map { repository.findValidationPlanById(it)!!.toDomain() as ValidationPlan.PendingValidationPlan }.toSet()
     }
 
     override fun save(validationPlan: ValidationPlan): ValidationPlan {

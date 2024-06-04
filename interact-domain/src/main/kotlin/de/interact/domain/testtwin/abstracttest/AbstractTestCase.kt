@@ -1,22 +1,18 @@
 package de.interact.domain.testtwin.abstracttest
 
+import arrow.optics.optics
 import de.interact.domain.shared.AbstractTestId
+import de.interact.domain.shared.Entity
 import de.interact.domain.testtwin.abstracttest.concretetest.ConcreteTestCase
 
+@optics
 data class AbstractTestCase(
-    val id: AbstractTestId,
-    val identifier: AbstractTestCaseIdentifier
-) {
-    constructor(
-        id: AbstractTestId,
-        identifier: AbstractTestCaseIdentifier,
-        templateFor: Set<ConcreteTestCase>
-    ) : this(id, identifier) {
-        this.templateFor = templateFor
-    }
-
-    var templateFor: Set<ConcreteTestCase> = setOf()
-        internal set
+    override val id: AbstractTestId,
+    val identifier: AbstractTestCaseIdentifier,
+    var templateFor: Set<ConcreteTestCase> = emptySet(),
+    override val version: Long? = null
+): Entity<AbstractTestId>(){
+    companion object {}
 }
 
 @JvmInline

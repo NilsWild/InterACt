@@ -9,9 +9,9 @@ import de.interact.domain.testtwin.api.event.IncomingInterfaceAddedToVersionEven
 import de.interact.domain.testtwin.api.event.InteractionTestAddedEvent
 import de.interact.domain.testtwin.api.event.OutgoingInterfaceAddedToVersionEvent
 import de.interact.domain.testtwin.api.event.UnitTestAddedEvent
-import de.interact.domain.testtwin.`interface`.IncomingInterface
-import de.interact.domain.testtwin.`interface`.Interface
-import de.interact.domain.testtwin.`interface`.OutgoingInterface
+import de.interact.domain.testtwin.componentinterface.IncomingInterface
+import de.interact.domain.testtwin.componentinterface.ComponentInterface
+import de.interact.domain.testtwin.componentinterface.OutgoingInterface
 import de.interact.domain.testtwin.spi.*
 
 class TestTwinManager(
@@ -35,7 +35,7 @@ class TestTwinManager(
         component = getOrCreateComponent(component)
         var version = getExistingVersionForComponent(component, partialVersion)
 
-        val newInterfaces: Set<Interface>
+        val newInterfaces: Set<ComponentInterface>
         val newUnitTestCases: Set<UnitTest>
         val newInteractionTestCases: Set<InteractionTest>
 

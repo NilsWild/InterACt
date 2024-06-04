@@ -20,8 +20,8 @@ import de.interact.domain.testtwin.abstracttest.concretetest.message.*
 import de.interact.domain.testtwin.abstracttest.concretetest.message.ComponentResponseMessage
 import de.interact.domain.testtwin.abstracttest.concretetest.testCaseIdentifier
 import de.interact.domain.testtwin.api.dto.PartialComponentVersionModel
-import de.interact.domain.testtwin.`interface`.IncomingInterface
-import de.interact.domain.testtwin.`interface`.OutgoingInterface
+import de.interact.domain.testtwin.componentinterface.IncomingInterface
+import de.interact.domain.testtwin.componentinterface.OutgoingInterface
 import de.interact.utils.Logging
 import de.interact.utils.logger
 import io.vertx.core.Vertx
@@ -109,12 +109,30 @@ class ObservationControllerApi(private val url: String, vertx: Vertx) :
                 EntityReference(component),
                 VersionIdentifier(observedComponent.version.value),
                 testCases,
-                testCases.asSequence().flatMap { it.templateFor }.flatMap { it.triggeredMessages }
-                    .filterIsInstance<Message.ReceivedMessage>()
-                    .map { it.receivedBy }.toSet(),
-                testCases.asSequence().flatMap { it.templateFor }.flatMap { it.triggeredMessages }
-                    .filterIsInstance<Message.SentMessage>()
-                    .map { it.sentBy }.toSet(),
+                observedComponent.testedBy.asSequence().flatMap { it.templateFor }.map { it.observedBehavior }.flatMap { it.messageSequence }
+                    .filterIsInstance<de.interact.domain.testobservation.model.Message.ReceivedMessage>()
+                    .map { message ->
+                        IncomingInterface(
+                            IncomingInterfaceId(
+                                Generators.nameBasedGenerator()
+                                    .generate("$versionId:IncomingInterface:${message.receivedBy.protocol}:${message.receivedBy.protocolData}")
+                            ),
+                            Protocol(message.receivedBy.protocol.value),
+                            ProtocolData(message.receivedBy.protocolData.data)
+                        )
+                    }.toSet(),
+                observedComponent.testedBy.asSequence().flatMap { it.templateFor }.map { it.observedBehavior }.flatMap { it.messageSequence }
+                    .filterIsInstance<de.interact.domain.testobservation.model.Message.SentMessage>()
+                    .map { message ->
+                        OutgoingInterface(
+                            OutgoingInterfaceId(
+                                Generators.nameBasedGenerator()
+                                    .generate("$versionId:OutgoingInterface:${message.sentBy.protocol}:${message.sentBy.protocolData}")
+                            ),
+                            Protocol(message.sentBy.protocol.value),
+                            ProtocolData(message.sentBy.protocolData.data)
+                        )
+                    }.toSet(),
                 versionId
             )
         )
@@ -138,7 +156,7 @@ class ObservationControllerApi(private val url: String, vertx: Vertx) :
                     StimulusMessage(
                         StimulusMessageId(UUID.randomUUID()),
                         MessageValue(message.value.value),
-                        receivedBy
+                        EntityReference(receivedBy.id, null)
                     ).also {
                         convertedMessages += it
                     }
@@ -157,9 +175,12 @@ class ObservationControllerApi(private val url: String, vertx: Vertx) :
                         ComponentResponseMessageId(UUID.randomUUID()),
                         MessageValue(message.value.value),
                         convertedMessages.size,
-                        sentBy,
-                        message.dependsOn.map { convertedMessages[it.order] as de.interact.domain.testtwin.abstracttest.concretetest.message.Message.ReceivedMessage })
-                        .also {
+                        EntityReference(sentBy.id, null),
+                        message.dependsOn.map {
+                            val m = convertedMessages[it.order] as Message.ReceivedMessage
+                            EntityReference(m.id, m.version)
+                        }
+                    ).also {
                             convertedMessages += it
                         }
                 }
@@ -173,12 +194,13 @@ class ObservationControllerApi(private val url: String, vertx: Vertx) :
                         Protocol(message.receivedBy.protocol.value),
                         ProtocolData(message.receivedBy.protocolData.data)
                     )
+                    val m = convertedMessages[message.reactionTo.order] as ComponentResponseMessage
                     EnvironmentResponseMessage(
                         EnvironmentResponseMessageId(UUID.randomUUID()),
                         MessageValue(message.value.value),
                         convertedMessages.size,
-                        receivedBy,
-                        convertedMessages[message.reactionTo.order] as ComponentResponseMessage
+                        EntityReference(receivedBy.id, null),
+                        EntityReference(m.id, m.version)
                     ).also {
                         convertedMessages += it
                     }

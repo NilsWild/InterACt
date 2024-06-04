@@ -14,6 +14,8 @@ const val SYSTEM_INTERACTION_EXPECTATION_NODE_LABEL = "SystemInteractionExpectat
 const val EXPECT_FROM_RELATIONSHIP_LABEL = "EXPECT_FROM"
 const val EXPECT_TO_RELATIONSHIP_LABEL = "EXPECT_TO"
 const val REQUIRES_RELATIONSHIP_LABEL = "REQUIRES"
+const val DERIVED_FROM_TEST_RELATIONSHIP_LABEL = "DERIVED_FROM_TEST"
+const val DERIVED_FROM_PROPERTY_RELATIONSHIP_LABEL = "DERIVED_FROM_PROPERTY"
 
 @Node(INTERACTION_EXPECTATION_NODE_LABEL)
 sealed class InteractionExpectationEntity: Entity() {
@@ -44,7 +46,7 @@ class UnitTestBasedInteractionExpectationEntity : InteractionExpectationEntity()
         labels += setOf(UNIT_TEST_BASED_INTERACTION_EXPECTATION_NODE_LABEL)
     }
 
-    @Relationship(type = "DERIVED_FROM")
+    @Relationship(type = DERIVED_FROM_TEST_RELATIONSHIP_LABEL)
     lateinit var derivedFrom: UnitTestEntity
 }
 
@@ -55,7 +57,7 @@ class SystemInteractionExpectationEntity : InteractionExpectationEntity() {
         labels += setOf(SYSTEM_INTERACTION_EXPECTATION_NODE_LABEL)
     }
 
-    @Relationship(type = "DERIVED_FROM")
+    @Relationship(type = DERIVED_FROM_PROPERTY_RELATIONSHIP_LABEL)
     lateinit var derivedFrom: SystemPropertyExpectationEntity
 }
 

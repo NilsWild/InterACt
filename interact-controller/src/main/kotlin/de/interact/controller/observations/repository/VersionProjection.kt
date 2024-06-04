@@ -1,9 +1,6 @@
 package de.interact.controller.observations.repository
 
-import de.interact.controller.persistence.domain.COMPONENT_RESPONSE_NODE_LABEL
-import de.interact.controller.persistence.domain.ENVIRONMENT_RESPONSE_NODE_LABEL
-import de.interact.controller.persistence.domain.STIMULUS_NODE_LABEL
-import de.interact.controller.persistence.domain.UNIT_TEST_NODE_LABEL
+import de.interact.controller.persistence.domain.*
 import de.interact.domain.shared.*
 import de.interact.domain.shared.TestState
 import de.interact.domain.testtwin.Version
@@ -15,8 +12,8 @@ import de.interact.domain.testtwin.abstracttest.concretetest.InteractionTest
 import de.interact.domain.testtwin.abstracttest.concretetest.TestParameter
 import de.interact.domain.testtwin.abstracttest.concretetest.UnitTest
 import de.interact.domain.testtwin.abstracttest.concretetest.message.*
-import de.interact.domain.testtwin.`interface`.IncomingInterface
-import de.interact.domain.testtwin.`interface`.OutgoingInterface
+import de.interact.domain.testtwin.componentinterface.IncomingInterface
+import de.interact.domain.testtwin.componentinterface.OutgoingInterface
 import java.util.*
 
 interface VersionProjection {
@@ -55,32 +52,21 @@ interface VersionProjection {
                 val labels: Set<String>
                 val receivedBy: ListeningTo?
                 val sentBy: SendingTo?
-                val dependsOn: Set<Dependency>
-                val reactionTo: Dependency?
+                val dependsOn: Set<ReceivedMessageReferenceProjection>
+                val reactionTo: ComponentResponseReferenceProjection?
                 val version: Long?
-
-                interface Dependency {
-                    val id: String
-                    val order: Int
-                    val labels: Set<String>
-                    val version: Long?
-                }
             }
         }
     }
 
-    interface ListeningTo {
-        val id: UUID
+    interface ListeningTo: IncomingInterfaceReferenceProjection {
         val protocol: String
         val protocolData: Map<String, String>
-        val version: Long?
     }
 
-    interface SendingTo {
-        val id: UUID
+    interface SendingTo: OutgoingInterfaceReferenceProjection {
         val protocol: String
         val protocolData: Map<String, String>
-        val version: Long?
     }
 }
 
@@ -95,61 +81,34 @@ fun VersionProjection.toVersion(): Version {
 
             concreteTest.triggeredMessages.forEach { message ->
                 if (message.labels.contains(STIMULUS_NODE_LABEL)) {
-                    val receivedBy = IncomingInterface(
-                        IncomingInterfaceId(message.receivedBy!!.id),
-                        Protocol(message.receivedBy!!.protocol),
-                        ProtocolData(message.receivedBy!!.protocolData),
-                        message.receivedBy!!.version
-                    )
                     StimulusMessage(
                         StimulusMessageId(message.id),
                         MessageValue(message.payload),
-                        atLeastOneMessageReceivedOn.firstOrNull { it == receivedBy }
-                            ?: receivedBy.also { atLeastOneMessageReceivedOn.add(it) },
+                        message.receivedBy!!.toEntityReference(),
                         message.version
                     ).also {
                         convertedMessages += it
                     }
                 } else if (message.labels.contains(COMPONENT_RESPONSE_NODE_LABEL)) {
-                    val sentTo = OutgoingInterface(
-                        OutgoingInterfaceId(message.sentBy!!.id),
-                        Protocol(message.sentBy!!.protocol),
-                        ProtocolData(message.sentBy!!.protocolData),
-                        message.sentBy!!.version
-                    )
                     ComponentResponseMessage(
                         ComponentResponseMessageId(message.id),
                         MessageValue(message.payload),
                         convertedMessages.size,
-                        atLeastOneMessageSendTo.firstOrNull { it == sentTo }
-                            ?: sentTo.also { atLeastOneMessageSendTo.add(it) },
+                        message.sentBy!!.toEntityReference(),
                         message.dependsOn.map {
-                            if (it.labels.contains(ENVIRONMENT_RESPONSE_NODE_LABEL)) {
-                                convertedMessages[it.order] as EnvironmentResponseMessage
-                            } else if (it.labels.contains(STIMULUS_NODE_LABEL)) {
-                                convertedMessages[it.order] as StimulusMessage
-                            } else {
-                                throw IllegalStateException("Unknown message type")
-                            }
+                            it.toEntityReference()
                         },
                         message.version
                     ).also {
                         convertedMessages += it
                     }
                 } else if (message.labels.contains(ENVIRONMENT_RESPONSE_NODE_LABEL)) {
-                    val receivedBy = IncomingInterface(
-                        IncomingInterfaceId(message.receivedBy!!.id),
-                        Protocol(message.receivedBy!!.protocol),
-                        ProtocolData(message.receivedBy!!.protocolData),
-                        message.receivedBy!!.version
-                    )
                     EnvironmentResponseMessage(
                         EnvironmentResponseMessageId(message.id),
                         MessageValue(message.payload),
                         convertedMessages.size,
-                        atLeastOneMessageReceivedOn.firstOrNull { it == receivedBy }
-                            ?: receivedBy.also { atLeastOneMessageReceivedOn.add(it) },
-                        convertedMessages[message.reactionTo!!.order] as ComponentResponseMessage,
+                        message.receivedBy!!.toEntityReference(),
+                        message.reactionTo!!.toEntityReference(),
                         message.version
                     ).also {
                         convertedMessages += it
@@ -188,7 +147,8 @@ fun VersionProjection.toVersion(): Version {
                             concreteTest.version
                         )
                     }
-                }.toSet()
+                }.toSet(),
+                abstractTest.version
             )
         }.toSet(),
         listeningTo.map {

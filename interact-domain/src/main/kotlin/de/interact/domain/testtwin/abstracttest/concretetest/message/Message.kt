@@ -1,32 +1,41 @@
 package de.interact.domain.testtwin.abstracttest.concretetest.message
 
+import arrow.optics.optics
 import com.fasterxml.jackson.annotation.JsonIdentityInfo
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.ObjectIdGenerators
 import de.interact.domain.shared.*
-import de.interact.domain.testtwin.`interface`.IncomingInterface
-import de.interact.domain.testtwin.`interface`.OutgoingInterface
+import de.interact.domain.testtwin.componentinterface.IncomingInterface
+import de.interact.domain.testtwin.componentinterface.OutgoingInterface
 
 @JsonIdentityInfo(
     generator = ObjectIdGenerators.UUIDGenerator::class,
     property = "@id"
 )
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
-sealed class Message : Comparable<Message> {
-    abstract val id: MessageId
+@optics
+sealed class Message : Entity<MessageId>(), Comparable<Message> {
+
     abstract val value: MessageValue
     abstract val order: Int
-    abstract val version: Long?
 
+    companion object {}
+
+    @optics
     sealed class SentMessage : Message() {
         abstract override val id: SentMessageId
-        abstract val sentBy: OutgoingInterface
-        abstract val dependsOn: Collection<ReceivedMessage>
+        abstract val sentBy: EntityReference<OutgoingInterfaceId>
+        abstract val dependsOn: Collection<EntityReference<ReceivedMessageId>>
+
+        companion object {}
     }
 
+    @optics
     sealed class ReceivedMessage : Message() {
         abstract override val id: ReceivedMessageId
-        abstract val receivedBy: IncomingInterface
+        abstract val receivedBy: EntityReference<IncomingInterfaceId>
+
+        companion object {}
     }
 
     override fun compareTo(other: Message): Int {
@@ -34,32 +43,41 @@ sealed class Message : Comparable<Message> {
     }
 }
 
+@optics
 data class StimulusMessage(
     override val id: StimulusMessageId,
     override val value: MessageValue,
-    override val receivedBy: IncomingInterface,
+    override val receivedBy: EntityReference<IncomingInterfaceId>,
     override val version: Long? = null
 ) : Message.ReceivedMessage() {
     override val order = 0
+
+    companion object {}
 }
 
+@optics
 data class ComponentResponseMessage(
     override val id: ComponentResponseMessageId,
     override val value: MessageValue,
     override val order: Int,
-    override val sentBy: OutgoingInterface,
-    override val dependsOn: Collection<ReceivedMessage>,
+    override val sentBy: EntityReference<OutgoingInterfaceId>,
+    override val dependsOn: Collection<EntityReference<ReceivedMessageId>>,
     override val version: Long? = null
-) : Message.SentMessage()
+) : Message.SentMessage() {
+    companion object {}
+}
 
+@optics
 data class EnvironmentResponseMessage(
     override val id: EnvironmentResponseMessageId,
     override val value: MessageValue,
     override val order: Int,
-    override val receivedBy: IncomingInterface,
-    val reactionTo: ComponentResponseMessage,
+    override val receivedBy: EntityReference<IncomingInterfaceId>,
+    val reactionTo: EntityReference<ComponentResponseMessageId>,
     override val version: Long? = null
-) : Message.ReceivedMessage()
+) : Message.ReceivedMessage() {
+    companion object {}
+}
 
 @JvmInline
 value class MessageValue(val value: String) {

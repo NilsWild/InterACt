@@ -12,6 +12,7 @@ const val EXECUTABLE_TEST_CASE_NODE_LABEL = "ExecutableTestCase"
 const val FINISHED_TEST_CASE_NODE_LABEL = "FinishedTestCase"
 const val VALIDATED_TEST_CASE_NODE_LABEL = "ValidatedTestCase"
 const val FAILED_TEST_CASE_NODE_LABEL = "FailedTestCase"
+const val DERIVED_FROM_ABSTRACT_TEST_CASE_RELATIONSHIP_LABEL = "DERIVED_FROM_ABSTRACT_TEST_CASE"
 
 @Node(TEST_CASE_NODE_LABEL)
 class TestCaseEntity: Entity() {
@@ -19,7 +20,7 @@ class TestCaseEntity: Entity() {
     @Relationship
     lateinit var replacements: Set<ReplacementEntity>
 
-    @Relationship
+    @Relationship(type = DERIVED_FROM_ABSTRACT_TEST_CASE_RELATIONSHIP_LABEL)
     lateinit var derivedFrom: AbstractTestCaseEntity
 
     lateinit var parameters: List<String>

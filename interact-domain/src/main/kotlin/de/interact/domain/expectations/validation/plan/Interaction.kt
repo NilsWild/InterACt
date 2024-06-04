@@ -58,10 +58,12 @@ internal fun Interaction.Executable.validate(test: Test): Interaction.Finished.V
             this.testCase.replacements,
             this.testCase.parameters,
             EntityReference(test.id, test.version),
-            this.testCase.id
+            this.testCase.id,
+            this.testCase.version
         ),
         this.from,
         this.to,
-        this.id
+        this.id,
+        this.version
     )
 }

@@ -51,6 +51,24 @@ class VersionsDao(
             version.version
         ).apply {
             val versionEntity = this
+            listeningTo = version.listeningTo.map {
+                val receivedBy = incomingInterfaceEntity(
+                    it.id,
+                    it.version,
+                    it.protocol,
+                    it.protocolData
+                )
+                listenTo.firstOrNull { it.id == receivedBy.id } ?: receivedBy.also { listenTo.add(it) }
+            }.toSet()
+            sendingTo = version.sendingTo.map {
+                val sentTo = outgoingInterfaceEntity(
+                    it.id,
+                    it.version,
+                    it.protocol,
+                    it.protocolData
+                )
+                sendTo.firstOrNull { it.id == sentTo.id } ?: sentTo.also { sendTo.add(it) }
+            }.toSet()
             testedBy = version.testedBy.map { abstractTest ->
                 abstractTestCaseEntity(abstractTest.id, abstractTest.identifier,
                     abstractTest.templateFor.map { concreteTest ->
@@ -59,43 +77,27 @@ class VersionsDao(
                         concreteTest.triggeredMessages.forEach { it ->
                             when (it) {
                                 is StimulusMessage -> {
-                                    val receivedBy = incomingInterfaceEntity(
-                                        it.receivedBy.id,
-                                        it.receivedBy.version,
-                                        it.receivedBy.protocol,
-                                        it.receivedBy.protocolData
-                                    )
                                     stimulusEntity(
                                         it.id,
                                         it.version,
                                         it.value.toString(),
                                         it.order,
-                                        listenTo.firstOrNull { it == receivedBy } ?: receivedBy.also {
-                                            listenTo.add(
-                                                it
-                                            )
-                                        }
+                                        listenTo.first { inter -> inter.id == it.receivedBy.id.value }
                                     ).also {
                                         convertedMessages += it
                                     }
                                 }
 
                                 is ComponentResponseMessage -> {
-                                    val sentTo = outgoingInterfaceEntity(
-                                        it.sentBy.id,
-                                        it.sentBy.version,
-                                        it.sentBy.protocol,
-                                        it.sentBy.protocolData
-                                    )
                                     componentResponseEntity(
                                         it.id,
                                         it.version,
                                         it.value.toString(),
                                         it.order,
-                                        sendTo.firstOrNull { it == sentTo } ?: sentTo.also { sendTo.add(it) }
+                                        sendTo.first { inter -> inter.id == it.sentBy.id.value }
                                     ).apply {
                                         dependsOn =
-                                            it.dependsOn.map { convertedMessages[it.order] as ReceivedMessageEntity }
+                                            it.dependsOn.map { it.toEntity() }
                                                 .toSortedSet()
                                     }.also {
                                         convertedMessages += it
@@ -103,25 +105,15 @@ class VersionsDao(
                                 }
 
                                 is EnvironmentResponseMessage -> {
-                                    val receivedBy = incomingInterfaceEntity(
-                                        it.receivedBy.id,
-                                        it.receivedBy.version,
-                                        it.receivedBy.protocol,
-                                        it.receivedBy.protocolData
-                                    )
                                     environmentResponseEntity(
                                         it.id,
                                         it.version,
                                         it.value.toString(),
                                         it.order,
-                                        listenTo.firstOrNull { it == receivedBy } ?: receivedBy.also {
-                                            listenTo.add(
-                                                it
-                                            )
-                                        }
+                                        listenTo.first { inter -> inter.id == it.receivedBy.id.value }
                                     ).apply {
                                         reactionTo =
-                                            convertedMessages[it.reactionTo.order] as ComponentResponseEntity
+                                            it.reactionTo.toEntity()
                                     }.also {
                                         convertedMessages += it
                                     }
@@ -149,26 +141,9 @@ class VersionsDao(
                                     status
                                 )
                         }
-                    }.toSet()
+                    }.toSet(),
+                    abstractTest.version
                 )
-            }.toSet()
-            listeningTo = version.listeningTo.map {
-                val receivedBy = incomingInterfaceEntity(
-                    it.id,
-                    it.version,
-                    it.protocol,
-                    it.protocolData
-                )
-                listenTo.firstOrNull { it.id == receivedBy.id } ?: receivedBy.also { listenTo.add(it) }
-            }.toSet()
-            sendingTo = version.sendingTo.map {
-                val sentTo = outgoingInterfaceEntity(
-                    it.id,
-                    it.version,
-                    it.protocol,
-                    it.protocolData
-                )
-                sendTo.firstOrNull { it.id == sentTo.id } ?: sentTo.also { sendTo.add(it) }
             }.toSet()
         }
         val ent = neo4jTemplate.saveAs(entity, VersionProjection::class.java)
