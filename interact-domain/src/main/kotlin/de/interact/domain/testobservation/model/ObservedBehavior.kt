@@ -22,10 +22,7 @@ data class ObservedBehavior(
     }
 
     fun addComponentResponse(message: MessageValue, sentBy: OutgoingInterface): ComponentResponseMessage {
-        if (messageSequence.isEmpty()) {
-            throw IllegalStateException("Cannot add component response message to empty message sequence")
-        }
-        val previous = messageSequence.last()
+        val previous = messageSequence.lastOrNull()
         val componentResponse = ComponentResponseMessage(
             message,
             observedFor,

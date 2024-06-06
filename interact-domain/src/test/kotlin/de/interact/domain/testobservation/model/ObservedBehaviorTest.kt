@@ -143,22 +143,6 @@ internal class ObservedBehaviorTest {
                 observedBehavior.addEnvironmentResponse(message, IncomingInterface(protocol, ProtocolData(mapOf())))
             }
         }
-
-        @ParameterizedTest
-        @CsvSource(
-            "message,protocol"
-        )
-        fun `addComponentRespone to Behavior that does not contain a StimulusMessage should fail`(
-            message: MessageValue,
-            protocol: Protocol
-        ) {
-            val testCase: ConcreteTestCase = mockk()
-            val observedBehavior = ObservedBehavior(testCase)
-
-            assertThrows<IllegalStateException> {
-                observedBehavior.addComponentResponse(message, OutgoingInterface(protocol, ProtocolData(mapOf())))
-            }
-        }
     }
 
 }

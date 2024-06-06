@@ -23,7 +23,7 @@ here: [InteractionTestExample](https://github.com/NilsWild/InteractionTestExampl
 ### preparing your project
 
 4. Add the following Maven Dependencies to your projects to be tested. Currently InterACt only supports SpringWebFlux
-   Clients.
+   Clients and webmvc.
 
         <dependency>
             <groupId>de.interact</groupId>
@@ -32,7 +32,12 @@ here: [InteractionTestExample](https://github.com/NilsWild/InteractionTestExampl
         </dependency>
         <dependency>
             <groupId>de.interact</groupId>
-            <artifactId>interact-observer-spring-rest</artifactId>
+            <artifactId>interact-observer-spring-webclient</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>de.interact</groupId>
+            <artifactId>interact-observer-spring-webmvc</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 

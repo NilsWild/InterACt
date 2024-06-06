@@ -12,7 +12,7 @@ import java.util.*
 
 @Repository
 interface InterfacesRepository: org.springframework.data.repository.Repository<IncomingInterfaceEntity, UUID> {
-    fun findIncomingInterfaceByBoundToBoundToId(boundToId: UUID): Set<IncomingInterfaceReferenceProjection>
+    fun findIncomingInterfacesByBoundToId(boundToId: UUID): Set<IncomingInterfaceReferenceProjection>
 }
 
 @Service
@@ -20,7 +20,7 @@ class InterfacesDao(
     private val repository: InterfacesRepository
 ): Interfaces {
     override fun findIncomingInterfacesBoundToOutgoingInterface(outgoingInterfaceId: OutgoingInterfaceId): Set<Interface.IncomingInterface> {
-        return repository.findIncomingInterfaceByBoundToBoundToId(outgoingInterfaceId.value).map { it.toDomain() }.toSet()
+        return repository.findIncomingInterfacesByBoundToId(outgoingInterfaceId.value).map { it.toDomain() }.toSet()
     }
 }
 

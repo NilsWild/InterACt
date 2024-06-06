@@ -10,7 +10,7 @@ class TestRestClient(private val client: WebClient) {
     fun prepare(method: HttpMethod, uri: String, message: RestMessage<*>): WebClient.RequestHeadersSpec<*> {
         val request = client.method(method)
             .uri(uri, *message.pathVariables.toTypedArray())
-            .headers { headers -> headers.addAll(message.headers) }
+            .headers { headers -> message.headers.forEach{ headers.addAll(it.key, it.value.split(","))} }
         message.body?.let { request.bodyValue(it) }
         return request
     }

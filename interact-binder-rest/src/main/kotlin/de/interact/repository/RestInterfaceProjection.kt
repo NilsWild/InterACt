@@ -14,7 +14,7 @@ interface IncomingRestInterfaceProjection : RestInterfaceProjection {
         IncomingInterfaceId(id),
          RestInterfaceData(
              protocolData["method"]!!,
-             protocolData["url"]!!,
+             protocolData["path"]!!,
              protocolData["request"] == "true"
          )
     )
@@ -25,7 +25,7 @@ interface OutgoingRestInterfaceProjection : RestInterfaceProjection {
         OutgoingInterfaceId(id),
         RestInterfaceData(
             protocolData["method"]!!,
-            protocolData["url"]!!,
+            protocolData["path"]!!,
             protocolData["request"] == "true"
         )
     )
@@ -41,7 +41,7 @@ interface IncomingRestInterfaceExpectationProjection : RestInterfaceExpectationP
         IndirectIncomingInterfaceExpectationId(id),
         RestInterfaceData(
             protocolData["method"]!!,
-            protocolData["url"]!!,
+            protocolData["path"]!!,
             protocolData["request"] == "true"
         )
     )
@@ -52,7 +52,7 @@ interface OutgoingRestInterfaceExpectationProjection : RestInterfaceExpectationP
         IndirectOutgoingInterfaceExpectationId(id),
         RestInterfaceData(
             protocolData["method"]!!,
-            protocolData["url"]!!,
+            protocolData["path"]!!,
             protocolData["request"] == "true"
         )
     )

@@ -49,11 +49,11 @@ data class StimulusMessage(
 data class ComponentResponseMessage(
     override val value: MessageValue,
     override val triggeredBy: ConcreteTestCase,
-    override val previous: Message,
+    override val previous: Message?,
     override val sentBy: OutgoingInterface
 ) : Message.SentMessage() {
     override val dependsOn: Collection<ReceivedMessage> = getPreviousReceivedMessages()
-    override val order = previous.order + 1
+    override val order = previous?.order?.plus(1) ?: 0
 }
 
 data class EnvironmentResponseMessage(

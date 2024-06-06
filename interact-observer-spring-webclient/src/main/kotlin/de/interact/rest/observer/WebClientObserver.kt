@@ -10,7 +10,6 @@ import de.interact.domain.testobservation.spi.MessageObserver
 import de.interact.rest.StringRestMessage
 import de.interact.rest.toMultiMap
 import de.interact.utils.Logging
-import de.interact.utils.MultiMap
 import de.interact.utils.logger
 import org.reactivestreams.Publisher
 import org.springframework.core.io.buffer.DataBuffer
@@ -23,22 +22,27 @@ import org.springframework.web.reactive.function.client.ClientRequest
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction
 import org.springframework.web.reactive.function.client.ExchangeFunction
+import org.springframework.web.util.UriComponentsBuilder
+import org.springframework.web.util.UriTemplate
 import reactor.core.publisher.Mono
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.jvm.optionals.getOrElse
 
-class WebClientObserver(private val isTestHarness: Boolean) : MessageObserver, ExchangeFilterFunction {
+class WebClientObserver : MessageObserver, ExchangeFilterFunction {
 
     override fun filter(request: ClientRequest, next: ExchangeFunction): Mono<ClientResponse> {
         val interfaceUrl = request
             .attribute("org.springframework.web.reactive.function.client.WebClient.uriTemplate").getOrElse {
                 request.url()
             }.toString()
-        val pathVariables = PathVariableExtractor.extractPathVariablesFromUrl(
+
+        val queryParameters = UriComponentsBuilder.fromUri(request.url()).build().queryParams.toMap().mapValues { it.value.joinToString(",") }
+        val patternMatch = PathVariableExtractor.extractPathVariablesFromUrl(
             interfaceUrl,
             request.url()
-        )?.uriVariables?.entries?.map { it.value } ?: emptyList()
+        )
+        val pathVariables = patternMatch?.uriVariables?.entries?.map { it.value } ?: emptyList()
         val method = request.method()
         val headers = request.headers()
         val originalBodyInserter: BodyInserter<*, in ClientHttpRequest?> = request.body()
@@ -48,11 +52,11 @@ class WebClientObserver(private val isTestHarness: Boolean) : MessageObserver, E
                 val loggingOutputMessage =
                     RequestObserverDecorator(
                         outputMessage,
-                        isTestHarness,
                         interfaceUrl,
+                        queryParameters,
                         pathVariables,
                         method,
-                        headers.toMultiMap()
+                        headers.toMultiMap().getMap().mapValues { it.value.joinToString(",") }
                     )
                 originalBodyInserter.insert(loggingOutputMessage, context)
             }
@@ -61,11 +65,11 @@ class WebClientObserver(private val isTestHarness: Boolean) : MessageObserver, E
             .flatMap { clientResponse: ClientResponse ->
                 clientResponse.bodyToMono(String::class.java).flatMap { body ->
                     RestObservationHelper.recordResponse(
-                        isTestHarness,
                         interfaceUrl,
+                        queryParameters,
                         pathVariables,
                         method,
-                        clientResponse.headers().asHttpHeaders().toMultiMap(),
+                        clientResponse.headers().asHttpHeaders().toMultiMap().getMap().mapValues { it.value.joinToString(",") },
                         body
                     )
                     Mono.just(clientResponse.mutate().body(body).build())
@@ -75,12 +79,12 @@ class WebClientObserver(private val isTestHarness: Boolean) : MessageObserver, E
     }
 
     private class RequestObserverDecorator(
-        val request: ClientHttpRequest,
-        val isTestHarness: Boolean,
+        request: ClientHttpRequest,
         val interfaceUrl: String,
+        val queryParameters: Map<String, String>,
         val pathVariables: List<String>,
         val httpMethod: HttpMethod,
-        val headers: MultiMap<String, String>,
+        val headers: Map<String, String>,
     ) : ClientHttpRequestDecorator(request) {
         private val alreadyLogged = AtomicBoolean(false)
         override fun writeWith(body: Publisher<out DataBuffer>): Mono<Void> {
@@ -91,8 +95,8 @@ class WebClientObserver(private val isTestHarness: Boolean) : MessageObserver, E
                     .doOnNext { content ->
                         val responseBody = content.toString(StandardCharsets.UTF_8)
                         RestObservationHelper.recordRequest(
-                            isTestHarness,
                             interfaceUrl,
+                            queryParameters,
                             pathVariables,
                             httpMethod,
                             headers,
@@ -107,8 +111,8 @@ class WebClientObserver(private val isTestHarness: Boolean) : MessageObserver, E
             val needToLog = alreadyLogged.compareAndSet(false, true)
             if (needToLog) {
                 RestObservationHelper.recordRequest(
-                    isTestHarness,
                     interfaceUrl,
+                    queryParameters,
                     pathVariables,
                     httpMethod,
                     headers,
@@ -124,102 +128,70 @@ class WebClientObserver(private val isTestHarness: Boolean) : MessageObserver, E
         private val mapper = SerializationConstants.messageMapper
 
         fun recordRequest(
-            isTestHarness: Boolean,
             interfaceUrl: String,
+            queryParameters: Map<String, String>,
             pathVariables: List<String>,
             method: HttpMethod,
-            headers: MultiMap<String, String>,
+            headers: Map<String, String>,
             body: String
         ) {
 
-            headers.clear("traceparent")
+            var prunedHeaders = headers.minus("traceparent")
             val message = StringRestMessage(
                 pathVariables,
-                headers,
+                queryParameters,
+                prunedHeaders,
                 if (isValidJson(body)) body else "\"$body\""
             )
 
-            if (!isTestHarness) {
-                Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addComponentResponse(
-                    MessageValue(mapper.writeValueAsString(message)),
-                    OutgoingInterface(
-                        Protocol("REST"),
-                        ProtocolData(
-                            mapOf(
-                                Pair("url", interfaceUrl),
-                                Pair("method", method.name()),
-                                Pair("request", "true")
-                            )
+
+            Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addComponentResponse(
+                MessageValue(mapper.writeValueAsString(message)),
+                OutgoingInterface(
+                    Protocol("REST"),
+                    ProtocolData(
+                        mapOf(
+                            Pair("path", interfaceUrl),
+                            Pair("method", method.name()),
+                            Pair("request", "true")
                         )
                     )
-                ).also {
-                    log.info("Observed ${ComponentResponseMessage::class.java.simpleName}: $it")
-                }
-            } else {
-                Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addStimulus(
-                    MessageValue(mapper.writeValueAsString(message)),
-                    IncomingInterface(
-                        Protocol("REST"),
-                        ProtocolData(
-                            mapOf(
-                                Pair("url", interfaceUrl),
-                                Pair("method", method.name()),
-                                Pair("request", "true")
-                            )
-                        )
-                    )
-                ).also {
-                    log.info("Observed ${StimulusMessage::class.java.simpleName}: $it")
-                }
+                )
+            ).also {
+                log.info("Observed ${ComponentResponseMessage::class.java.simpleName}: $it")
             }
         }
 
         fun recordResponse(
-            isTestHarness: Boolean,
             interfaceUrl: String,
+            queryParameters: Map<String, String>,
             pathVariables: List<String>,
             method: HttpMethod,
-            headers: MultiMap<String, String>,
+            headers: Map<String, String>,
             body: String
         ) {
-            headers.clear("traceparent")
+            var prunedHeaders = headers.minus("traceparent")
             val message = StringRestMessage(
                 pathVariables,
-                headers,
+                queryParameters,
+                prunedHeaders,
                 if (isValidJson(body)) body else "\"$body\""
             )
-            if (!isTestHarness) {
-                Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addEnvironmentResponse(
-                    MessageValue(mapper.writeValueAsString(message)),
-                    IncomingInterface(
-                        Protocol("REST"),
-                        ProtocolData(
-                            mapOf(
-                                Pair("url", interfaceUrl),
-                                Pair("method", method.name()),
-                                Pair("request", "false")
-                            )
+
+            Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addEnvironmentResponse(
+                MessageValue(mapper.writeValueAsString(message)),
+                IncomingInterface(
+                    Protocol("REST"),
+                    ProtocolData(
+                        mapOf(
+                            Pair("path", interfaceUrl),
+                            Pair("method", method.name()),
+                            Pair("request", "false")
                         )
                     )
-                ).also {
-                    log.info("Observed ${EnvironmentResponseMessage::class.java.simpleName}: $it")
-                }
-            } else {
-                Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addComponentResponse(
-                    MessageValue(mapper.writeValueAsString(message)),
-                    OutgoingInterface(
-                        Protocol("REST"),
-                        ProtocolData(
-                            mapOf(
-                                Pair("url", interfaceUrl),
-                                Pair("method", method.name()),
-                                Pair("request", "false")
-                            )
-                        )
-                    )
-                ).also {
-                    log.info("Observed ${ComponentResponseMessage::class.java.simpleName}: $it")
-                }
+                )
+            ).also {
+                log.info("Observed ${EnvironmentResponseMessage::class.java.simpleName}: $it")
             }
         }
 

@@ -17,7 +17,7 @@
         <module>interact-junit5</module>
         <module>interact-interface-binding-api</module>
         <module>interact-binder-rest</module>
-        <module>interact-observer-spring-rest</module>
+        <module>interact-observer-spring-webclient</module>
         <module>interact-integrator</module>
         <module>interact-test</module>
         <module>interact-binder-amqp</module>
@@ -25,6 +25,7 @@
         <module>interact-observation-context-simple</module>
         <module>interact-controller-api</module>
         <module>interact-observation-context-micrometer</module>
+        <module>interact-observer-spring-webmvc</module>
     </modules>
 
     <properties>
