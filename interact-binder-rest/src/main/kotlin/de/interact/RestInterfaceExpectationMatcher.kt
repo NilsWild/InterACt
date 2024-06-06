@@ -17,10 +17,6 @@ class RestInterfaceExpectationMatcher(
     private val restInterfaceExpectationsDao: RestInterfaceExpectationsDao,
     private val restInterfaceMatcher: RestInterfaceMatcher
 ) : InterfaceExpectationMatcher {
-    override val name: InterfaceExpectationMatcherName
-        get() = InterfaceExpectationMatcherName("RestMatcher")
-    override val version: InterfaceExpectationMatcherVersion
-        get() = InterfaceExpectationMatcherVersion("1.0.0")
 
     override fun canHandle(event: InterfaceExpectationAddedEvent): Boolean {
         return event.protocol == Protocol("REST")
@@ -68,15 +64,15 @@ class RestInterfaceExpectationMatcher(
 
 
     private fun matchIncomingInterfaces(
-        incomingExpectations: Collection<IncomingRestInterfaceExpectation>,
-        incomingInterfaces: Collection<IncomingRestInterface>
+        incomingExpectations: Collection<IncomingRestInterfaceExpectationProjection>,
+        incomingInterfaces: Collection<IncomingRestInterfaceProjection>
     ): List<Pair<InterfaceExpectationId, InterfaceId>> {
         val result = mutableListOf<Pair<InterfaceExpectationId, InterfaceId>>()
         incomingExpectations.forEach { expectation ->
             incomingInterfaces.forEach { incomingInterface ->
                 if (restInterfaceMatcher.matches(
-                        incomingInterface.restProtocolData(),
-                        expectation.restProtocolData()
+                        incomingInterface.toDomain(),
+                        expectation.toDomain()
                     )
                 ) {
                     restInterfaceDao.match(incomingInterface, expectation)
@@ -88,15 +84,15 @@ class RestInterfaceExpectationMatcher(
     }
 
     private fun matchOutgoingInterfaces(
-        outgoingExpectations: Collection<OutgoingRestInterfaceExpectation>,
-        outgoingInterfaces: Collection<OutgoingRestInterface>
+        outgoingExpectations: Collection<OutgoingRestInterfaceExpectationProjection>,
+        outgoingInterfaces: Collection<OutgoingRestInterfaceProjection>
     ): List<Pair<InterfaceExpectationId, InterfaceId>> {
         val result = mutableListOf<Pair<InterfaceExpectationId, InterfaceId>>()
         outgoingExpectations.forEach { expectation ->
             outgoingInterfaces.forEach { outgoingInterface ->
                 if (restInterfaceMatcher.matches(
-                        outgoingInterface.restProtocolData(),
-                        expectation.restProtocolData()
+                        outgoingInterface.toDomain(),
+                        expectation.toDomain()
                     )
                 ) {
                     restInterfaceDao.match(outgoingInterface, expectation)

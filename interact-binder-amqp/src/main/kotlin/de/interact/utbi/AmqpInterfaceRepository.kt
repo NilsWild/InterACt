@@ -13,6 +13,7 @@ import kotlin.jvm.optionals.getOrNull
 
 @Repository
 class AmqpInterfaceRepository(private val neo4jClient: Neo4jClient) {
+
     fun findAllOutgoingAmqpInterfaces() = neo4jClient.query(
         "MATCH (o:$OUTGOING_INTERFACE_NODE_LABEL {protocol: \"AMQP\"}) " +
                 "RETURN o.id as id, o.`protocolData.exchangeType` as exchangeType, o.`protocolData.exchangeName` as exchangeName, o.`protocolData.routingKey` as routingKey, o.`protocolData.headers` as headers"

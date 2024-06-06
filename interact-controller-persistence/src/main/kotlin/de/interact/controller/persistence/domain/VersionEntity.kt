@@ -14,9 +14,9 @@ const val LISTENING_TO_RELATIONSHIP_LABEL = "LISTENING_TO"
 const val SENDING_TO_RELATIONSHIP_LABEL = "SENDING_TO"
 
 @Node(VERSION_NODE_LABEL)
-class VersionEntity {
+class VersionEntity(): Entity(){
 
-    constructor(id: VersionId, identifier: String, versionOf: ComponentEntity, version: Long? = null) {
+    constructor(id: VersionId, identifier: String, versionOf: ComponentEntity, version: Long? = null): this() {
         this.id = id.value
         this.identifier = identifier
         this.versionOf = versionOf
@@ -28,9 +28,6 @@ class VersionEntity {
     @Relationship(type = VERSION_OF_RELATIONSHIP_LABEL)
     lateinit var versionOf: ComponentEntity
 
-    @Id
-    lateinit var id: UUID
-
     @Relationship(type = TESTED_BY_RELATIONSHIP_LABEL)
     var testedBy: Set<AbstractTestCaseEntity> = setOf()
 
@@ -39,8 +36,5 @@ class VersionEntity {
 
     @Relationship(type = SENDING_TO_RELATIONSHIP_LABEL)
     var sendingTo: Set<OutgoingInterfaceEntity> = setOf()
-
-    @Version
-    var version: Long? = null
 
 }

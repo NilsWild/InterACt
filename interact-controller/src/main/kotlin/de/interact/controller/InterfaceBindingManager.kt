@@ -20,9 +20,7 @@ class InterfaceBindingManager(
             for (matcher in matchers) {
                 println(
                     "...Loaded Matcher: "
-                            + matcher.name
-                            + ": "
-                            + matcher.version
+                            + matcher::class.simpleName
                 )
             }
         }

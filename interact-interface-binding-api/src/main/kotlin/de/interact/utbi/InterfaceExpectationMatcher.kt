@@ -6,9 +6,6 @@ import de.interact.domain.shared.InterfaceId
 import de.interact.domain.testtwin.api.event.InterfaceAddedToVersionEvent
 
 interface InterfaceExpectationMatcher {
-    val name: InterfaceExpectationMatcherName
-    val version: InterfaceExpectationMatcherVersion
-
     fun canHandle(event: InterfaceExpectationAddedEvent): Boolean
     fun canHandle(event: InterfaceAddedToVersionEvent): Boolean
     fun match(event: InterfaceExpectationAddedEvent): List<Pair<InterfaceExpectationId, InterfaceId>>

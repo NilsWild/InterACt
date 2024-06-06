@@ -16,11 +16,6 @@ class AmqpBinder(
     private val amqpInterfaceMatcher: AmqpInterfaceMatcher,
     private val amqpInterfaceRepository: AmqpInterfaceRepository
 ) : InterfaceBinder {
-    override val name: InterfaceBinderName
-        get() = InterfaceBinderName("AmqpBinder")
-    override val version: InterfaceBinderVersion
-        get() = InterfaceBinderVersion("1.0.0")
-
     override fun bindInterfaces(interfaceAddedEvent: InterfaceAddedToVersionEvent) {
         when (interfaceAddedEvent) {
             is IncomingInterfaceAddedToVersionEvent -> bindInterfaces(
@@ -58,7 +53,7 @@ class AmqpBinder(
                     neo4jClient.query(
                         "MATCH (o:$OUTGOING_INTERFACE_NODE_LABEL {id: \$outId}) " +
                                 "OPTIONAL MATCH (i:$INCOMING_INTERFACE_NODE_LABEL {id: \$inId}) " +
-                                "MERGE (o)-[:BOUND_TO{createdBy:'$name:$version'}]->(i)"
+                                "MERGE (o)-[:BOUND_TO]->(i)"
                     ).bind(outgoingInterface.id.toString()).to("outId")
                         .bind(incomingInterface.id.toString()).to("inId")
                         .run()

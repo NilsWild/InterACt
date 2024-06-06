@@ -11,15 +11,15 @@ import java.util.*
 @Repository
 interface IncomingRestInterfaceExpectationsRepository :
     org.springframework.data.repository.Repository<IncomingInterfaceExpectationEntity, UUID> {
-    fun findByIdAndProtocol(id: UUID, protocol: String): IncomingRestInterfaceExpectation?
-    fun findByProtocol(protocol: String): Collection<IncomingRestInterfaceExpectation>
+    fun findByIdAndProtocol(id: UUID, protocol: String): IncomingRestInterfaceExpectationProjection?
+    fun findByProtocol(protocol: String): Collection<IncomingRestInterfaceExpectationProjection>
 }
 
 @Repository
 interface OutgoingInterfaceExpectationsRepository :
     org.springframework.data.repository.Repository<OutgoingInterfaceExpectationEntity, UUID> {
-    fun findByIdAndProtocol(id: UUID, protocol: String): OutgoingRestInterfaceExpectation?
-    fun findByProtocol(protocol: String): Collection<OutgoingRestInterfaceExpectation>
+    fun findByIdAndProtocol(id: UUID, protocol: String): OutgoingRestInterfaceExpectationProjection?
+    fun findByProtocol(protocol: String): Collection<OutgoingRestInterfaceExpectationProjection>
 
 }
 
@@ -28,19 +28,19 @@ class RestInterfaceExpectationsDao(
     private val incomingRestInterfaceExpectationsRepository: IncomingRestInterfaceExpectationsRepository,
     private val outgoingInterfaceExpectationsRepository: OutgoingInterfaceExpectationsRepository
 ) {
-    fun findIncomingById(id: IncomingInterfaceExpectationId): IncomingRestInterfaceExpectation? {
+    fun findIncomingById(id: IncomingInterfaceExpectationId): IncomingRestInterfaceExpectationProjection? {
         return incomingRestInterfaceExpectationsRepository.findByIdAndProtocol(id.id, "REST")
     }
 
-    fun findOutgoingById(id: OutgoingInterfaceExpectationId): OutgoingRestInterfaceExpectation? {
+    fun findOutgoingById(id: OutgoingInterfaceExpectationId): OutgoingRestInterfaceExpectationProjection? {
         return outgoingInterfaceExpectationsRepository.findByIdAndProtocol(id.id, "REST")
     }
 
-    fun findAllIncoming(): Collection<IncomingRestInterfaceExpectation> {
+    fun findAllIncoming(): Collection<IncomingRestInterfaceExpectationProjection> {
         return incomingRestInterfaceExpectationsRepository.findByProtocol("REST")
     }
 
-    fun findAllOutgoing(): Collection<OutgoingRestInterfaceExpectation> {
+    fun findAllOutgoing(): Collection<OutgoingRestInterfaceExpectationProjection> {
         return outgoingInterfaceExpectationsRepository.findByProtocol("REST")
     }
 }

@@ -30,7 +30,7 @@ class IncomingInterfaceEntity : InterfaceEntity() {
     }
 
     @Relationship(type = BOUNT_TO_RELATIONSHIP_LABEL, direction = Relationship.Direction.INCOMING)
-    var boundTo: Set<IncomingToOutgoingInterfaceBindingRelationship> = emptySet()
+    var boundTo: Set<OutgoingInterfaceEntity> = emptySet()
 }
 
 @Node(OUTGOING_INTERFACE_NODE_LABEL)
@@ -41,27 +41,7 @@ class OutgoingInterfaceEntity() : InterfaceEntity() {
     }
 
     @Relationship(type = BOUNT_TO_RELATIONSHIP_LABEL)
-    var boundTo: Set<OutgoingToIncomingInterfaceBindingRelationship> = emptySet()
-}
-
-@RelationshipProperties
-data class OutgoingToIncomingInterfaceBindingRelationship(
-    val createdBy: String,
-    @TargetNode private val boundTo: IncomingInterfaceEntity
-) {
-    @RelationshipId
-    var id: String? = null
-        private set
-}
-
-@RelationshipProperties
-data class IncomingToOutgoingInterfaceBindingRelationship(
-    val createdBy: String,
-    @TargetNode private val boundTo: OutgoingInterfaceEntity
-) {
-    @RelationshipId
-    var id: String? = null
-        private set
+    var boundTo: Set<IncomingInterfaceEntity> = emptySet()
 }
 
 fun EntityReference<InterfaceId>.toEntity(): InterfaceEntity {

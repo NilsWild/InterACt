@@ -20,10 +20,6 @@ class AmqpInterfaceExpectationMatcher(
     private val amqpInterfaceRepository: AmqpInterfaceRepository,
     private val amqpInterfaceExpectationRepository: AmqpInterfaceExpectationRepository
 ) : InterfaceExpectationMatcher {
-    override val name: InterfaceExpectationMatcherName
-        get() = InterfaceExpectationMatcherName("AmqpMatcher")
-    override val version: InterfaceExpectationMatcherVersion
-        get() = InterfaceExpectationMatcherVersion("1.0.0")
 
     override fun match(event: InterfaceExpectationAddedEvent): List<Pair<InterfaceExpectationId, InterfaceId>> {
         return when (event) {
@@ -77,7 +73,7 @@ class AmqpInterfaceExpectationMatcher(
                     neo4jClient.query(
                         "MATCH (ie:$INCOMING_INTERFACE_EXPECTATION_NODE_LABEL {id: \$ieId}) " +
                                 "OPTIONAL MATCH (i:$INCOMING_INTERFACE_NODE_LABEL {id: \$inId}) " +
-                                "MERGE (ie)-[:$MATCHED_BY_RELATIONSHIP_LABEL{createdBy:'$name:$version'}]->(i)"
+                                "MERGE (ie)-[:$MATCHED_BY_RELATIONSHIP_LABEL]->(i)"
                     ).bind(expectation.id.toString()).to("ieId")
                         .bind(incomingInterface.id.toString()).to("inId")
                         .run()
@@ -104,7 +100,7 @@ class AmqpInterfaceExpectationMatcher(
                     neo4jClient.query(
                         "MATCH (ie:$OUTGOING_INTERFACE_EXPECTATION_NODE_LABEL {id: \$ieId}) " +
                                 "OPTIONAL MATCH (oi:$OUTGOING_INTERFACE_NODE_LABEL {id: \$outId}) " +
-                                "MERGE (ie)-[:$MATCHED_BY_RELATIONSHIP_LABEL{createdBy:'$name:$version'}]->(oi)"
+                                "MERGE (ie)-[:$MATCHED_BY_RELATIONSHIP_LABEL]->(oi)"
                     ).bind(expectation.id.toString()).to("ieId")
                         .bind(outgoingInterface.id.toString()).to("outId")
                         .run()

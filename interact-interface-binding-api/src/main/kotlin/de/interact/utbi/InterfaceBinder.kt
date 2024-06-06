@@ -7,11 +7,6 @@ import de.interact.domain.testtwin.api.event.InterfaceAddedToVersionEvent
  * in the unit test based integration (utbi) model.
  */
 interface InterfaceBinder {
-
-    val name: InterfaceBinderName
-
-    val version: InterfaceBinderVersion
-
     fun bindInterfaces(interfaceAddedEvent: InterfaceAddedToVersionEvent)
     fun canHandle(interfaceAddedEvent: InterfaceAddedToVersionEvent): Boolean
 
