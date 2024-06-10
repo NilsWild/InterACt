@@ -1,15 +1,18 @@
 package de.interact.rest
 
+import de.interact.domain.rest.RestMessage
+import de.interact.domain.serialization.SerializationConstants
 import de.interact.utils.MultiMap
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
+import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.client.WebClient
 
 class TestRestClient(private val client: WebClient) {
 
-    fun prepare(method: HttpMethod, uri: String, message: RestMessage<*>): WebClient.RequestHeadersSpec<*> {
+    fun prepare(method: HttpMethod, message: RestMessage<*>): WebClient.RequestHeadersSpec<*> {
         val request = client.method(method)
-            .uri(uri, *message.pathVariables.toTypedArray())
+            .uri(message.path)
             .headers { headers -> message.headers.forEach{ headers.addAll(it.key, it.value.split(","))} }
         message.body?.let { request.bodyValue(it) }
         return request

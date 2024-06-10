@@ -98,7 +98,3 @@ fun failedInteractionEntity(id: InteractionId, version: Long?, previous: Set<Int
 }
 
 interface InteractionReferenceProjection: EntityReferenceWithLabelsProjection
-
-fun InteractionReferenceProjection.toEntityReference(): EntityReference<InteractionId> {
-    return EntityReference(InteractionId(id),version)
-}

@@ -55,7 +55,7 @@ interface ValidationPlanProjection: ValidationPlanReferenceProjection {
         val interactions: Set<InteractionProjection>
 
         interface InteractionProjection: InteractionReferenceProjection {
-            val previous: Set<InteractionReferenceProjection>
+            val previous: Set<EntityReferenceProjection>
             val derivedFrom: UnitTestReferenceProjection
             val from: Set<IncomingInterfaceReferenceProjection>
             val to: Set<OutgoingInterfaceReferenceProjection>
@@ -328,6 +328,18 @@ private fun ValidationPlanProjection.toDomain(): ValidationPlan {
 
     return when {
         status == "PENDING" -> ValidationPlan.PendingValidationPlan(
+            candidateFor.toEntityReference(),
+            mappedGraph,
+            ValidationPlanId(id),
+            version
+        )
+        status == "VALIDATED" -> ValidationPlan.ValidatedValidationPlan(
+            candidateFor.toEntityReference(),
+            mappedGraph,
+            ValidationPlanId(id),
+            version
+        )
+        status == "FAILED" -> ValidationPlan.FailedValidationPlan(
             candidateFor.toEntityReference(),
             mappedGraph,
             ValidationPlanId(id),

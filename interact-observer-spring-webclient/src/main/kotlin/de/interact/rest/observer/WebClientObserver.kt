@@ -1,13 +1,13 @@
 package de.interact.rest.observer
 
 import com.fasterxml.jackson.core.JacksonException
+import de.interact.domain.rest.RestMessage
 import de.interact.domain.serialization.SerializationConstants
 import de.interact.domain.shared.Protocol
 import de.interact.domain.shared.ProtocolData
 import de.interact.domain.testobservation.config.Configuration
 import de.interact.domain.testobservation.model.*
 import de.interact.domain.testobservation.spi.MessageObserver
-import de.interact.rest.StringRestMessage
 import de.interact.rest.toMultiMap
 import de.interact.utils.Logging
 import de.interact.utils.logger
@@ -23,7 +23,6 @@ import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction
 import org.springframework.web.reactive.function.client.ExchangeFunction
 import org.springframework.web.util.UriComponentsBuilder
-import org.springframework.web.util.UriTemplate
 import reactor.core.publisher.Mono
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicBoolean
@@ -32,17 +31,14 @@ import kotlin.jvm.optionals.getOrElse
 class WebClientObserver : MessageObserver, ExchangeFilterFunction {
 
     override fun filter(request: ClientRequest, next: ExchangeFunction): Mono<ClientResponse> {
-        val interfaceUrl = request
+        val interfaceUrlTemplate = request
             .attribute("org.springframework.web.reactive.function.client.WebClient.uriTemplate").getOrElse {
-                request.url()
+                request.url().path
             }.toString()
+        val interfaceUrl = request.url().path
 
         val queryParameters = UriComponentsBuilder.fromUri(request.url()).build().queryParams.toMap().mapValues { it.value.joinToString(",") }
-        val patternMatch = PathVariableExtractor.extractPathVariablesFromUrl(
-            interfaceUrl,
-            request.url()
-        )
-        val pathVariables = patternMatch?.uriVariables?.entries?.map { it.value } ?: emptyList()
+
         val method = request.method()
         val headers = request.headers()
         val originalBodyInserter: BodyInserter<*, in ClientHttpRequest?> = request.body()
@@ -52,9 +48,9 @@ class WebClientObserver : MessageObserver, ExchangeFilterFunction {
                 val loggingOutputMessage =
                     RequestObserverDecorator(
                         outputMessage,
-                        interfaceUrl,
+                        interfaceUrlTemplate,
                         queryParameters,
-                        pathVariables,
+                        interfaceUrl,
                         method,
                         headers.toMultiMap().getMap().mapValues { it.value.joinToString(",") }
                     )
@@ -65,12 +61,13 @@ class WebClientObserver : MessageObserver, ExchangeFilterFunction {
             .flatMap { clientResponse: ClientResponse ->
                 clientResponse.bodyToMono(String::class.java).flatMap { body ->
                     RestObservationHelper.recordResponse(
-                        interfaceUrl,
+                        interfaceUrlTemplate,
                         queryParameters,
-                        pathVariables,
+                        interfaceUrl,
                         method,
                         clientResponse.headers().asHttpHeaders().toMultiMap().getMap().mapValues { it.value.joinToString(",") },
-                        body
+                        body,
+                        clientResponse.statusCode().value()
                     )
                     Mono.just(clientResponse.mutate().body(body).build())
                 }
@@ -82,7 +79,7 @@ class WebClientObserver : MessageObserver, ExchangeFilterFunction {
         request: ClientHttpRequest,
         val interfaceUrl: String,
         val queryParameters: Map<String, String>,
-        val pathVariables: List<String>,
+        val path: String,
         val httpMethod: HttpMethod,
         val headers: Map<String, String>,
     ) : ClientHttpRequestDecorator(request) {
@@ -97,7 +94,7 @@ class WebClientObserver : MessageObserver, ExchangeFilterFunction {
                         RestObservationHelper.recordRequest(
                             interfaceUrl,
                             queryParameters,
-                            pathVariables,
+                            path,
                             httpMethod,
                             headers,
                             responseBody
@@ -113,7 +110,7 @@ class WebClientObserver : MessageObserver, ExchangeFilterFunction {
                 RestObservationHelper.recordRequest(
                     interfaceUrl,
                     queryParameters,
-                    pathVariables,
+                    path,
                     httpMethod,
                     headers,
                     ""
@@ -130,15 +127,15 @@ class WebClientObserver : MessageObserver, ExchangeFilterFunction {
         fun recordRequest(
             interfaceUrl: String,
             queryParameters: Map<String, String>,
-            pathVariables: List<String>,
+            path: String,
             method: HttpMethod,
             headers: Map<String, String>,
             body: String
         ) {
 
             var prunedHeaders = headers.minus("traceparent")
-            val message = StringRestMessage(
-                pathVariables,
+            val message = RestMessage.Request(
+                path,
                 queryParameters,
                 prunedHeaders,
                 if (isValidJson(body)) body else "\"$body\""
@@ -165,17 +162,19 @@ class WebClientObserver : MessageObserver, ExchangeFilterFunction {
         fun recordResponse(
             interfaceUrl: String,
             queryParameters: Map<String, String>,
-            pathVariables: List<String>,
+            path: String,
             method: HttpMethod,
             headers: Map<String, String>,
-            body: String
+            body: String,
+            statusCode: Int
         ) {
             var prunedHeaders = headers.minus("traceparent")
-            val message = StringRestMessage(
-                pathVariables,
+            val message = RestMessage.Response(
+                path,
                 queryParameters,
                 prunedHeaders,
-                if (isValidJson(body)) body else "\"$body\""
+                if (isValidJson(body)) body else "\"$body\"",
+                statusCode
             )
 
             Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addEnvironmentResponse(

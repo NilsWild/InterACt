@@ -1,6 +1,7 @@
 package de.interact.rest.observer
 
 import com.fasterxml.jackson.core.JacksonException
+import de.interact.domain.rest.RestMessage
 import de.interact.domain.serialization.SerializationConstants
 import de.interact.domain.shared.Protocol
 import de.interact.domain.shared.ProtocolData
@@ -24,16 +25,12 @@ class ObservationService: Logging {
 
     fun logRequest(httpServletRequest: HttpServletRequest, body: Any?) {
         val parameters = buildParametersMap(httpServletRequest)
-        val pathVariables = PathVariableExtractor.extractPathVariablesFromUrl(
-            httpServletRequest.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE).toString(),
-            URI(httpServletRequest.requestURI)
-        )?.uriVariables?.entries?.map { it.value } ?: emptyList()
 
-        val message = StringRestMessage(
-            pathVariables,
+        val message = RestMessage.Request(
+            httpServletRequest.requestURI,
             parameters,
             buildHeadersMap(httpServletRequest),
-            if (isValidJson(body.toString())) "$body" else "\"$body\""
+            if(body == null) null else if (body is String) body else SerializationConstants.messageMapper.writeValueAsString(body)
         )
 
         if(Configuration.observationManager!!.getCurrentTestCase().observedBehavior.messageSequence.size == 0){
@@ -85,15 +82,12 @@ class ObservationService: Logging {
         body: Any?
     ) {
         val parameters = buildParametersMap(httpServletRequest)
-        val pathVariables = PathVariableExtractor.extractPathVariablesFromUrl(
-            httpServletRequest.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE).toString(),
-            URI(httpServletRequest.requestURI)
-        )?.uriVariables?.entries?.map { it.value } ?: emptyList()
-        val message = StringRestMessage(
-            pathVariables,
+        val message = RestMessage.Response(
+            httpServletRequest.requestURI,
             parameters,
             buildHeadersMap(httpServletRequest),
-            if (isValidJson(body.toString())) "$body" else "\"$body\""
+            if(body == null) null else if (body is String) body else SerializationConstants.messageMapper.writeValueAsString(body),
+            httpServletResponse.status
         )
 
         Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addComponentResponse(

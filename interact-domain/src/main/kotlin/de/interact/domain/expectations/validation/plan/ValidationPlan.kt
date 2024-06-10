@@ -37,11 +37,11 @@ sealed class ValidationPlan: Entity<ValidationPlanId>() {
 
 fun ValidationPlan.PendingValidationPlan.handle(test: Test): ValidationPlan {
     val interactionGraph = interactionGraph.handle(test)
-    if (interactionGraph.interactions.any { it is Interaction.Finished.Failed }) {
-        return ValidationPlan.FailedValidationPlan(candidateFor, interactionGraph, id, version)
+    return if (interactionGraph.interactions.any { it is Interaction.Finished.Failed }) {
+        ValidationPlan.FailedValidationPlan(candidateFor, interactionGraph, id, version)
     } else if(interactionGraph.interactions.all { it is Interaction.Finished.Validated }) {
-        return ValidationPlan.ValidatedValidationPlan(candidateFor, interactionGraph, id, version)
+        ValidationPlan.ValidatedValidationPlan(candidateFor, interactionGraph, id, version)
     } else {
-        return this.copy(interactionGraph = interactionGraph)
+        this.copy(interactionGraph = interactionGraph)
     }
 }
