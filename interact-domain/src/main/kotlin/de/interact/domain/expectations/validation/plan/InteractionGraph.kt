@@ -31,20 +31,41 @@ private fun InteractionGraph.hash(interaction: Interaction) : String {
 }
 
 fun InteractionGraph.leadsTo(interfaceIds: Set<InterfaceId>): Boolean {
-    return interfaceIds.all { leadsTo(it) }
+    return findInteractionsThatLeadTo(interfaceIds).size == interfaceIds.size
 }
 
 fun InteractionGraph.leadsTo(interfaceId: InterfaceId): Boolean {
+    return findInteractionsThatLeadTo(setOf(interfaceId)).isNotEmpty()
+}
+
+private fun InteractionGraph.findInteractionsThatLeadTo(interfaceIds: Set<InterfaceId>): Set<Interaction> {
     val toTraverse: Queue<Interaction> = LinkedList()
     toTraverse.addAll(sinks)
+    val interactionsThatLeadTo = mutableSetOf<Interaction>()
     while (toTraverse.isNotEmpty()) {
         val current = toTraverse.poll()
-        if (current.from.map { it.id }.contains(interfaceId) || current.to.map { it.id }.contains(interfaceId)) {
-            return true
+        if (current.from.map { it.id }.containsAll(interfaceIds) || current.to.map { it.id }.containsAll(interfaceIds)) {
+            interactionsThatLeadTo.add(current)
         }
         toTraverse.addAll(reverseAdjacencyMap[current]!!)
     }
-    return false
+    return interactionsThatLeadTo
+}
+
+fun InteractionGraph.removeUnnecessaryInteractionsToReach(interfaceIds: Set<InterfaceId>): InteractionGraph {
+    val toTraverse: Queue<Interaction> = LinkedList()
+    toTraverse.addAll(findInteractionsThatLeadTo(interfaceIds))
+    val interactionsToKeep = mutableSetOf<Interaction>()
+    while (toTraverse.isNotEmpty()) {
+        val current = toTraverse.poll()
+        interactionsToKeep.add(current)
+        toTraverse.addAll(reverseAdjacencyMap[current]!!)
+    }
+    return this.copy(
+        interactions = interactionsToKeep,
+        adjacencyMap = adjacencyMap.filterKeys { interactionsToKeep.contains(it) }.mapValues { (_,v) -> v.filter{interactionsToKeep.contains(it)}.toSet()},
+        reverseAdjacencyMap = reverseAdjacencyMap.filterKeys { interactionsToKeep.contains(it) }.mapValues { (_, v) -> v.filter{interactionsToKeep.contains(it)}.toSet() }
+    )
 }
 
 internal fun InteractionGraph.handle(test: Test): InteractionGraph {

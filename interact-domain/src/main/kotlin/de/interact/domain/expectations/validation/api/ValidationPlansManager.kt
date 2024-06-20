@@ -71,7 +71,7 @@ class ValidationPlansManager(
                         derivedFromTest.parameters,
                         interactionExpectation.derivedFrom
                     ),
-                    setOf((derivedFromTest.triggeredMessages.first() as StimulusMessage).receivedBy),
+                    derivedFromTest.triggeredMessages.filterIsInstance<StimulusMessage>().firstOrNull()?.let { setOf(it.receivedBy)} ?: emptySet(),
                     setOf(
                         derivedFromTest.triggeredMessages
                             .filterIsInstance<ComponentResponseMessage>()
@@ -86,7 +86,7 @@ class ValidationPlansManager(
             val expandedInteractionGraphs = expandInteractionGraph(interactionGraphToExpand)
             expandedInteractionGraphs.forEach { interactionGraph ->
                 if (interactionGraph.leadsTo(interactionExpectation.expectTo.map { it.id }.toSet())) {
-                    interactionGraphs.add(interactionGraph)
+                    interactionGraphs.add(interactionGraph.removeUnnecessaryInteractionsToReach(interactionExpectation.expectTo.map { it.id }.toSet()))
                 } else if (interactionGraph != interactionGraphToExpand) {
                     interactionGraphsToExpand.offer(interactionGraph)
                 }
@@ -170,7 +170,6 @@ class ValidationPlansManager(
             boundInterfaces.forEach { nextInterface ->
                 val unitTests = tests.findUnitTestsReceivingBy(nextInterface)
                 val nextSegments = unitTests.map { unitTest ->
-                    //TODO filter message if next message in flow of test
                     Interaction.Pending(
                         EntityReference(UnitTestId(unitTest.id.value), unitTest.version),
                         TestCase.IncompleteTestCase(
@@ -197,6 +196,9 @@ class ValidationPlansManager(
                             ) }.map { it.sentBy }.toSet()
                     )
                 }
+                    //.filter { interaction ->
+                    //TODO !interactionGraph.canBeContinuedWith(nextInterface.id, interaction)
+                //}
                 result[nextInterface.id] = nextSegments
             }
         }
