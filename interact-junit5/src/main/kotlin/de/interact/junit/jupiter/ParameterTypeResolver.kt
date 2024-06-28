@@ -19,7 +19,7 @@ object ParameterTypeResolver {
             val type = parameterContext.parameter.parameterizedType
             if (type is ParameterizedType) {
                 val genericTypes =
-                    type.actualTypeArguments.map { SerializationConstants.mapper.typeFactory.constructType(it) }
+                    type.actualTypeArguments.map { SerializationConstants.messageMapper.typeFactory.constructType(it) }
                         .toTypedArray()
                 SerializationConstants.messageMapper.readValue(
                     argument.toString(),
