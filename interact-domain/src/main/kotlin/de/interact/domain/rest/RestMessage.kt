@@ -31,7 +31,7 @@ sealed interface RestMessage<T> {
 class BodySerializer : JsonSerializer<Any>() {
     override fun serialize(value: Any, gen: JsonGenerator, serializers: SerializerProvider) {
         if(value is String) {
-            gen.writeRawValue(value)
+            gen.writeString(value)
         }else {
             gen.writeObject(value)
         }
