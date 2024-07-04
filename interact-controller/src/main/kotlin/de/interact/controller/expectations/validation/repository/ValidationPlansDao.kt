@@ -11,6 +11,7 @@ import org.springframework.data.neo4j.repository.query.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.util.*
+import kotlin.reflect.KFunction2
 
 @Repository
 interface ValidationPlansRepository :
@@ -97,17 +98,20 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
                     is Interaction.Finished.Failed -> ::failedInteractionEntity
                 }
 
-                val referenceCreator = when(interaction) {
-                    is Interaction.Pending -> ::pendingInteractionEntityReference
-                    is Interaction.Executable -> ::executableInteractionEntityReference
-                    is Interaction.Finished.Validated -> ::validatedInteractionEntityReference
-                    is Interaction.Finished.Failed -> ::failedInteractionEntityReference
+                val referenceCreator: (Interaction) -> (InteractionId, Long?) -> InteractionEntity = {
+                    val inter = it
+                        when(inter) {
+                            is Interaction.Pending -> ::pendingInteractionEntityReference
+                            is Interaction.Executable -> ::executableInteractionEntityReference
+                            is Interaction.Finished.Validated -> ::validatedInteractionEntityReference
+                            is Interaction.Finished.Failed -> ::failedInteractionEntityReference
+                        }
                 }
 
                 creator(
                     interaction.id,
                     interaction.version,
-                    interactionGraph.reverseAdjacencyMap[interaction]!!.map { interactionEntityReference(it.id, it.version).also { it.labels } }.toSet(),
+                    interactionGraph.reverseAdjacencyMap[interaction]!!.map { referenceCreator(it)(it.id,it.version) }.toSet(),
                     interaction.derivedFrom.toEntity(),
                     interaction.from.map { it.toEntity() }.toSet(),
                     interaction.to.map { it.toEntity() }.toSet(),
