@@ -1,6 +1,5 @@
 package de.interact.domain.expectations.validation.plan
 
-import arrow.optics.copy
 import de.interact.domain.expectations.validation.test.Test
 import de.interact.domain.shared.Entity
 import de.interact.domain.shared.EntityReference

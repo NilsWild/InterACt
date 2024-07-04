@@ -39,7 +39,7 @@ class BodySerializer : JsonSerializer<Any>() {
     override fun serialize(value: Any, gen: JsonGenerator, serializers: SerializerProvider) {
         if(value is String) {
             if(value.isEmpty()) {
-                gen.writeString("")
+                gen.writeRawValue("")
             } else {
                 catch({
                     SerializationConstants.mapper.readTree(value)

@@ -96,10 +96,18 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
                     is Interaction.Finished.Validated -> ::validatedInteractionEntity
                     is Interaction.Finished.Failed -> ::failedInteractionEntity
                 }
+
+                val referenceCreator = when(interaction) {
+                    is Interaction.Pending -> ::pendingInteractionEntityReference
+                    is Interaction.Executable -> ::executableInteractionEntityReference
+                    is Interaction.Finished.Validated -> ::validatedInteractionEntityReference
+                    is Interaction.Finished.Failed -> ::failedInteractionEntityReference
+                }
+
                 creator(
                     interaction.id,
                     interaction.version,
-                    interactionGraph.reverseAdjacencyMap[interaction]!!.map { interactionEntityReference(it.id, it.version) }.toSet(),
+                    interactionGraph.reverseAdjacencyMap[interaction]!!.map { interactionEntityReference(it.id, it.version).also { it.labels } }.toSet(),
                     interaction.derivedFrom.toEntity(),
                     interaction.from.map { it.toEntity() }.toSet(),
                     interaction.to.map { it.toEntity() }.toSet(),

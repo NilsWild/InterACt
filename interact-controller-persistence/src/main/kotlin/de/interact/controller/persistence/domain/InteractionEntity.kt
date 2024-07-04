@@ -97,4 +97,28 @@ fun failedInteractionEntity(id: InteractionId, version: Long?, previous: Set<Int
     }
 }
 
+fun pendingInteractionEntityReference(id: InteractionId, version: Long?): InteractionEntity {
+    return interactionEntityReference(id, version).also {
+        it.labels = setOf(PENDING_INTERACTION_NODE_LABEL)
+    }
+}
+
+fun executableInteractionEntityReference(id: InteractionId, version: Long?): InteractionEntity {
+    return interactionEntityReference(id, version).also {
+        it.labels = setOf(EXECUTABLE_INTERACTION_NODE_LABEL)
+    }
+}
+
+fun validatedInteractionEntityReference(id: InteractionId, version: Long?): InteractionEntity {
+    return interactionEntityReference(id, version).also {
+        it.labels = setOf(VALIDATED_INTERACTION_NODE_LABEL)
+    }
+}
+
+fun failedInteractionEntityReference(id: InteractionId, version: Long?): InteractionEntity {
+    return interactionEntityReference(id, version).also {
+        it.labels = setOf(FAILED_INTERACTION_NODE_LABEL)
+    }
+}
+
 interface InteractionReferenceProjection: EntityReferenceWithLabelsProjection
