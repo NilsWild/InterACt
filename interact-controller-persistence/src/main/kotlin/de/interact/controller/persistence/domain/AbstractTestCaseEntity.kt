@@ -11,13 +11,10 @@ const val ABSTRACT_TEST_CASE_NODE_LABEL = "AbstractTestCase"
 const val TEMPLATE_FOR_RELATIONSHIP_LABEL = "TEMPLATE_FOR"
 
 @Node(ABSTRACT_TEST_CASE_NODE_LABEL)
-class AbstractTestCaseEntity: Entity() {
-
-    lateinit var identifier: String
-
+class AbstractTestCaseEntity: Entity()  {
+    var identifier: String? = null
     @Relationship(type = TEMPLATE_FOR_RELATIONSHIP_LABEL)
     var templateFor: Set<ConcreteTestCaseEntity> = setOf()
-
     @Relationship(type = TESTED_BY_RELATIONSHIP_LABEL, direction = Relationship.Direction.INCOMING)
     var test: VersionEntity? = null
 }

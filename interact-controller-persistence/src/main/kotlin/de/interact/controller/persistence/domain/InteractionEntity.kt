@@ -21,7 +21,7 @@ const val TO_RELATIONSHIP_LABEL = "TO"
 const val VALIDATED_BY_RELATIONSHIP_LABEL = "VALIDATED_BY"
 
 @Node(INTERACTION_NODE_LABEL)
-class InteractionEntity: Entity() {
+class InteractionEntity: Entity(), Comparable<InteractionEntity> {
 
     @Relationship(type = NEXT_INTERACTION_RELATIONSHIP_LABEL)
     lateinit var next: Set<InteractionEntity>
@@ -41,20 +41,27 @@ class InteractionEntity: Entity() {
     @Relationship(type = VALIDATED_BY_RELATIONSHIP_LABEL)
     lateinit var testCase: TestCaseEntity
 
+    var order: Int = 0
+
     @DynamicLabels
     var labels: Set<String> = emptySet()
 
+    override fun compareTo(other: InteractionEntity): Int {
+        return order - other.order
+    }
+
 }
 
-fun interactionEntityReference(id: InteractionId, version: Long?): InteractionEntity {
+fun interactionEntityReference(id: InteractionId, order: Int, version: Long?): InteractionEntity {
     return InteractionEntity().also {
         it.id = id.value
+        it.order = order
         it.version = version
     }
 }
 
-fun pendingInteractionEntity(id: InteractionId, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
-    return interactionEntityReference(id, version).also {
+fun pendingInteractionEntity(id: InteractionId, order:Int, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
+    return interactionEntityReference(id, order, version).also {
         it.previous = previous
         it.derivedFrom = derivedFrom
         it.from = from
@@ -64,8 +71,8 @@ fun pendingInteractionEntity(id: InteractionId, version: Long?, previous: Set<In
     }
 }
 
-fun executableInteractionEntity(id: InteractionId, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
-    return interactionEntityReference(id, version).also {
+fun executableInteractionEntity(id: InteractionId, order:Int, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
+    return interactionEntityReference(id, order, version).also {
         it.previous = previous
         it.derivedFrom = derivedFrom
         it.from = from
@@ -75,8 +82,8 @@ fun executableInteractionEntity(id: InteractionId, version: Long?, previous: Set
     }
 }
 
-fun validatedInteractionEntity(id: InteractionId, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
-    return interactionEntityReference(id, version).also {
+fun validatedInteractionEntity(id: InteractionId, order: Int, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
+    return interactionEntityReference(id, order, version).also {
         it.previous = previous
         it.derivedFrom = derivedFrom
         it.from = from
@@ -86,37 +93,13 @@ fun validatedInteractionEntity(id: InteractionId, version: Long?, previous: Set<
     }
 }
 
-fun failedInteractionEntity(id: InteractionId, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
-    return interactionEntityReference(id, version).also {
+fun failedInteractionEntity(id: InteractionId, order: Int, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
+    return interactionEntityReference(id, order, version).also {
         it.previous = previous
         it.derivedFrom = derivedFrom
         it.from = from
         it.to = to
         it.testCase = testCase
-        it.labels = setOf(FAILED_INTERACTION_NODE_LABEL)
-    }
-}
-
-fun pendingInteractionEntityReference(id: InteractionId, version: Long?): InteractionEntity {
-    return interactionEntityReference(id, version).also {
-        it.labels = setOf(PENDING_INTERACTION_NODE_LABEL)
-    }
-}
-
-fun executableInteractionEntityReference(id: InteractionId, version: Long?): InteractionEntity {
-    return interactionEntityReference(id, version).also {
-        it.labels = setOf(EXECUTABLE_INTERACTION_NODE_LABEL)
-    }
-}
-
-fun validatedInteractionEntityReference(id: InteractionId, version: Long?): InteractionEntity {
-    return interactionEntityReference(id, version).also {
-        it.labels = setOf(VALIDATED_INTERACTION_NODE_LABEL)
-    }
-}
-
-fun failedInteractionEntityReference(id: InteractionId, version: Long?): InteractionEntity {
-    return interactionEntityReference(id, version).also {
         it.labels = setOf(FAILED_INTERACTION_NODE_LABEL)
     }
 }

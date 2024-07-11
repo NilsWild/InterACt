@@ -20,6 +20,12 @@ sealed class InterfaceEntity: Entity() {
     @Transient
     var labels: Set<String> = setOf(INTERFACE_NODE_LABEL)
 
+    @Relationship(type = LISTENING_TO_RELATIONSHIP_LABEL, direction = Relationship.Direction.INCOMING)
+    lateinit var consumer: VersionEntity
+
+    @Relationship(type = SENDING_TO_RELATIONSHIP_LABEL, direction = Relationship.Direction.INCOMING)
+    lateinit var producer: VersionEntity
+
 }
 
 @Node(INCOMING_INTERFACE_NODE_LABEL)
@@ -31,6 +37,9 @@ class IncomingInterfaceEntity : InterfaceEntity() {
 
     @Relationship(type = BOUNT_TO_RELATIONSHIP_LABEL, direction = Relationship.Direction.INCOMING)
     var boundTo: Set<OutgoingInterfaceEntity> = emptySet()
+
+    @Relationship(type = RECEIVED_BY_RELATIONSHIP_LABEL)
+    var receivedMessages: Set<ReceivedMessageEntity> = emptySet()
 }
 
 @Node(OUTGOING_INTERFACE_NODE_LABEL)
@@ -42,6 +51,9 @@ class OutgoingInterfaceEntity() : InterfaceEntity() {
 
     @Relationship(type = BOUNT_TO_RELATIONSHIP_LABEL)
     var boundTo: Set<IncomingInterfaceEntity> = emptySet()
+
+    @Relationship(type = SENT_BY_RELATIONSHIP_LABEL)
+    var sentMessages: Set<SentMessageEntity> = emptySet()
 }
 
 fun EntityReference<InterfaceId>.toEntity(): InterfaceEntity {

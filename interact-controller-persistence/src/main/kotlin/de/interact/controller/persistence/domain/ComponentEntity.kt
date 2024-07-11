@@ -2,6 +2,7 @@ package de.interact.controller.persistence.domain
 
 import de.interact.domain.shared.ComponentId
 import org.springframework.data.neo4j.core.schema.Node
+import org.springframework.data.neo4j.core.schema.Relationship
 
 const val COMPONENT_NODE_LABEL = "Component"
 
@@ -17,5 +18,8 @@ class ComponentEntity(): Entity() {
         this.identifier = identifier
     }
 
-    lateinit var identifier: String
+    var identifier: String? = null
+
+    @Relationship(type = VERSION_OF_RELATIONSHIP_LABEL, direction = Relationship.Direction.INCOMING)
+    var versions: Set<VersionEntity> = emptySet()
 }

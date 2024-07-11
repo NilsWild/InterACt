@@ -23,18 +23,18 @@ class VersionEntity(): Entity(){
         this.version = version
     }
 
-    lateinit var identifier: String
+    var identifier: String? = null
 
     @Relationship(type = VERSION_OF_RELATIONSHIP_LABEL)
-    lateinit var versionOf: ComponentEntity
+    var versionOf: ComponentEntity? = null
 
     @Relationship(type = TESTED_BY_RELATIONSHIP_LABEL)
-    var testedBy: Set<AbstractTestCaseEntity> = setOf()
+    var testedBy: Set<AbstractTestCaseEntity> = emptySet()
 
     @Relationship(type = LISTENING_TO_RELATIONSHIP_LABEL)
-    var listeningTo: Set<IncomingInterfaceEntity> = setOf()
+    var listeningTo: Set<IncomingInterfaceEntity> = emptySet()
 
     @Relationship(type = SENDING_TO_RELATIONSHIP_LABEL)
-    var sendingTo: Set<OutgoingInterfaceEntity> = setOf()
+    var sendingTo: Set<OutgoingInterfaceEntity> = emptySet()
 
 }

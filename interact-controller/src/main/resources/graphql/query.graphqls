@@ -1,0 +1,201 @@
+schema {
+    query: Query
+}
+
+type Component {
+    id: ID!
+    identifier: String!
+    name: String!
+    amountComponentVersions: Int!
+    versions: [Version]!
+}
+
+type Version {
+    id: ID!
+    identifier: String!
+    versionOf: Component!
+    listeningTo: [Interface]!
+    sendingTo: [Interface]!
+    testedBy: [AbstractTestCase]!
+}
+
+interface Message {
+    id: ID!
+    payload: String!
+    order: Int!
+    triggeredBy: ConcreteTestCase!
+}
+
+interface SentMessage implements Message {
+   id: ID!
+   payload: String!
+   order: Int!
+   triggeredBy: ConcreteTestCase!
+   sentBy: OutgoingInterface!
+}
+
+interface ReceivedMessage implements Message {
+    id: ID!
+    payload: String!
+    order: Int!
+    triggeredBy: ConcreteTestCase!
+    receivedBy: IncomingInterface!
+    dependencyFor: [ComponentResponse]!
+}
+
+type ComponentResponse implements SentMessage & Message {
+    id: ID!
+    payload: String!
+    order: Int!
+    triggeredBy: ConcreteTestCase!
+    sentBy: OutgoingInterface!
+    dependsOn: [ReceivedMessage]!
+    stimulusFor: [ComponentResponse]!
+}
+
+type Stimulus implements ReceivedMessage & Message {
+    id: ID!
+    payload: String!
+    order: Int!
+    triggeredBy: ConcreteTestCase!
+    receivedBy: IncomingInterface!
+    dependencyFor: [ComponentResponse]!
+}
+
+type EnvironmentResponse implements ReceivedMessage & Message{
+    id: ID!
+    payload: String!
+    order: Int!
+    triggeredBy: ConcreteTestCase!
+    receivedBy: IncomingInterface!
+    reactionTo: ComponentResponse!
+    dependencyFor: [ComponentResponse]!
+}
+
+interface Interface {
+    id: ID!
+    type: String!
+    protocol: String!
+    protocolData: [ProtocolDatum]!
+}
+
+type IncomingInterface implements Interface {
+    id: ID!
+    type: String!
+    protocol: String!
+    protocolData: [ProtocolDatum]!
+    consumer: Component!
+    receivedMessages: [ReceivedMessage]!
+    boundTo: [OutgoingInterface]!
+}
+
+type OutgoingInterface implements Interface {
+    id: ID!
+    type: String!
+    protocol: String!
+    protocolData: [ProtocolDatum]!
+    producer: Component!
+    sentMessages: [SentMessage]!
+    boundTo: [IncomingInterface]!
+}
+
+interface ConcreteTestCase {
+    id: ID!
+    identifier: String!
+    parameters: [String]!
+    triggeredMessages: [Message]!
+    template: AbstractTestCase!
+    status: String!
+}
+
+type UnitTest implements ConcreteTestCase {
+    id: ID!
+    identifier: String!
+    parameters: [String]!
+    triggeredMessages: [Message]!
+    template: AbstractTestCase!
+    status: String!
+    derivedExpectations: [UnitTestBasedInteractionExpectation]!
+}
+
+type InteractionTest implements ConcreteTestCase {
+    id: ID!
+    identifier: String!
+    parameters: [String]!
+    triggeredMessages: [Message]!
+    template: AbstractTestCase!
+    status: String!
+}
+
+type AbstractTestCase {
+    id: ID!
+    identifier: String!
+    templateFor: [ConcreteTestCase]!
+    test: Version!
+}
+
+interface InteractionExpectation{
+    id: ID!
+    expectFrom: Message!
+    expectTo: [Interface]!
+    status: String!
+    validationPlans: [InteractionExpectationValidationPlan]!
+}
+
+type UnitTestBasedInteractionExpectation implements InteractionExpectation {
+    id: ID!
+    expectFrom: Message!
+    expectTo: [Interface]!
+    status: String!
+    validationPlans: [InteractionExpectationValidationPlan]!
+    derivedFrom: UnitTest!
+}
+
+type InteractionExpectationValidationPlan {
+    id: ID!
+    candidateFor: InteractionExpectation!
+    interactionGraph: InteractionGraph!
+    status: String!
+}
+
+type InteractionGraph {
+    id: ID!
+    interactions: [Interaction]!
+}
+
+type Interaction {
+    id: ID!
+    next: [Interaction]!
+    previous: [Interaction]!
+    derivedFrom: UnitTest!
+    from: [IncomingInterface]!
+    to: [OutgoingInterface]!
+    testCase: TestCase!
+    order: Int!
+    labels: [String]!
+}
+
+type TestCase {
+    id: ID!
+    replacements: [Replacement]!
+    derivedFrom: AbstractTestCase!
+    parameters: [String]!
+    actualTest: ConcreteTestCase
+    labels: [String]!
+}
+
+type Replacement {
+    id: ID!
+    messageToReplace: Message!
+    replaceWithMessageFrom: OutgoingInterface!
+}
+
+type ProtocolDatum {
+    first: String!
+    second: String!
+}
+
+type Query {
+    components: [Component]!
+    component(identifier: String!): Component!
+}

@@ -53,6 +53,9 @@ sealed class ReceivedMessageEntity : MessageEntity() {
     @Relationship(type = RECEIVED_BY_RELATIONSHIP_LABEL)
     lateinit var receivedBy: IncomingInterfaceEntity
 
+    @Relationship(DEPENDS_ON_RELATIONSHIP_LABEL, direction = Relationship.Direction.INCOMING)
+    var dependencyFor: Set<ComponentResponseEntity> = setOf()
+
     init {
         labels += setOf(RECEIVED_MESSAGE_NODE_LABEL)
     }
@@ -90,9 +93,6 @@ class EnvironmentResponseEntity : ReceivedMessageEntity() {
 
     @Relationship(REACTION_TO_RELATIONSHIP_LABEL)
     lateinit var reactionTo: ComponentResponseEntity
-
-    @Relationship(DEPENDS_ON_RELATIONSHIP_LABEL, direction = Relationship.Direction.INCOMING)
-    var dependencyFor: Set<ComponentResponseEntity> = setOf()
 }
 
 interface MessageReferenceProjection: EntityReferenceWithLabelsProjection {

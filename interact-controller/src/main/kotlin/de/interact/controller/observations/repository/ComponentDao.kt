@@ -6,20 +6,20 @@ import de.interact.domain.testtwin.Component
 import de.interact.domain.testtwin.ComponentIdentifier
 import de.interact.domain.testtwin.spi.Components
 import org.springframework.data.neo4j.core.Neo4jTemplate
-import org.springframework.stereotype.Repository
+import org.springframework.data.neo4j.repository.Neo4jRepository
+import org.springframework.graphql.data.GraphQlRepository
 import org.springframework.stereotype.Service
 import java.util.*
 
-
-@Repository
-interface ComponentRepositoy : org.springframework.data.repository.Repository<ComponentEntity, UUID> {
+@GraphQlRepository(typeName = "Component")
+interface ComponentRepository : org.springframework.data.repository.Repository<ComponentEntity, UUID>, Neo4jRepository<ComponentEntity, UUID>{
     fun findProjectionById(identifier: UUID): ComponentProjection?
     fun findAllBy(): List<ComponentProjection>
 }
 
 @Service
 class ComponentDao(
-    private val repository: ComponentRepositoy,
+    private val repository: ComponentRepository,
     private val neo4jTemplate: Neo4jTemplate
 ) : Components {
     override fun `find by id`(id: ComponentId): Component? {

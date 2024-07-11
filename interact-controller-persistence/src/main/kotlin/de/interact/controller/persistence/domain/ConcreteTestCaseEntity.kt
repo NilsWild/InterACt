@@ -40,6 +40,8 @@ class UnitTestEntity : ConcreteTestCaseEntity() {
         labels += setOf(UNIT_TEST_NODE_LABEL)
     }
 
+    @Relationship(type = DERIVED_FROM_TEST_RELATIONSHIP_LABEL, direction = Relationship.Direction.INCOMING)
+    var derivedExpectations: Set<UnitTestBasedInteractionExpectationEntity> = emptySet()
 }
 
 @Node(INTERACTION_TEST_NODE_LABEL)

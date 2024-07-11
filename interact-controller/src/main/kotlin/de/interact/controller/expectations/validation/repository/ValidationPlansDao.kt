@@ -1,5 +1,7 @@
 package de.interact.controller.expectations.validation.repository
 
+import arrow.core.Either.Companion.catch
+import arrow.core.getOrElse
 import de.interact.controller.persistence.domain.*
 import de.interact.domain.expectations.TestParameter
 import de.interact.domain.expectations.validation.plan.*
@@ -60,6 +62,7 @@ interface ValidationPlanProjection: ValidationPlanReferenceProjection {
             val derivedFrom: UnitTestReferenceProjection
             val from: Set<IncomingInterfaceReferenceProjection>
             val to: Set<OutgoingInterfaceReferenceProjection>
+            val order: Int
             val testCase: TestCaseProjection
 
             interface TestCaseProjection: TestCaseReferenceProjection {
@@ -83,6 +86,110 @@ interface ValidationPlanProjection: ValidationPlanReferenceProjection {
 }
 
 private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntity {
+
+    val interactionsToMap = interactionGraph.source?.let { mutableSetOf(it) } ?: mutableSetOf()
+    val mappedInteractions: MutableMap<InteractionId,InteractionEntity> = mutableMapOf()
+    while (interactionsToMap.isNotEmpty()) {
+        val current = interactionsToMap.first()
+        interactionsToMap.remove(current)
+
+        var map: (Interaction) -> InteractionEntity = { interaction ->
+            val creator = when(interaction) {
+                is Interaction.Pending -> ::pendingInteractionEntity
+                is Interaction.Executable -> ::executableInteractionEntity
+                is Interaction.Finished.Validated -> ::validatedInteractionEntity
+                is Interaction.Finished.Failed -> ::failedInteractionEntity
+            }
+
+            creator(
+                interaction.id,
+                catch{Collections.max(interactionGraph.reverseAdjacencyMap[interaction]!!.map { mappedInteractions[it.id]!!.order+1 })}.getOrElse { 0 },
+                interaction.version,
+                interactionGraph.reverseAdjacencyMap[interaction]!!.map { mappedInteractions[it.id]!! }.toSet(),
+                interaction.derivedFrom.toEntity(),
+                interaction.from.map { it.toEntity() }.toSet(),
+                interaction.to.map { it.toEntity() }.toSet(),
+                when (interaction.testCase) {
+                    is TestCase.IncompleteTestCase -> incompleteTestCaseEntity(
+                        interaction.testCase.id,
+                        interaction.testCase.version,
+                        interaction.testCase.replacements.map {
+                            replacementEntity(
+                                it.id,
+                                it.version,
+                                it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
+                                    m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
+                                },
+                                it.replacement.interfaceToCopyFrom.toEntity()
+                            )
+                        }.toSet(),
+                        (interaction.testCase as TestCase.IncompleteTestCase).deriveFrom.toEntity()
+                    )
+
+                    is TestCase.ExecutableTestCase -> executableTestCaseEntity(
+                        interaction.testCase.id,
+                        interaction.testCase.version,
+                        interaction.testCase.replacements.map {
+                            replacementEntity(
+                                it.id,
+                                it.version,
+                                it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
+                                    m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
+                                },
+                                it.replacement.interfaceToCopyFrom.toEntity()
+                            )
+                        }.toSet(),
+                        (interaction.testCase as TestCase.ExecutableTestCase).derivedFrom.toEntity(),
+                        (interaction.testCase as TestCase.ExecutableTestCase).parameters.map { it.toString() }
+                    )
+
+                    is TestCase.CompleteTestCase.Succeeded -> succeededTestCaseEntity(
+                        interaction.testCase.id,
+                        interaction.testCase.version,
+                        interaction.testCase.replacements.map {
+                            replacementEntity(
+                                it.id,
+                                it.version,
+                                it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
+                                    m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
+                                },
+                                it.replacement.interfaceToCopyFrom.toEntity()
+                            )
+                        }.toSet(),
+                        (interaction.testCase as TestCase.CompleteTestCase.Succeeded).derivedFrom.toEntity(),
+                        (interaction.testCase as TestCase.CompleteTestCase.Succeeded).parameters.map { it.toString() },
+                        (interaction.testCase as TestCase.CompleteTestCase.Succeeded).actualTest.toEntity()
+                    )
+
+                    is TestCase.CompleteTestCase.Failed -> failedTestCaseEntity(
+                        interaction.testCase.id,
+                        interaction.testCase.version,
+                        interaction.testCase.replacements.map {
+                            replacementEntity(
+                                it.id,
+                                it.version,
+                                it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
+                                    m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
+                                },
+                                it.replacement.interfaceToCopyFrom.toEntity()
+                            )
+                        }.toSet(),
+                        (interaction.testCase as TestCase.CompleteTestCase.Failed).derivedFrom.toEntity(),
+                        (interaction.testCase as TestCase.CompleteTestCase.Failed).parameters.map { it.toString() },
+                        (interaction.testCase as TestCase.CompleteTestCase.Succeeded).actualTest.toEntity()
+                    )
+                }
+            )
+        }
+
+        mappedInteractions[current.id] = map(current)
+        interactionGraph.adjacencyMap[current]?.forEach() {
+            if(mappedInteractions.keys.containsAll(interactionGraph.reverseAdjacencyMap[it]!!.map { it.id })) {
+                interactionsToMap.add(it)
+            }
+        }
+    }
+
     return interactionExpectationValidationPlanEntity(
         id,
         version,
@@ -90,103 +197,7 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
         interactionGraphEntity(
             interactionGraph.id,
             interactionGraph.version,
-            interactionGraph.interactions.map { interaction ->
-                val creator = when(interaction) {
-                    is Interaction.Pending -> ::pendingInteractionEntity
-                    is Interaction.Executable -> ::executableInteractionEntity
-                    is Interaction.Finished.Validated -> ::validatedInteractionEntity
-                    is Interaction.Finished.Failed -> ::failedInteractionEntity
-                }
-
-                val referenceCreator: (Interaction) -> (InteractionId, Long?) -> InteractionEntity = {
-                    val inter = it
-                        when(inter) {
-                            is Interaction.Pending -> ::pendingInteractionEntityReference
-                            is Interaction.Executable -> ::executableInteractionEntityReference
-                            is Interaction.Finished.Validated -> ::validatedInteractionEntityReference
-                            is Interaction.Finished.Failed -> ::failedInteractionEntityReference
-                        }
-                }
-
-                creator(
-                    interaction.id,
-                    interaction.version,
-                    interactionGraph.reverseAdjacencyMap[interaction]!!.map { referenceCreator(it)(it.id,it.version) }.toSet(),
-                    interaction.derivedFrom.toEntity(),
-                    interaction.from.map { it.toEntity() }.toSet(),
-                    interaction.to.map { it.toEntity() }.toSet(),
-                    when (interaction.testCase) {
-                        is TestCase.IncompleteTestCase -> incompleteTestCaseEntity(
-                            interaction.testCase.id,
-                            interaction.testCase.version,
-                            interaction.testCase.replacements.map {
-                                replacementEntity(
-                                    it.id,
-                                    it.version,
-                                    it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
-                                        m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
-                                    },
-                                    it.replacement.interfaceToCopyFrom.toEntity()
-                                )
-                            }.toSet(),
-                            (interaction.testCase as TestCase.IncompleteTestCase).deriveFrom.toEntity()
-                        )
-
-                        is TestCase.ExecutableTestCase -> executableTestCaseEntity(
-                            interaction.testCase.id,
-                            interaction.testCase.version,
-                            interaction.testCase.replacements.map {
-                                replacementEntity(
-                                    it.id,
-                                    it.version,
-                                    it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
-                                        m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
-                                    },
-                                    it.replacement.interfaceToCopyFrom.toEntity()
-                                )
-                            }.toSet(),
-                            (interaction.testCase as TestCase.ExecutableTestCase).derivedFrom.toEntity(),
-                            (interaction.testCase as TestCase.ExecutableTestCase).parameters.map { it.toString() }
-                        )
-
-                        is TestCase.CompleteTestCase.Succeeded -> succeededTestCaseEntity(
-                            interaction.testCase.id,
-                            interaction.testCase.version,
-                            interaction.testCase.replacements.map {
-                                replacementEntity(
-                                    it.id,
-                                    it.version,
-                                    it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
-                                        m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
-                                    },
-                                    it.replacement.interfaceToCopyFrom.toEntity()
-                                )
-                            }.toSet(),
-                            (interaction.testCase as TestCase.CompleteTestCase.Succeeded).derivedFrom.toEntity(),
-                            (interaction.testCase as TestCase.CompleteTestCase.Succeeded).parameters.map { it.toString() },
-                            (interaction.testCase as TestCase.CompleteTestCase.Succeeded).actualTest.toEntity()
-                        )
-
-                        is TestCase.CompleteTestCase.Failed -> failedTestCaseEntity(
-                            interaction.testCase.id,
-                            interaction.testCase.version,
-                            interaction.testCase.replacements.map {
-                                replacementEntity(
-                                    it.id,
-                                    it.version,
-                                    it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
-                                        m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
-                                    },
-                                    it.replacement.interfaceToCopyFrom.toEntity()
-                                )
-                            }.toSet(),
-                            (interaction.testCase as TestCase.CompleteTestCase.Failed).derivedFrom.toEntity(),
-                            (interaction.testCase as TestCase.CompleteTestCase.Failed).parameters.map { it.toString() },
-                            (interaction.testCase as TestCase.CompleteTestCase.Succeeded).actualTest.toEntity()
-                        )
-                    }
-                )
-            }.toSet()
+            mappedInteractions.values.toSortedSet()
         ),
         when (this) {
             is ValidationPlan.PendingValidationPlan -> "PENDING"

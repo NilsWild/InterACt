@@ -6,7 +6,7 @@ import java.util.*
 
 abstract class Entity {
     @Id
-    lateinit var id: UUID
+    var id: UUID? = null
     @Version
     var version: Long? = null
 }

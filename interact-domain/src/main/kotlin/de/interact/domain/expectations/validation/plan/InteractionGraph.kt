@@ -3,7 +3,10 @@ package de.interact.domain.expectations.validation.plan
 import com.fasterxml.uuid.Generators
 import de.interact.domain.expectations.validation.test.Test
 import de.interact.domain.expectations.validation.test.isEqualTo
-import de.interact.domain.shared.*
+import de.interact.domain.shared.Entity
+import de.interact.domain.shared.InteractionGraphId
+import de.interact.domain.shared.InterfaceId
+import de.interact.domain.shared.hashedSha256
 import java.util.*
 import java.util.function.Predicate
 
