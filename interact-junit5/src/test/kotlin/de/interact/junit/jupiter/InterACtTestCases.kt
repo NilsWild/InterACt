@@ -1,5 +1,6 @@
 package de.interact.junit.jupiter
 
+import de.interact.domain.rest.RestMessage
 import de.interact.junit.jupiter.annotation.InterACtTest
 import de.interact.test.forExample
 import de.interact.test.inherently
@@ -43,6 +44,14 @@ internal class InterACtTestCases {
         }
     }
 
+    @InterACtTest
+    @CsvSource(
+        value = ["null"]
+    )
+    fun test(message: RestMessage.Request<Map<String, DemoObject>> ) {
+        println(message)
+    }
+
     data class TestObj(val name: String, val name2: String)
 
     class TestObjAggregator : ArgumentsAggregator {
@@ -50,4 +59,6 @@ internal class InterACtTestCases {
             return TestObj(arguments.getString(0), arguments.getString(1))
         }
     }
+
+    class DemoObject(val name: String, val age: Int)
 }

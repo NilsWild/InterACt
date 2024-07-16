@@ -28,7 +28,7 @@ class SerializationTest {
         deserialized.body shouldBe mapOf("body" to "value")
     }
 
-    //@Test
+    @Test
     fun serialize2() {
         val req = RestMessage.Request(
             path = "/path/1",

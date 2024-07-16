@@ -11,14 +11,19 @@ import de.interact.domain.testtwin.abstracttest.concretetest.message.Environment
 import de.interact.domain.testtwin.abstracttest.concretetest.message.StimulusMessage
 import de.interact.domain.testtwin.spi.Versions
 import org.springframework.data.neo4j.core.Neo4jTemplate
+import org.springframework.data.neo4j.repository.Neo4jRepository
+import org.springframework.graphql.data.GraphQlRepository
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.util.*
 
 @Repository
-interface VersionRepository : org.springframework.data.repository.Repository<VersionEntity, UUID> {
+interface VersionRepository : org.springframework.data.repository.Repository<VersionEntity, UUID>,
+    Neo4jRepository<VersionEntity, UUID> {
     fun findProjByVersionOfId(componentId: UUID): List<VersionProjection>
     fun findProjByVersionOfIdAndId(componentId: UUID, versionId: UUID): VersionProjection?
+    fun findByVersionOfIdentifierAndIdentifier(componentIdentifier: String, versionIdentifier: String): VersionEntity?
+    fun findByVersionOfIdentifier(componentIdentifier: String):  List<VersionEntity>
 }
 
 @Service

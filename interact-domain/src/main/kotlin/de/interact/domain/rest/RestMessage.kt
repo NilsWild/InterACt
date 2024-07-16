@@ -50,9 +50,7 @@ class BodySerializer : JsonSerializer<Any>() {
                 }
             }
         }else {
-            SerializationConstants.messageMapper.serializerFactory.createSerializer(
-                serializers,
-                SerializationConstants.messageMapper.typeFactory.constructType(value::class.java)).serialize(value, gen, serializers)
+            gen.writeRawValue(SerializationConstants.messageMapper.writeValueAsString(value))
         }
     }
 }

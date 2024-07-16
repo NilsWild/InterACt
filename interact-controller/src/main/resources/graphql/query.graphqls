@@ -198,4 +198,6 @@ type ProtocolDatum {
 type Query {
     components: [Component]!
     component(identifier: String!): Component!
+    version(componentIdentifier: String!, versionIdentifier: String!): Version!
+    versions(componentIdentifier: String!): [Version]!
 }

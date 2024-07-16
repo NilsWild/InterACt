@@ -54,6 +54,21 @@ internal class InterACtTestTest {
                     TestCaseParameter("Test"),
                     TestCaseParameter(null)
                 )
+            ),
+            TestInvocationDescriptor(
+                AbstractTestId(
+                    ObservationToTwinMapper.abstractTestCaseId(
+                        ObservationToTwinMapper.versionId(
+                            ObservationToTwinMapper.componentId(ComponentName("interact-junit")),
+                            ComponentVersion("1.0.0")
+                        ),
+                        AbstractTestCaseSource(InterACtTestCases::class.java.canonicalName),
+                        AbstractTestCaseName("test")
+                    ).value
+                ),
+                listOf(
+                    TestCaseParameter("{\"path\":\"/path/1\",\"parameters\":{\"param\":\"value\"},\"headers\":{\"header\":\"value\"},\"body\":{\"value\":{\"name\":\"a\",\"age\":1}}}")
+                )
             )
         )
 

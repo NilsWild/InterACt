@@ -7,14 +7,15 @@ import de.interact.domain.testtwin.ComponentIdentifier
 import de.interact.domain.testtwin.spi.Components
 import org.springframework.data.neo4j.core.Neo4jTemplate
 import org.springframework.data.neo4j.repository.Neo4jRepository
-import org.springframework.graphql.data.GraphQlRepository
+import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.util.*
 
-@GraphQlRepository(typeName = "Component")
+@Repository
 interface ComponentRepository : org.springframework.data.repository.Repository<ComponentEntity, UUID>, Neo4jRepository<ComponentEntity, UUID>{
     fun findProjectionById(identifier: UUID): ComponentProjection?
     fun findAllBy(): List<ComponentProjection>
+    fun findByIdentifier(identifier: String): ComponentEntity?
 }
 
 @Service
