@@ -10,4 +10,5 @@ interface UnitTestBasedInteractionExpectationRepository:
     de.interact.controller.expectations.derivation.repository.UnitTestBasedInteractionExpectationsRepository,
     de.interact.controller.expectations.validation.repository.UnitTestBasedInteractionExpectationsRepository {
         fun count(): Long
-    }
+    fun countByStatus(status: String): Long
+}

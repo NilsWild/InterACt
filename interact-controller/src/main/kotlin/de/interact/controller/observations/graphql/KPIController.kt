@@ -5,6 +5,7 @@ import de.interact.controller.observations.repository.VersionRepository
 import de.interact.controller.persistence.ConcreteTestCaseRepository
 import de.interact.controller.persistence.UnitTestBasedInteractionExpectationRepository
 import de.interact.controller.persistence.domain.UNIT_TEST_NODE_LABEL
+import de.interact.domain.shared.InteractionExpectationStatus
 import de.interact.domain.shared.TestState
 import org.springframework.graphql.data.method.annotation.QueryMapping
 import org.springframework.graphql.data.method.annotation.SchemaMapping
@@ -57,17 +58,17 @@ class KPIController(
 
     @SchemaMapping(typeName = "KPIs", field = "expectationsPassedAmount")
     fun expectationsPassedAmount(): Int {
-        return 0
+        return unitTestBasedInteractionExpectationRepository.countByStatus(InteractionExpectationStatus.Validated.toString()).toInt()
     }
 
     @SchemaMapping(typeName = "KPIs", field = "expectationsPendingAmount")
     fun expectationsPendingAmount(): Int {
-        return 0
+        return unitTestBasedInteractionExpectationRepository.countByStatus(InteractionExpectationStatus.Validating.toString()).toInt()
     }
 
     @SchemaMapping(typeName = "KPIs", field = "expectationsFailedAmount")
     fun expectationsFailedAmount(): Int {
-        return 0
+        return unitTestBasedInteractionExpectationRepository.countByStatus(InteractionExpectationStatus.NoValidatingPathFound.toString()).toInt()
     }
 
 }
