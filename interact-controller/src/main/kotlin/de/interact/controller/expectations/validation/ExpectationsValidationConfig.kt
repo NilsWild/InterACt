@@ -1,5 +1,6 @@
 package de.interact.controller.expectations.validation
 
+import de.interact.domain.expectations.validation.api.InteractionExpectationsManager
 import de.interact.domain.expectations.validation.api.ValidationPlansManager
 import de.interact.domain.expectations.validation.spi.Interfaces
 import de.interact.domain.expectations.validation.spi.Tests
@@ -23,6 +24,14 @@ class ExpectationsValidationConfig {
             validationPlans,
             unitTestBasedInteractionExpectations,
             interfaces
+        )
+    }
+
+    @Bean
+    fun interactionExpectationManager(validationPlans: ValidationPlans, unitTestBasedInteractionExpectations: UnitTestBasedInteractionExpectations): InteractionExpectationsManager {
+        return InteractionExpectationsManager(
+            validationPlans,
+            unitTestBasedInteractionExpectations
         )
     }
 }

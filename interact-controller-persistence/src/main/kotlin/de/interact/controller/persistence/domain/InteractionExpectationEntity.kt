@@ -103,13 +103,15 @@ fun unitTestBasedInteractionExpectationEntity(
     expectFrom: MessageEntity,
     expectTo: Set<InterfaceEntity>,
     requires: Set<InteractionExpectationEntity>,
-    derivedFrom: UnitTestEntity
+    derivedFrom: UnitTestEntity,
+    status: String,
 ): UnitTestBasedInteractionExpectationEntity {
     return unitTestBasedInteractionExpectationEntityReference(id,version).also {
         it.expectFrom = expectFrom
         it.expectTo = expectTo
         it.requires = requires
         it.derivedFrom = derivedFrom
+        it.status = status
     }
 }
 

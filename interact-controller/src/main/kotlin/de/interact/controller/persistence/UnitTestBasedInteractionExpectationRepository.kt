@@ -8,4 +8,6 @@ import java.util.*
 interface UnitTestBasedInteractionExpectationRepository:
     org.springframework.data.repository.Repository<UnitTestBasedInteractionExpectationEntity, UUID>,
     de.interact.controller.expectations.derivation.repository.UnitTestBasedInteractionExpectationsRepository,
-    de.interact.controller.expectations.validation.repository.UnitTestBasedInteractionExpectationsRepository
+    de.interact.controller.expectations.validation.repository.UnitTestBasedInteractionExpectationsRepository {
+        fun count(): Long
+    }

@@ -4,16 +4,17 @@ import arrow.core.Either.Companion.catch
 import arrow.core.getOrElse
 import de.interact.controller.persistence.domain.*
 import de.interact.domain.expectations.TestParameter
+import de.interact.domain.expectations.validation.events.ValidationPlanUpdatedEvent
 import de.interact.domain.expectations.validation.plan.*
 import de.interact.domain.expectations.validation.spi.ValidationPlans
 import de.interact.domain.expectations.validation.test.Test
 import de.interact.domain.shared.*
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.neo4j.core.Neo4jTemplate
 import org.springframework.data.neo4j.repository.query.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.util.*
-import kotlin.reflect.KFunction2
 
 @Repository
 interface ValidationPlansRepository :
@@ -30,13 +31,19 @@ interface ValidationPlansRepository :
         parameters: List<String>
     ): List<UUID>
     fun findValidationPlanById(id: UUID): ValidationPlanProjection?
+    fun findValidationPlanByCandidateForId(value: UUID): Set<ValidationPlanProjection>
 }
 
 @Service
 class ValidationPlansDao(
     private val neo4jTemplate: Neo4jTemplate,
-    private val repository: ValidationPlansRepository
+    private val repository: ValidationPlansRepository,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) : ValidationPlans {
+    override fun find(id: ValidationPlanId): ValidationPlan? {
+        return repository.findValidationPlanById(id.value)?.toDomain()
+    }
+
     override fun waitingFor(test: Test): Set<ValidationPlan.PendingValidationPlan> {
         return repository.findValidationPlanWaitingForTest(
             test.derivedFrom.id.value,
@@ -45,7 +52,13 @@ class ValidationPlansDao(
     }
 
     override fun save(validationPlan: ValidationPlan): ValidationPlan {
-        return neo4jTemplate.saveAs(validationPlan.toEntity(), ValidationPlanProjection::class.java).toDomain()
+        return neo4jTemplate.saveAs(validationPlan.toEntity(), ValidationPlanProjection::class.java).toDomain().also {
+            applicationEventPublisher.publishEvent(ValidationPlanUpdatedEvent(it.id))
+        }
+    }
+
+    override fun findByInteractionExpectationId(id: UnitTestBasedInteractionExpectationId): List<ValidationPlan> {
+        return repository.findValidationPlanByCandidateForId(id.value).map { it.toDomain() }
     }
 }
 

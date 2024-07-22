@@ -3,6 +3,7 @@ package de.interact.controller.expectations.derivation.repository
 import de.interact.controller.persistence.domain.*
 import de.interact.domain.expectations.derivation.interactionexpectation.InteractionExpectation
 import de.interact.domain.expectations.derivation.spi.UnitTestBasedInteractionExpectations
+import de.interact.domain.shared.InteractionExpectationStatus
 import de.interact.domain.shared.UnitTestBasedInteractionExpectationId
 import org.springframework.data.neo4j.core.Neo4jTemplate
 import org.springframework.data.repository.NoRepositoryBean
@@ -39,7 +40,8 @@ private fun InteractionExpectation.UnitTestBasedInteractionExpectation.toEntity(
         requires.map {
             it.toEntity()
         }.toSet(),
-        derivedFrom.toEntity()
+        derivedFrom.toEntity(),
+        status.toString()
     )
 }
 
@@ -48,6 +50,7 @@ interface UnitTestBasedInteractionExpectationProjection: UnitTestBasedInteractio
     val expectFrom: ComponentResponseReferenceProjection
     val expectTo: Set<IncomingInterfaceReferenceProjection>
     val requires: Set<InteractionExpectationReferenceProjection>
+    val status: String
 }
 
 private fun UnitTestBasedInteractionExpectationProjection.toDomain(): InteractionExpectation.UnitTestBasedInteractionExpectation {
@@ -60,6 +63,7 @@ private fun UnitTestBasedInteractionExpectationProjection.toDomain(): Interactio
         requires.map {
             it.toEntityReference()
         }.toSet(),
+        InteractionExpectationStatus.fromString(status),
         UnitTestBasedInteractionExpectationId(id),
         version
     )

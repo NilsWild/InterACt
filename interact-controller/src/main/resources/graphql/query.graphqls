@@ -195,9 +195,28 @@ type ProtocolDatum {
     second: String!
 }
 
+type KPIs {
+    # component stats
+    componentAmount: Int
+    componentVersionsAmount: Int
+
+    # unit test stats
+    unitTestAmount: Int
+    unitTestPassedAmount: Int
+    unitTestFailedAmount: Int
+
+    # expectations stats
+    expectationsAmount: Int
+    expectationsPassedAmount: Int
+    expectationsPendingAmount: Int
+    expectationsFailedAmount: Int
+}
+
+
 type Query {
     components: [Component]!
     component(identifier: String!): Component!
     version(componentIdentifier: String!, versionIdentifier: String!): Version!
     versions(componentIdentifier: String!): [Version]!
+    kpis: KPIs!
 }

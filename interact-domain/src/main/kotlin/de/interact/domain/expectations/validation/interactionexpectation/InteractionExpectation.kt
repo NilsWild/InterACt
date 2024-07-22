@@ -9,13 +9,15 @@ sealed class InteractionExpectation: Entity<InteractionExpectationId>() {
     abstract val expectTo: Set<EntityReference<InterfaceId>>
     abstract val requires: Set<EntityReference<InteractionExpectationId>>
     abstract val validationPlans: Set<EntityReference<ValidationPlanId>>
+    abstract val status: InteractionExpectationStatus
 
     data class UnitTestBasedInteractionExpectation(
         val derivedFrom: EntityReference<UnitTestId>,
         override val expectFrom: EntityReference<MessageId>,
         override val expectTo: Set<EntityReference<InterfaceId>>,
-        override val requires: Set<EntityReference<InteractionExpectationId>> = emptySet(),
-        override val validationPlans: Set<EntityReference<ValidationPlanId>> = emptySet(),
+        override val requires: Set<EntityReference<InteractionExpectationId>>,
+        override val validationPlans: Set<EntityReference<ValidationPlanId>>,
+        override val status: InteractionExpectationStatus,
         override val id: UnitTestBasedInteractionExpectationId = UnitTestBasedInteractionExpectationId(UUID.randomUUID()),
         override val version: Long? = null
     ) : InteractionExpectation()
@@ -23,8 +25,9 @@ sealed class InteractionExpectation: Entity<InteractionExpectationId>() {
     data class SystemInteractionExpectation(
         override val expectFrom: EntityReference<MessageId>,
         override val expectTo: Set<EntityReference<InterfaceId>>,
-        override val requires: Set<EntityReference<InteractionExpectationId>> = emptySet(),
-        override val validationPlans: Set<EntityReference<ValidationPlanId>> = emptySet(),
+        override val requires: Set<EntityReference<InteractionExpectationId>>,
+        override val validationPlans: Set<EntityReference<ValidationPlanId>>,
+        override val status: InteractionExpectationStatus,
         override val id: SystemInteractionExpectationId = SystemInteractionExpectationId(UUID.randomUUID()),
         override val version: Long? = null
     ) : InteractionExpectation()

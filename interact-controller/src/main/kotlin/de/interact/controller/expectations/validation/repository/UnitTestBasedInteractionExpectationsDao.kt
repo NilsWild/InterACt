@@ -3,9 +3,7 @@ package de.interact.controller.expectations.validation.repository
 import de.interact.controller.persistence.domain.*
 import de.interact.domain.expectations.validation.interactionexpectation.InteractionExpectation
 import de.interact.domain.expectations.validation.spi.UnitTestBasedInteractionExpectations
-import de.interact.domain.shared.EntityReference
-import de.interact.domain.shared.UnitTestBasedInteractionExpectationId
-import de.interact.domain.shared.UnitTestId
+import de.interact.domain.shared.*
 import org.springframework.data.neo4j.repository.query.Query
 import org.springframework.stereotype.Service
 import java.util.*
@@ -24,6 +22,11 @@ interface UnitTestBasedInteractionExpectationsRepository{
             "RETURN exp"
     )
     fun findExpectationPotentiallyDependantOn(test: UUID): Set<UnitTestBasedInteractionExpectationReferenceProjection>
+    fun findByValidationPlansId(id: UUID): UnitTestBasedInteractionExpectationProjection?
+    @Query("MATCH (exp:$UNIT_TEST_BASED_INTERACTION_EXPECTATION_NODE_LABEL{id:\$id}) " +
+            "SET exp.status = \$status " +
+            "RETURN exp")
+    fun setStatus(id: UUID, status: String): UnitTestBasedInteractionExpectationProjection?
 }
 
 @Service
@@ -37,6 +40,17 @@ class UnitTestBasedInteractionExpectationsDao(
     override fun findInteractionExpectationsPotentiallyDependantOn(test: EntityReference<UnitTestId>): Set<EntityReference<UnitTestBasedInteractionExpectationId>> {
         return repository.findExpectationPotentiallyDependantOn(test.id.value).map { it.toEntityReference() }.toSet()
     }
+
+    override fun findByValidationPlansId(id: ValidationPlanId): InteractionExpectation.UnitTestBasedInteractionExpectation? {
+        return repository.findByValidationPlansId(id.value)?.toDomain()
+    }
+
+    override fun setStatus(
+        id: UnitTestBasedInteractionExpectationId,
+        validated: InteractionExpectationStatus
+    ) {
+        repository.setStatus(id.value, validated.toString())
+    }
 }
 
 interface UnitTestBasedInteractionExpectationProjection: UnitTestBasedInteractionExpectationReferenceProjection{
@@ -45,6 +59,7 @@ interface UnitTestBasedInteractionExpectationProjection: UnitTestBasedInteractio
     val expectTo: Set<InterfaceReferenceProjection>
     val requires: Set<InteractionExpectationReferenceProjection>
     val validationPlans: Set<ValidationPlanReferenceProjection>
+    val status: String
 }
 
 fun UnitTestBasedInteractionExpectationProjection.toDomain(): InteractionExpectation.UnitTestBasedInteractionExpectation {
@@ -54,6 +69,7 @@ fun UnitTestBasedInteractionExpectationProjection.toDomain(): InteractionExpecta
         expectTo.map { it.toEntityReference() }.toSet(),
         requires.map { it.toEntityReference() }.toSet(),
         validationPlans.map { it.toEntityReference() }.toSet(),
+        InteractionExpectationStatus.fromString(status),
         UnitTestBasedInteractionExpectationId(id),
         version
     )

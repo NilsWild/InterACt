@@ -265,5 +265,19 @@
                 <enabled>false</enabled>
             </releases>
         </repository>
+        <repository>
+            <id>gitlab-rwth</id>
+            <url>https://git.rwth-aachen.de/api/v4/projects/84754/packages/maven</url>
+        </repository>
     </repositories>
+    <distributionManagement>
+        <repository>
+            <id>gitlab-rwth</id>
+            <url>https://git.rwth-aachen.de/api/v4/projects/84754/packages/maven</url>
+        </repository>
+        <snapshotRepository>
+            <id>gitlab-rwth</id>
+            <url>https://git.rwth-aachen.de/api/v4/projects/84754/packages/maven</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
