@@ -53,6 +53,7 @@ interface TestProjection: ConcreteTestCaseReferenceProjection {
     val template: AbstractTestCaseProjection
     val parameters: List<String>
     val triggeredMessages: Set<ComplexMessageReference>
+    val status: String
 
     interface AbstractTestCaseProjection: AbstractTestCaseReferenceProjection {
         val test: VersionReferenceProjection
@@ -109,6 +110,7 @@ fun TestProjection.toDomain(): Test {
         template.test.toEntityReference(),
         template.toEntityReference(),
         parameters.map { TestParameter(it) },
-        convertedMessages.toSortedSet()
+        convertedMessages.toSortedSet(),
+        TestState.fromString(status)
     )
 }

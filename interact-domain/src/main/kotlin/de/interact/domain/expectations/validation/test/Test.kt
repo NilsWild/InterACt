@@ -14,6 +14,7 @@ data class Test(
     val derivedFrom: EntityReference<AbstractTestId>,
     val parameters: List<TestParameter>,
     val triggeredMessages: SortedSet<Message<*>>,
+    val status: TestState
 ): Entity<TestId>()
 
 sealed class Message<ID: MessageId> : Entity<ID>(), Comparable<Message<*>> {

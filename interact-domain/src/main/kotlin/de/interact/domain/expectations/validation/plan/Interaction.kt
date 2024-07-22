@@ -50,20 +50,38 @@ sealed class Interaction: Entity<InteractionId>() {
     }
 }
 
-internal fun Interaction.Executable.validate(test: Test): Interaction.Finished.Validated {
-    return Interaction.Finished.Validated(
-        this.derivedFrom,
-        TestCase.CompleteTestCase.Succeeded(
-            this.testCase.derivedFrom,
-            this.testCase.replacements,
-            this.testCase.parameters,
-            EntityReference(test.id, test.version),
-            this.testCase.id,
-            this.testCase.version
-        ),
-        this.from,
-        this.to,
-        this.id,
-        this.version
-    )
+internal fun Interaction.Executable.validate(test: Test): Interaction {
+    return when(test.status) {
+        is TestState.TestFinishedState.Succeeded -> Interaction.Finished.Validated(
+            this.derivedFrom,
+            TestCase.CompleteTestCase.Succeeded(
+                this.testCase.derivedFrom,
+                this.testCase.replacements,
+                this.testCase.parameters,
+                EntityReference(test.id, test.version),
+                this.testCase.id,
+                this.testCase.version
+            ),
+            this.from,
+            this.to,
+            this.id,
+            this.version
+        )
+        is TestState.TestFinishedState.Failed -> Interaction.Finished.Failed(
+            this.derivedFrom,
+            TestCase.CompleteTestCase.Failed(
+                this.testCase.derivedFrom,
+                this.testCase.replacements,
+                this.testCase.parameters,
+                EntityReference(test.id, test.version),
+                this.testCase.id,
+                this.testCase.version
+            ),
+            this.from,
+            this.to,
+            this.id,
+            this.version
+        )
+        else -> this
+    }
 }

@@ -189,7 +189,7 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
                         }.toSet(),
                         (interaction.testCase as TestCase.CompleteTestCase.Failed).derivedFrom.toEntity(),
                         (interaction.testCase as TestCase.CompleteTestCase.Failed).parameters.map { it.toString() },
-                        (interaction.testCase as TestCase.CompleteTestCase.Succeeded).actualTest.toEntity()
+                        (interaction.testCase as TestCase.CompleteTestCase.Failed).actualTest.toEntity()
                     )
                 }
             )

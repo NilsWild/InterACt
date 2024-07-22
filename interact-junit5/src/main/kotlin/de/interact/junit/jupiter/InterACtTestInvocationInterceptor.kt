@@ -53,6 +53,9 @@ class InterACtTestInvocationInterceptor(
             } catch (e: AssertionError) {
                 concreteTestCase.executionFinished(TestState.TestFinishedState.Failed.AssertionFailed)
                 throw e
+            } catch (e: Exception) {
+                concreteTestCase.executionFinished(TestState.TestFinishedState.Failed.ExceptionFailed)
+                throw e
             }
             Awaitility.await().until {
                 Configuration.observationManager!!.testFinished()
