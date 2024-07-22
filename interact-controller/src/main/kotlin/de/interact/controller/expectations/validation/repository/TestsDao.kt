@@ -20,7 +20,7 @@ interface TestsRepository: org.springframework.data.repository.Repository<Concre
             "MATCH p = (t)-[:$TRIGGERED_MESSAGES_RELATIONSHIP_LABEL]->()" +
             "-[:$DEPENDS_ON_RELATIONSHIP_LABEL|$REACTION_TO_RELATIONSHIP_LABEL" +
             "|$RECEIVED_BY_RELATIONSHIP_LABEL|$SENT_BY_RELATIONSHIP_LABEL]->() " +
-            "MATCH p2 = (t)<-[:$TEMPLATE_FOR_RELATIONSHIP_LABEL]-() " +
+            "MATCH p2 = (t)<-[:$TEMPLATE_FOR_RELATIONSHIP_LABEL]-()<-[:$TESTED_BY_RELATIONSHIP_LABEL]-() " +
             "RETURN t, collect(nodes(p))+collect(nodes(p2)), collect(relationships(p))+collect(relationships(p2))")
     fun findUnitTestThatReceivedMessageByInterface(
         receivedByInterfaceId: UUID
@@ -50,9 +50,13 @@ class TestsDao(
 }
 
 interface TestProjection: ConcreteTestCaseReferenceProjection {
-    val template: AbstractTestCaseReferenceProjection
+    val template: AbstractTestCaseProjection
     val parameters: List<String>
     val triggeredMessages: Set<ComplexMessageReference>
+
+    interface AbstractTestCaseProjection: AbstractTestCaseReferenceProjection {
+        val test: VersionReferenceProjection
+    }
 
     interface ComplexMessageReference: MessageReferenceProjection {
         val order: Int
@@ -65,7 +69,7 @@ interface TestProjection: ConcreteTestCaseReferenceProjection {
 }
 
 fun TestProjection.toDomain(): Test {
-    val convertedMessages = emptySet<Message>().toMutableSet()
+    val convertedMessages = emptySet<Message<*>>().toMutableSet()
 
     triggeredMessages.forEach { messageToConvert ->
         when {
@@ -102,6 +106,7 @@ fun TestProjection.toDomain(): Test {
             else -> throw IllegalArgumentException("Unknown test type")
         },
         version!!,
+        template.test.toEntityReference(),
         template.toEntityReference(),
         parameters.map { TestParameter(it) },
         convertedMessages.toSortedSet()

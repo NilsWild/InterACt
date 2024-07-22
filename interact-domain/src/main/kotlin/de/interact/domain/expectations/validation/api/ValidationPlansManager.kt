@@ -3,13 +3,15 @@ package de.interact.domain.expectations.validation.api
 import de.interact.domain.expectations.TestParameter
 import de.interact.domain.expectations.derivation.events.InteractionExpectationAddedEvent
 import de.interact.domain.expectations.derivation.spi.UnitTestBasedInteractionExpectationAddedEventListener
-import de.interact.domain.expectations.validation.`interface`.toEntityReference
 import de.interact.domain.expectations.validation.plan.*
 import de.interact.domain.expectations.validation.spi.Interfaces
 import de.interact.domain.expectations.validation.spi.Tests
 import de.interact.domain.expectations.validation.spi.UnitTestBasedInteractionExpectations
 import de.interact.domain.expectations.validation.spi.ValidationPlans
-import de.interact.domain.expectations.validation.test.*
+import de.interact.domain.expectations.validation.test.ComponentResponseMessage
+import de.interact.domain.expectations.validation.test.Message
+import de.interact.domain.expectations.validation.test.StimulusMessage
+import de.interact.domain.expectations.validation.test.Test
 import de.interact.domain.shared.*
 import de.interact.domain.testtwin.api.event.InteractionTestAddedEvent
 import de.interact.domain.testtwin.api.event.UnitTestAddedEvent
@@ -169,7 +171,15 @@ class ValidationPlansManager(
             val boundInterfaces = interfaces.findIncomingInterfacesBoundToOutgoingInterface(startInterface.id)
             boundInterfaces.forEach { nextInterface ->
                 val unitTests = tests.findUnitTestsReceivingBy(nextInterface)
-                val nextSegments = unitTests.map { unitTest ->
+                val nextSegments = unitTests.filter { nextTestCandidate ->
+                    interactionGraph.findFirstInteractionTraversingReverseAdjacencyMap(sink) {
+                    // we can continue if the next interaction is derived from the same concrete test case if
+                    // it's derived from the same abstract test case as a previous interaction
+                    (it.testCase.derivedFrom.id == nextTestCandidate.derivedFrom.id && it.derivedFrom.id != nextTestCandidate.id)
+                            // and it needs to be derived from the same abstract testcase if it's testing the same component
+                            || nextTestCandidate.testFor.id == tests.find(it.derivedFrom.id)!!.testFor.id && it.testCase.derivedFrom.id != nextTestCandidate.derivedFrom.id
+                    } == null
+                }.map { unitTest ->
                     Interaction.Pending(
                         EntityReference(UnitTestId(unitTest.id.value), unitTest.version),
                         TestCase.IncompleteTestCase(
@@ -190,15 +200,14 @@ class ValidationPlansManager(
                         ),
                         setOf(nextInterface.toEntityReference()),
                         unitTest.triggeredMessages.filterIsInstance<ComponentResponseMessage>()
-                            .filter { it.dependsOn.map { it.id }.contains(
-                                unitTest.triggeredMessages.filterIsInstance<Message.ReceivedMessage>()
-                                    .first { it.receivedBy.id == nextInterface.id }.id
-                            ) }.map { it.sentBy }.toSet()
+                            .filter {
+                                it.dependsOn.map { it.id }.contains(
+                                    unitTest.triggeredMessages.filterIsInstance<Message.ReceivedMessage>()
+                                        .first { it.receivedBy.id == nextInterface.id }.id
+                                )
+                            }.map { it.sentBy }.toSet()
                     )
                 }
-                    //.filter { interaction ->
-                    //TODO !interactionGraph.canBeContinuedWith(nextInterface.id, interaction)
-                //}
                 result[nextInterface.id] = nextSegments
             }
         }
@@ -255,7 +264,7 @@ class ValidationPlansManager(
                     it to Interaction.Executable(
                         it.derivedFrom,
                         TestCase.ExecutableTestCase(
-                            it.testCase.deriveFrom,
+                            it.testCase.derivedFrom,
                             it.testCase.replacements,
                             parameters,
                             it.testCase.id,

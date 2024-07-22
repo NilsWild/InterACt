@@ -136,7 +136,7 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
                                 it.replacement.interfaceToCopyFrom.toEntity()
                             )
                         }.toSet(),
-                        (interaction.testCase as TestCase.IncompleteTestCase).deriveFrom.toEntity()
+                        (interaction.testCase as TestCase.IncompleteTestCase).derivedFrom.toEntity()
                     )
 
                     is TestCase.ExecutableTestCase -> executableTestCaseEntity(

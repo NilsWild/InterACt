@@ -1,5 +1,7 @@
 package de.interact.controller.persistence.domain
 
+import de.interact.domain.shared.EntityReference
+import de.interact.domain.shared.EntityReferenceProjection
 import de.interact.domain.shared.VersionId
 import org.springframework.data.annotation.Version
 import org.springframework.data.neo4j.core.schema.Id
@@ -37,4 +39,10 @@ class VersionEntity(): Entity(){
     @Relationship(type = SENDING_TO_RELATIONSHIP_LABEL)
     var sendingTo: Set<OutgoingInterfaceEntity> = emptySet()
 
+}
+
+interface VersionReferenceProjection: EntityReferenceProjection
+
+fun VersionReferenceProjection.toEntityReference(): EntityReference<VersionId> {
+    return EntityReference(VersionId(id), version)
 }

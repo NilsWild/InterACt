@@ -5,6 +5,10 @@ import java.util.*
 abstract class Entity<out ID:Any>{
     abstract val id: ID
     abstract val version: Long?
+
+    fun toEntityReference(): EntityReference<ID> {
+        return EntityReference(this)
+    }
 }
 
 data class EntityReference<out ID:Any>(val id: ID, val version: Long?) {

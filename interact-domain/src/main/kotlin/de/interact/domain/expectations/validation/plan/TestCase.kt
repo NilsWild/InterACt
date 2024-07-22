@@ -6,17 +6,18 @@ import java.util.*
 
 sealed class TestCase: Entity<TestDefinitionId>() {
 
+    abstract val derivedFrom: EntityReference<AbstractTestId>
     abstract val replacements: Set<Replacement>
 
     data class IncompleteTestCase(
-        val deriveFrom: EntityReference<AbstractTestId>,
+        override val derivedFrom: EntityReference<AbstractTestId>,
         override val replacements: Set<Replacement>,
         override val id: TestDefinitionId = TestDefinitionId(UUID.randomUUID()),
         override val version: Long? = null
     ) : TestCase()
 
     data class ExecutableTestCase(
-        val derivedFrom: EntityReference<AbstractTestId>,
+        override val derivedFrom: EntityReference<AbstractTestId>,
         override val replacements: Set<Replacement>,
         val parameters: List<TestParameter>,
         override val id: TestDefinitionId = TestDefinitionId(UUID.randomUUID()),
@@ -24,7 +25,6 @@ sealed class TestCase: Entity<TestDefinitionId>() {
     ) : TestCase()
 
     sealed class CompleteTestCase: TestCase() {
-        abstract val derivedFrom: EntityReference<AbstractTestId>
         abstract val parameters: List<TestParameter>
         abstract val actualTest: EntityReference<TestId>
 
