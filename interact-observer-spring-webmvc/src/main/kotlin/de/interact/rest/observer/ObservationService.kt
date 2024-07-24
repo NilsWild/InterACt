@@ -1,6 +1,7 @@
 package de.interact.rest.observer
 
 import com.fasterxml.jackson.core.JacksonException
+import com.fasterxml.jackson.databind.ObjectMapper
 import de.interact.domain.rest.RestMessage
 import de.interact.domain.serialization.SerializationConstants
 import de.interact.domain.shared.Protocol
@@ -13,15 +14,17 @@ import de.interact.utils.Logging
 import de.interact.utils.logger
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.converter.HttpMessageConverter
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerMapping
 import java.net.URI
 import java.util.*
 
 @Component
-class ObservationService: Logging {
+class ObservationService(): Logging {
 
     val log = logger()
+    val urlTemplateMap: MutableMap<String, String> = HashMap()
 
     fun logRequest(httpServletRequest: HttpServletRequest, body: Any?) {
         val parameters = buildParametersMap(httpServletRequest)
@@ -58,6 +61,9 @@ class ObservationService: Logging {
                 )
             )
         }
+
+        urlTemplateMap[httpServletRequest.requestURI] =
+            httpServletRequest.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE).toString()
 
         val stringBuilder = StringBuilder()
         stringBuilder.append("REQUEST ")
@@ -96,7 +102,7 @@ class ObservationService: Logging {
                 Protocol("REST"),
                 ProtocolData(mapOf(
                     "method" to httpServletRequest.method.toString(),
-                    "path" to httpServletRequest.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE).toString(),
+                    "path" to urlTemplateMap[httpServletRequest.requestURI].toString(),
                     "request" to "false"
                 ))
             )
