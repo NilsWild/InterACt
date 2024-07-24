@@ -1,9 +1,11 @@
 package de.interact.junit.jupiter
 
+import com.fasterxml.jackson.databind.JavaType
 import de.interact.domain.serialization.SerializationConstants
 import org.junit.jupiter.api.extension.ParameterContext
 import org.junit.jupiter.params.converter.DefaultArgumentConverter
 import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
 
 object ParameterTypeResolver {
 
@@ -16,21 +18,21 @@ object ParameterTypeResolver {
         } else if (parameterContext.parameter.type.isPrimitive) {
             DefaultArgumentConverter.INSTANCE.convert(argument, parameterContext)
         } else {
-            val type = parameterContext.parameter.parameterizedType
-            if (type is ParameterizedType) {
-                val genericTypes =
-                    type.actualTypeArguments.map { SerializationConstants.messageMapper.typeFactory.constructType(it) }
-                        .toTypedArray()
-                SerializationConstants.messageMapper.readValue(
-                    argument.toString(),
-                    SerializationConstants.messageMapper.typeFactory.constructParametricType(
-                        parameterContext.parameter.type,
-                        *genericTypes
-                    )
-                )
-            } else {
-                SerializationConstants.messageMapper.readValue(argument.toString(), parameterContext.parameter.type)
-            }
+            //TODO use mapper
+            SerializationConstants.mapper.readValue(argument.toString(), resolveTypeReference(parameterContext.parameter.parameterizedType))
+        }
+    }
+
+    private fun resolveTypeReference(type: Type): JavaType {
+        return if (type is ParameterizedType) {
+            val genericTypes =
+                type.actualTypeArguments.map { resolveTypeReference(it) }.toTypedArray()
+            SerializationConstants.mapper.typeFactory.constructParametricType(
+                type.rawType as Class<*>,
+                *genericTypes
+            )
+        } else {
+            SerializationConstants.mapper.typeFactory.constructType(type)
         }
     }
 }

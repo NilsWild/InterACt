@@ -33,12 +33,12 @@ class ObservationService(): Logging {
             httpServletRequest.requestURI,
             parameters,
             buildHeadersMap(httpServletRequest),
-            if(body == null) null else if (body is String) body else SerializationConstants.messageMapper.writeValueAsString(body)
+            if(body == null) null else if (body is String) body else SerializationConstants.getMessageMapper(body.javaClass).writeValueAsJsonString(body)
         )
 
         if(Configuration.observationManager!!.getCurrentTestCase().observedBehavior.messageSequence.size == 0){
             Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addStimulus(
-                MessageValue(SerializationConstants.messageMapper.writeValueAsString(message)),
+                MessageValue(SerializationConstants.mapper.writeValueAsString(message)),
                 IncomingInterface(
                     Protocol("REST"),
                     ProtocolData(mapOf(
@@ -50,7 +50,7 @@ class ObservationService(): Logging {
             )
         } else {
             Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addEnvironmentResponse(
-                MessageValue(SerializationConstants.messageMapper.writeValueAsString(message)),
+                MessageValue(SerializationConstants.mapper.writeValueAsString(message)),
                 IncomingInterface(
                     Protocol("REST"),
                     ProtocolData(mapOf(
@@ -92,12 +92,12 @@ class ObservationService(): Logging {
             httpServletRequest.requestURI,
             parameters,
             buildHeadersMap(httpServletRequest),
-            if(body == null) null else if (body is String) body else SerializationConstants.messageMapper.writeValueAsString(body),
+            if(body == null) null else if (body is String) body else SerializationConstants.getMessageMapper(body.javaClass).writeValueAsJsonString(body),
             httpServletResponse.status
         )
 
         Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addComponentResponse(
-            MessageValue(SerializationConstants.messageMapper.writeValueAsString(message)),
+            MessageValue(SerializationConstants.mapper.writeValueAsString(message)),
             OutgoingInterface(
                 Protocol("REST"),
                 ProtocolData(mapOf(
@@ -155,15 +155,5 @@ class ObservationService(): Logging {
         }
 
         return map
-    }
-
-    private fun isValidJson(body: String): Boolean {
-        if (body.isBlank()) return false
-        try {
-            SerializationConstants.messageMapper.readTree(body)
-        } catch (e: JacksonException) {
-            return false
-        }
-        return true
     }
 }

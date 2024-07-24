@@ -1,5 +1,6 @@
 package de.interact.junit.jupiter
 
+import de.interact.domain.serialization.JacksonMessageMapper
 import de.interact.domain.serialization.SerializationConstants
 import de.interact.domain.testobservation.model.AbstractTestCaseName
 import de.interact.domain.testobservation.model.AbstractTestCaseSource
@@ -53,23 +54,7 @@ object ExtensionContextToTestInfoMapper {
         if (context.arguments[index] == null) {
             return TestCaseParameter(null)
         }
-        val type = context.executable.genericParameterTypes[index]
-        val result = if (type is ParameterizedType) {
-            val genericTypes =
-                type.actualTypeArguments.map { SerializationConstants.messageMapper.typeFactory.constructType(it) }
-                    .toTypedArray()
-            SerializationConstants.messageMapper.writerFor(
-                SerializationConstants.messageMapper.typeFactory.constructParametricType(
-                    context.executable.parameterTypes[index],
-                    *genericTypes
-                )
-            )
-                .writeValueAsString(
-                    context.arguments[index]
-                )
-        } else {
-            SerializationConstants.messageMapper.writeValueAsString(context.arguments[index])
-        }
+        val result = SerializationConstants.mapper.writeValueAsString(context.arguments[index])
         return TestCaseParameter(result)
     }
 }

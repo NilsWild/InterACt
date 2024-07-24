@@ -122,7 +122,7 @@ class WebClientObserver : MessageObserver, ExchangeFilterFunction {
 
     object RestObservationHelper : Logging {
         private val log = logger()
-        private val mapper = SerializationConstants.messageMapper
+        private val mapper = SerializationConstants.mapper
 
         fun recordRequest(
             interfaceUrl: String,

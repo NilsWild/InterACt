@@ -15,12 +15,12 @@ class SerializationTest {
             headers = mapOf("header" to "value"),
             body = "{\"body\":\"value\"}"
         )
-        val serialized = SerializationConstants.messageMapper.writeValueAsString(
+        val serialized = SerializationConstants.mapper.writeValueAsString(
             req
         )
-        val deserialized: RestMessage.Request<Map<String, String>> = SerializationConstants.messageMapper.readValue(
+        val deserialized: RestMessage.Request<Map<String, String>> = SerializationConstants.mapper.readValue(
             serialized,
-            SerializationConstants.messageMapper.typeFactory.constructParametricType(
+            SerializationConstants.mapper.typeFactory.constructParametricType(
                 RestMessage.Request::class.java,
                 Map::class.java
             )
@@ -36,12 +36,12 @@ class SerializationTest {
             headers = mapOf("header" to "value"),
             body = mapOf("body" to "value")
         )
-        val serialized = SerializationConstants.messageMapper.writeValueAsString(
+        val serialized = SerializationConstants.mapper.writeValueAsString(
             req
         )
-        val deserialized: RestMessage.Request<Map<String, String>> = SerializationConstants.messageMapper.readValue(
+        val deserialized: RestMessage.Request<Map<String, String>> = SerializationConstants.mapper.readValue(
             serialized,
-            SerializationConstants.messageMapper.typeFactory.constructParametricType(
+            SerializationConstants.mapper.typeFactory.constructParametricType(
                 RestMessage.Request::class.java,
                 Map::class.java
             )

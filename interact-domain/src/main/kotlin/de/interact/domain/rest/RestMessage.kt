@@ -3,12 +3,14 @@ package de.interact.domain.rest
 import arrow.core.raise.catch
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.TreeNode
 import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer
 import com.fasterxml.jackson.databind.jsontype.TypeDeserializer
 import com.fasterxml.jackson.databind.ser.ContextualSerializer
+import com.sun.source.tree.Tree
 import de.interact.domain.serialization.SerializationConstants
 import io.github.projectmapk.jackson.module.kogera.readValue
 
@@ -50,7 +52,7 @@ class BodySerializer : JsonSerializer<Any>() {
                 }
             }
         }else {
-            gen.writeRawValue(SerializationConstants.messageMapper.writeValueAsString(value))
+            gen.writeRawValue(SerializationConstants.getMessageMapper(value.javaClass).writeValueAsJsonString(value))
         }
     }
 }
@@ -64,8 +66,17 @@ class BodyDeserializer : JsonDeserializer<Any>(), ContextualDeserializer {
         return BodyDeserializer().apply { valueType = bodyType }
     }
 
-    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Any {
-        return SerializationConstants.messageMapper.readValue(p, valueType)
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Any? {
+        return try {
+            val body = p.codec.readTree<TreeNode>(p).toString()
+            val result = SerializationConstants.getMessageMapper(valueType!!.rawClass).resolveToTestParameter(
+                body,
+                valueType!!
+            )
+            result
+        } catch (e: Exception) {
+            return p.valueAsString
+        }
     }
 
 }

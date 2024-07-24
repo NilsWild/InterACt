@@ -47,7 +47,7 @@ class FeignObserver : Logger() {
         )
 
         Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addComponentResponse(
-            MessageValue(SerializationConstants.messageMapper.writeValueAsString(message)),
+            MessageValue(SerializationConstants.mapper.writeValueAsString(message)),
             OutgoingInterface(
                 Protocol("REST"),
                 ProtocolData(
@@ -81,7 +81,7 @@ class FeignObserver : Logger() {
         )
 
         Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addEnvironmentResponse(
-            MessageValue(SerializationConstants.messageMapper.writeValueAsString(message)),
+            MessageValue(SerializationConstants.mapper.writeValueAsString(message)),
             IncomingInterface(
                 Protocol("REST"),
                 ProtocolData(
@@ -101,7 +101,7 @@ class FeignObserver : Logger() {
     private fun isValidJson(body: String): Boolean {
         if (body.isBlank()) return false
         try {
-            SerializationConstants.messageMapper.readTree(body)
+            SerializationConstants.mapper.readTree(body)
         } catch (e: JacksonException) {
             return false
         }

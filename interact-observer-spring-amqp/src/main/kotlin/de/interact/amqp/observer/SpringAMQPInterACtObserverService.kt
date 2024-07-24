@@ -63,7 +63,7 @@ class SpringAMQPInterACtObserverService(rabbitUrl: String, rabbitUser: String, r
         )
 
         Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addComponentResponse(
-            MessageValue(SerializationConstants.messageMapper.writeValueAsString(payload)),
+            MessageValue(SerializationConstants.getMessageMapper(payload.javaClass).writeValueAsJsonString(payload)),
             OutgoingInterface(
                 Protocol("AMQP"),
                 ProtocolData(
@@ -103,7 +103,7 @@ class SpringAMQPInterACtObserverService(rabbitUrl: String, rabbitUser: String, r
             )
         }
 
-        val messageValue = MessageValue(SerializationConstants.messageMapper.writeValueAsString(payload))
+        val messageValue = MessageValue(SerializationConstants.getMessageMapper(payload.javaClass).writeValueAsJsonString(payload))
         val incomingInterface = IncomingInterface(
             Protocol("AMQP"),
             ProtocolData(
