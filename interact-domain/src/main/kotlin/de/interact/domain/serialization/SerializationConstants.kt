@@ -16,7 +16,7 @@ object SerializationConstants {
         JavaTimeModule()
     )
 
-    var messageMappers: SortedSet<MessageMapper> = sortedSetOf(JacksonMessageMapper(mapper))
+    var messageMappers: SortedSet<MessageMapper> = sortedSetOf()
         private set
 
     fun registerMessageMapper(messageMapper: MessageMapper) {

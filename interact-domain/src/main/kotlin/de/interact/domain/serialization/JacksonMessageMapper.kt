@@ -10,7 +10,7 @@ class JacksonMessageMapper(private val mapper: ObjectMapper, override val order:
         return true
     }
 
-    override fun resolveToTestParameter(value: String, type: Type): Any? {
+    override fun readValue(value: String, type: Type): Any? {
         return mapper.readValue(value,resolveTypeReference(type))
 
     }

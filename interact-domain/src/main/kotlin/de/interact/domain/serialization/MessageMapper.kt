@@ -7,10 +7,7 @@ interface MessageMapper: Comparable<MessageMapper> {
     val order: Int
 
     fun canHandle(type: Class<*>): Boolean
-    fun resolveToTestParameter(value: String, type: Type): Any?
-    fun resolveToTestNameElement(value: Any): String {
-        return writeValueAsJsonString(value)
-    }
+    fun readValue(value: String, type: Type): Any?
     fun writeValueAsJsonString(value: Any): String
 
     override fun compareTo(other: MessageMapper): Int {

@@ -27,12 +27,8 @@ class InteractResponseBodyFilter(
     override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
         val responseWrapper = ContentCachingResponseWrapper(response)
         val requestWrapper = ContentCachingRequestWrapper(request)
-        val requestBody = getStringValue(
-            requestWrapper.contentAsByteArray,
-            request.characterEncoding
-        )
+
         filterChain.doFilter(requestWrapper, responseWrapper)
-        loggingService.logRequest(requestWrapper, requestBody)
         val responseBody: String = getStringValue(
             responseWrapper.contentAsByteArray,
             response.characterEncoding

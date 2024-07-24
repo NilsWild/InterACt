@@ -1,11 +1,19 @@
 package de.interact.rest.observer
 
 import de.interact.domain.rest.RestMessage
+import de.interact.domain.serialization.JacksonMessageMapper
 import de.interact.domain.serialization.SerializationConstants
 import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SerializationTest {
+
+    init {
+        SerializationConstants.registerMessageMapper(JacksonMessageMapper(SerializationConstants.mapper))
+    }
 
     @Test
     fun serialize() {
