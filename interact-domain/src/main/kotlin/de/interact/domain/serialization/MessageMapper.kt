@@ -2,6 +2,7 @@ package de.interact.domain.serialization
 
 import java.lang.reflect.Type
 
+@JvmDefaultWithoutCompatibility
 interface MessageMapper: Comparable<MessageMapper> {
 
     val order: Int

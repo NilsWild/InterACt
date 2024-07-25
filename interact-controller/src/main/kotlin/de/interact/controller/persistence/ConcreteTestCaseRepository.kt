@@ -12,6 +12,6 @@ interface ConcreteTestCaseRepository: org.springframework.data.repository.Reposi
     @Query("MATCH (n:`:#{literal(#label)}`) RETURN count(n)")
     fun countByLabelsContains(label: String): Long
 
-    @Query("MATCH (n:`:#{literal(#label)}`) WEHRE n.status = \$status RETURN count(n)")
+    @Query("MATCH (n:`:#{literal(#label)}`) WHERE n.status = \$status RETURN count(n)")
     fun countByLabelsContainsAndStatus(label: String, status: String): Long
 }
