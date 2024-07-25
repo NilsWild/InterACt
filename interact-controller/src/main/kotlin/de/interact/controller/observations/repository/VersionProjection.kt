@@ -12,6 +12,7 @@ import de.interact.domain.testtwin.abstracttest.concretetest.InteractionTest
 import de.interact.domain.testtwin.abstracttest.concretetest.TestParameter
 import de.interact.domain.testtwin.abstracttest.concretetest.UnitTest
 import de.interact.domain.testtwin.abstracttest.concretetest.message.*
+import de.interact.domain.testtwin.abstracttest.concretetest.message.Message
 import de.interact.domain.testtwin.componentinterface.IncomingInterface
 import de.interact.domain.testtwin.componentinterface.OutgoingInterface
 import java.util.*

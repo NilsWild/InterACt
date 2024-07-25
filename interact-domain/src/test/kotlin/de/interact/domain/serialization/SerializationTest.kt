@@ -1,18 +1,19 @@
-package de.interact.rest.observer
+package de.interact.domain.serialization
 
+import com.fasterxml.jackson.databind.JavaType
 import de.interact.domain.rest.RestMessage
-import de.interact.domain.serialization.JacksonMessageMapper
-import de.interact.domain.serialization.SerializationConstants
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SerializationTest {
 
     init {
-        SerializationConstants.registerMessageMapper(JacksonMessageMapper(SerializationConstants.mapper))
+        SerializationConstants.registerMessageSerializer(RestMessageBodySerializer(SerializationConstants.mapper))
+        SerializationConstants.registerMessageDeserializer(RestMessageBodyDeserializer(SerializationConstants.mapper))
     }
 
     @Test
@@ -23,14 +24,16 @@ class SerializationTest {
             headers = mapOf("header" to "value"),
             body = "{\"body\":\"value\"}"
         )
-        val serialized = SerializationConstants.mapper.writeValueAsString(
-            req
-        )
-        val deserialized: RestMessage.Request<Map<String, String>> = SerializationConstants.mapper.readValue(
+        val serialized = SerializationConstants.mapper.writeValueAsString(req)
+        val deserialized: RestMessage.Request<Map<String, String>> = SerializationConstants.mapper.readValue<RestMessage.Request<Map<String, String>>>(
             serialized,
             SerializationConstants.mapper.typeFactory.constructParametricType(
                 RestMessage.Request::class.java,
-                Map::class.java
+                SerializationConstants.mapper.typeFactory.constructMapType(
+                    HashMap::class.java,
+                    String::class.java,
+                    String::class.java
+                )
             )
         )
         deserialized.body shouldBe mapOf("body" to "value")
@@ -55,5 +58,18 @@ class SerializationTest {
             )
         )
         deserialized shouldBe req
+    }
+
+    private fun resolveTypeReference(type: Type): JavaType {
+        return if (type is ParameterizedType) {
+            val genericTypes =
+                type.actualTypeArguments.map { resolveTypeReference(it) }.toTypedArray()
+            SerializationConstants.mapper.typeFactory.constructParametricType(
+                type.rawType as Class<*>,
+                *genericTypes
+            )
+        } else {
+            SerializationConstants.mapper.typeFactory.constructType(type)
+        }
     }
 }

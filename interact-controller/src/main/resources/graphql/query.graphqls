@@ -84,7 +84,7 @@ type IncomingInterface implements Interface {
     type: String!
     protocol: String!
     protocolData: [ProtocolDatum]!
-    consumer: Component!
+    consumer: Version!
     receivedMessages: [ReceivedMessage]!
     boundTo: [OutgoingInterface]!
 }
@@ -94,7 +94,7 @@ type OutgoingInterface implements Interface {
     type: String!
     protocol: String!
     protocolData: [ProtocolDatum]!
-    producer: Component!
+    producer: Version!
     sentMessages: [SentMessage]!
     boundTo: [IncomingInterface]!
 }

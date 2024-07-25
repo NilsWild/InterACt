@@ -1,6 +1,5 @@
 package de.interact.junit.jupiter
 
-import de.interact.domain.serialization.JacksonMessageMapper
 import de.interact.domain.serialization.SerializationConstants
 import de.interact.domain.testobservation.model.AbstractTestCaseName
 import de.interact.domain.testobservation.model.AbstractTestCaseSource
@@ -10,7 +9,6 @@ import de.interact.test.PropertiesBasedComponentInformationLoader
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext
 import java.lang.reflect.Method
-import java.lang.reflect.ParameterizedType
 import kotlin.reflect.full.createInstance
 
 object ExtensionContextToTestInfoMapper {

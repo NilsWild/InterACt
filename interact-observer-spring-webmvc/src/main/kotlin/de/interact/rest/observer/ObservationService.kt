@@ -33,7 +33,7 @@ class ObservationService(): Logging {
             httpServletRequest.requestURI,
             parameters,
             buildHeadersMap(httpServletRequest),
-            if(body == null) null else if (body is String) body else SerializationConstants.getMessageMapper(body.javaClass).writeValueAsJsonString(body)
+            body
         )
 
         if(Configuration.observationManager!!.getCurrentTestCase().observedBehavior.messageSequence.size == 0){
@@ -92,7 +92,7 @@ class ObservationService(): Logging {
             httpServletRequest.requestURI,
             parameters,
             buildHeadersMap(httpServletRequest),
-            if(body == null) null else if (body is String) body else SerializationConstants.getMessageMapper(body.javaClass).writeValueAsJsonString(body),
+            body,
             httpServletResponse.status
         )
 

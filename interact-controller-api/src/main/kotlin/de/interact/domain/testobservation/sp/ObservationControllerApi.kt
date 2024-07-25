@@ -18,6 +18,7 @@ import de.interact.domain.testtwin.abstracttest.concretetest.TestParameter
 import de.interact.domain.testtwin.abstracttest.concretetest.UnitTest
 import de.interact.domain.testtwin.abstracttest.concretetest.message.*
 import de.interact.domain.testtwin.abstracttest.concretetest.message.ComponentResponseMessage
+import de.interact.domain.testtwin.abstracttest.concretetest.message.Message
 import de.interact.domain.testtwin.abstracttest.concretetest.testCaseIdentifier
 import de.interact.domain.testtwin.api.dto.PartialComponentVersionModel
 import de.interact.domain.testtwin.componentinterface.IncomingInterface

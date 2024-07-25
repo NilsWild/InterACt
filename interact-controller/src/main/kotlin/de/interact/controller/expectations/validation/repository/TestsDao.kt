@@ -6,6 +6,7 @@ import de.interact.domain.expectations.shared.MessageValue
 import de.interact.domain.expectations.validation.`interface`.Interface
 import de.interact.domain.expectations.validation.spi.Tests
 import de.interact.domain.expectations.validation.test.*
+import de.interact.domain.expectations.validation.test.Message
 import de.interact.domain.shared.*
 import org.springframework.data.neo4j.repository.query.Query
 import org.springframework.stereotype.Repository

@@ -2,7 +2,7 @@ package de.interact.amqp.observer
 
 import com.rabbitmq.http.client.Client
 import com.rabbitmq.http.client.domain.ExchangeInfo
-import de.interact.amqp.StringAMQPMessage
+import de.interact.domain.amqp.AmqpMessage
 import de.interact.domain.amqp.ExchangeName
 import de.interact.domain.amqp.QueueBinding
 import de.interact.domain.amqp.RoutingKey
@@ -57,13 +57,13 @@ class SpringAMQPInterACtObserverService(rabbitUrl: String, rabbitUser: String, r
                 }
             }
         }
-        val payload = StringAMQPMessage(
+        val payload = AmqpMessage(
             messageHeaders,
-            String(message.body, StandardCharsets.UTF_8)
+            message.body
         )
 
         Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addComponentResponse(
-            MessageValue(SerializationConstants.getMessageMapper(payload.javaClass).writeValueAsJsonString(payload)),
+            MessageValue(SerializationConstants.mapper.writeValueAsString(payload)),
             OutgoingInterface(
                 Protocol("AMQP"),
                 ProtocolData(
@@ -89,9 +89,9 @@ class SpringAMQPInterACtObserverService(rabbitUrl: String, rabbitUser: String, r
             (message.messageProperties.headers["properties"] as HashMap<String, Any>)["headers"] as HashMap<String, Any>
         messageHeaders.remove("traceparent")
         messageHeaders.remove("interact.sender.type")
-        val payload = StringAMQPMessage(
+        val payload = AmqpMessage(
             messageHeaders,
-            String(message.body, StandardCharsets.UTF_8)
+            message.body
         )
         val bindings = arrayListOf<QueueBinding>()
         for (bindingInfo in rabbitClient.getQueueBindings("/", queue).filter { it.source != "" }) {
@@ -103,7 +103,7 @@ class SpringAMQPInterACtObserverService(rabbitUrl: String, rabbitUser: String, r
             )
         }
 
-        val messageValue = MessageValue(SerializationConstants.getMessageMapper(payload.javaClass).writeValueAsJsonString(payload))
+        val messageValue = MessageValue(SerializationConstants.mapper.writeValueAsString(payload))
         val incomingInterface = IncomingInterface(
             Protocol("AMQP"),
             ProtocolData(
