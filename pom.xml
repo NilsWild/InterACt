@@ -27,6 +27,7 @@
         <module>interact-observation-context-micrometer</module>
         <module>interact-observer-spring-webmvc</module>
         <module>interact-observer-spring-cloud-feign</module>
+        <module>interact-observer-spring-resttemplate</module>
     </modules>
 
     <properties>
