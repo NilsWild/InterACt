@@ -43,7 +43,28 @@ class RestMessageDeserializer: StdDeserializer<RestMessage<*>>(RestMessage::clas
                 }
                 else -> throw IllegalArgumentException("Unknown type: $type")
             }
-        } else {
+        } else if(body is TextNode) {
+            return when(type) {
+                RestMessage.Request::class.simpleName -> {
+                    RestMessage.Request(
+                        path = (root.get("path") as TextNode).asText(),
+                        parameters = (root.get("parameters") as ObjectNode).fields().asSequence().map { it.key to it.value.asText() }.toMap(),
+                        headers = (root.get("headers") as ObjectNode).fields().asSequence().map { it.key to it.value.asText() }.toMap(),
+                        body = body.toString()
+                    )
+                }
+                RestMessage.Response::class.simpleName -> {
+                    RestMessage.Response(
+                        path = (root.get("path") as TextNode).asText(),
+                        parameters = (root.get("parameters") as ObjectNode).fields().asSequence().map { it.key to it.value.asText() }.toMap(),
+                        headers = (root.get("headers") as ObjectNode).fields().asSequence().map { it.key to it.value.asText() }.toMap(),
+                        body = body.toString(),
+                        statusCode = (root.get("statusCode") as IntNode).asInt()
+                    )
+                }
+                else -> throw IllegalArgumentException("Unknown type: $type")
+            }
+    } else {
             val r = when(type) {
                 RestMessage.Request::class.simpleName -> {
                     RestMessage.Request(
