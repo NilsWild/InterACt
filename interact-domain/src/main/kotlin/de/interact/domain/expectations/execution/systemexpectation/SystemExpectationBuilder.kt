@@ -1,8 +1,8 @@
 package de.interact.domain.expectations.execution.systemexpectation
 
+import de.interact.domain.shared.InterfaceSpec
 import de.interact.domain.shared.SystemInteractionExpectationId
 import de.interact.domain.shared.SystemPropertyExpectationIdentifier
-import de.interact.domain.shared.InterfaceSpec
 
 sealed class SystemExpectationBuilder {
     protected var stimulus: Any? = null

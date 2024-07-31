@@ -17,7 +17,7 @@ import org.springframework.web.servlet.HandlerMapping
 import java.util.*
 
 @Component
-class ObservationService(): Logging {
+class ObservationService : Logging {
 
     val log = logger()
     val urlTemplateMap: MutableMap<String, String> = HashMap()

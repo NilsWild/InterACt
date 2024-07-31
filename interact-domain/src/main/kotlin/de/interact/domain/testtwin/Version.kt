@@ -25,7 +25,7 @@ data class Version(
     override val version: Long? = null
 ): Entity<VersionId>(){
 
-    companion object {}
+    companion object
 
     fun mergeWithVersionInfo(version: Version): Version {
         if (version.id != id) {

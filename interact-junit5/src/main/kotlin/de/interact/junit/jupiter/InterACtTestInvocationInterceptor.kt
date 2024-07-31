@@ -1,8 +1,8 @@
 package de.interact.junit.jupiter
 
+import de.interact.domain.shared.TestState
 import de.interact.domain.testobservation.config.Configuration
 import de.interact.domain.testobservation.model.ConcreteTestCaseName
-import de.interact.domain.shared.TestState
 import de.interact.domain.testobservation.model.TypeIdentifier
 import de.interact.test.ExampleBasedAssertionError
 import org.awaitility.Awaitility

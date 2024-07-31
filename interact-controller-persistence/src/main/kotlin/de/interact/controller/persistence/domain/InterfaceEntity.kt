@@ -2,7 +2,9 @@ package de.interact.controller.persistence.domain
 
 import de.interact.domain.shared.*
 import org.springframework.data.annotation.Transient
-import org.springframework.data.neo4j.core.schema.*
+import org.springframework.data.neo4j.core.schema.CompositeProperty
+import org.springframework.data.neo4j.core.schema.Node
+import org.springframework.data.neo4j.core.schema.Relationship
 
 const val INTERFACE_NODE_LABEL = "Interface"
 const val INCOMING_INTERFACE_NODE_LABEL = "IncomingInterface"
@@ -43,7 +45,7 @@ class IncomingInterfaceEntity : InterfaceEntity() {
 }
 
 @Node(OUTGOING_INTERFACE_NODE_LABEL)
-class OutgoingInterfaceEntity() : InterfaceEntity() {
+class OutgoingInterfaceEntity : InterfaceEntity() {
 
     init {
         labels += setOf(OUTGOING_INTERFACE_NODE_LABEL)

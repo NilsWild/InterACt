@@ -3,11 +3,8 @@ package de.interact.controller.persistence.domain
 import de.interact.domain.shared.EntityReference
 import de.interact.domain.shared.EntityReferenceProjection
 import de.interact.domain.shared.VersionId
-import org.springframework.data.annotation.Version
-import org.springframework.data.neo4j.core.schema.Id
 import org.springframework.data.neo4j.core.schema.Node
 import org.springframework.data.neo4j.core.schema.Relationship
-import java.util.*
 
 const val VERSION_NODE_LABEL = "Version"
 const val VERSION_OF_RELATIONSHIP_LABEL = "VERSION_OF"

@@ -2,9 +2,9 @@ package de.interact.domain.expectations.execution.systemexpectation
 
 import arrow.core.Either
 import com.fasterxml.jackson.annotation.JsonIgnore
+import de.interact.domain.shared.InterfaceSpec
 import de.interact.domain.shared.SystemInteractionExpectationId
 import de.interact.domain.shared.SystemPropertyExpectationIdentifier
-import de.interact.domain.shared.InterfaceSpec
 
 sealed class SystemExpectation {
     abstract val filter: ((Any) -> Unit)

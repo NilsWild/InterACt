@@ -12,7 +12,6 @@ import de.interact.domain.testtwin.abstracttest.concretetest.message.StimulusMes
 import de.interact.domain.testtwin.spi.Versions
 import org.springframework.data.neo4j.core.Neo4jTemplate
 import org.springframework.data.neo4j.repository.Neo4jRepository
-import org.springframework.graphql.data.GraphQlRepository
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.util.*

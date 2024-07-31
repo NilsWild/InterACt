@@ -2,9 +2,7 @@ package de.interact.domain.testtwin.spi
 
 import de.interact.domain.shared.ComponentId
 import de.interact.domain.shared.VersionId
-import de.interact.domain.testtwin.ComponentIdentifier
 import de.interact.domain.testtwin.Version
-import de.interact.domain.testtwin.VersionIdentifier
 import kotlin.reflect.KFunction
 
 interface Versions {

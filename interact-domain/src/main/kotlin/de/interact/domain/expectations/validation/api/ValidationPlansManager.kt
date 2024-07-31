@@ -20,7 +20,6 @@ import de.interact.domain.testtwin.spi.UnitTestAddedEventListener
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentHashMap.KeySetView
-import java.util.concurrent.locks.Lock
 
 class ValidationPlansManager(
     private val tests: Tests,

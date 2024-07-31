@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.ObjectIdGenerators
 import de.interact.domain.shared.*
-import de.interact.domain.testtwin.componentinterface.IncomingInterface
-import de.interact.domain.testtwin.componentinterface.OutgoingInterface
 
 @JsonIdentityInfo(
     generator = ObjectIdGenerators.UUIDGenerator::class,
@@ -19,7 +17,7 @@ sealed class Message : Entity<MessageId>(), Comparable<Message> {
     abstract val value: MessageValue
     abstract val order: Int
 
-    companion object {}
+    companion object;
 
     @optics
     sealed class SentMessage : Message() {
@@ -27,7 +25,7 @@ sealed class Message : Entity<MessageId>(), Comparable<Message> {
         abstract val sentBy: EntityReference<OutgoingInterfaceId>
         abstract val dependsOn: Collection<EntityReference<ReceivedMessageId>>
 
-        companion object {}
+        companion object
     }
 
     @optics
@@ -35,7 +33,7 @@ sealed class Message : Entity<MessageId>(), Comparable<Message> {
         abstract override val id: ReceivedMessageId
         abstract val receivedBy: EntityReference<IncomingInterfaceId>
 
-        companion object {}
+        companion object
     }
 
     override fun compareTo(other: Message): Int {
@@ -52,7 +50,7 @@ data class StimulusMessage(
 ) : Message.ReceivedMessage() {
     override val order = 0
 
-    companion object {}
+    companion object
 }
 
 @optics
@@ -64,7 +62,7 @@ data class ComponentResponseMessage(
     override val dependsOn: Collection<EntityReference<ReceivedMessageId>>,
     override val version: Long? = null
 ) : Message.SentMessage() {
-    companion object {}
+    companion object
 }
 
 @optics
@@ -76,7 +74,7 @@ data class EnvironmentResponseMessage(
     val reactionTo: EntityReference<ComponentResponseMessageId>,
     override val version: Long? = null
 ) : Message.ReceivedMessage() {
-    companion object {}
+    companion object
 }
 
 @JvmInline

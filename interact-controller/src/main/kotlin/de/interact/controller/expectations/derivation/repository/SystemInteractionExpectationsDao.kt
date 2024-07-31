@@ -3,7 +3,7 @@ package de.interact.controller.expectations.derivation.repository
 import de.interact.controller.persistence.domain.*
 import de.interact.domain.expectations.derivation.interactionexpectation.InteractionExpectation
 import de.interact.domain.expectations.derivation.spi.SystemInteractionExpectations
-import de.interact.domain.shared.*
+import de.interact.domain.shared.SystemInteractionExpectationId
 import org.springframework.data.neo4j.core.Neo4jTemplate
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service

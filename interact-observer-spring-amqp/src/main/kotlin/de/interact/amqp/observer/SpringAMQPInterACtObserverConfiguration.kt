@@ -17,7 +17,7 @@ import org.springframework.core.Ordered.LOWEST_PRECEDENCE
 import org.springframework.core.annotation.Order
 import org.springframework.core.env.Environment
 
-class SpringAMQPInterACtObserverConfiguration() {
+class SpringAMQPInterACtObserverConfiguration {
 
     @Bean
     fun amqpObserverLatch(observationManager: TestObservationManager): AmqpObserverLatch {

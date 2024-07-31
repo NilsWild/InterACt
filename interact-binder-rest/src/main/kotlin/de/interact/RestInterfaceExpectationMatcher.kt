@@ -7,8 +7,6 @@ import de.interact.domain.testtwin.api.event.InterfaceAddedToVersionEvent
 import de.interact.domain.testtwin.api.event.OutgoingInterfaceAddedToVersionEvent
 import de.interact.repository.*
 import de.interact.utbi.InterfaceExpectationMatcher
-import de.interact.utbi.InterfaceExpectationMatcherName
-import de.interact.utbi.InterfaceExpectationMatcherVersion
 import org.springframework.stereotype.Service
 
 @Service

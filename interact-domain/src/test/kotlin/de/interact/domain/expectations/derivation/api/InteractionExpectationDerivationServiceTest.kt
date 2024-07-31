@@ -1,7 +1,6 @@
 package de.interact.domain.expectations.derivation.api
 
 import de.interact.domain.expectations.derivation.interaction.Interaction
-import de.interact.domain.expectations.derivation.interactionexpectation.InteractionExpectation
 import de.interact.domain.expectations.derivation.spi.EventPublisher
 import de.interact.domain.expectations.derivation.spi.Interactions
 import de.interact.domain.expectations.derivation.spi.SystemInteractionExpectations

@@ -1,9 +1,9 @@
 package de.interact.domain.expectations.execution.result
 
 import arrow.core.Either
+import de.interact.domain.expectations.execution.result.error.ExpectationsExecutionResultError
 import de.interact.domain.expectations.specification.collection.ExpectationsCollectionName
 import de.interact.domain.expectations.specification.collection.ExpectationsCollectionVersion
-import de.interact.domain.expectations.execution.result.error.ExpectationsExecutionResultError
 
 data class SystemPropertyExpectationsCollection(
     val name: ExpectationsCollectionName,

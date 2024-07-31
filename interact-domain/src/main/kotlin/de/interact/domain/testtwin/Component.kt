@@ -10,7 +10,7 @@ data class Component(
     val identifier: ComponentIdentifier,
     override val version: Long? = null
 ): Entity<ComponentId>(){
-    companion object{}
+    companion object
 }
 
 @JvmInline

@@ -2,7 +2,6 @@ package de.interact.controller.persistence
 
 import de.interact.controller.expectations.derivation.repository.TestInteractionsRepository
 import de.interact.controller.persistence.domain.ConcreteTestCaseEntity
-import de.interact.controller.persistence.domain.UNIT_TEST_NODE_LABEL
 import org.springframework.data.neo4j.repository.query.Query
 import org.springframework.stereotype.Repository
 import java.util.*

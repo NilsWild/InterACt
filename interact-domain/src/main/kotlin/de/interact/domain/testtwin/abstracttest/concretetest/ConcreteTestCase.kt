@@ -21,7 +21,7 @@ sealed class ConcreteTestCase: Entity<TestId>(){
     abstract val triggeredMessages: SortedSet<Message>
     abstract val status: TestState
 
-    companion object {}
+    companion object
 }
 
 @optics
@@ -33,7 +33,7 @@ data class UnitTest(
     override val status: TestState,
     override val version: Long? = null
 ) : ConcreteTestCase() {
-    companion object {}
+    companion object
 }
 
 @optics
@@ -45,7 +45,7 @@ data class InteractionTest(
     override val status: TestState,
     override val version: Long? = null
 ) : ConcreteTestCase() {
-    companion object {}
+    companion object
 }
 
 @JvmInline

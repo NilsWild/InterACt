@@ -26,7 +26,7 @@ import java.nio.charset.StandardCharsets
 import java.util.stream.Collectors
 
 @Order(Ordered.LOWEST_PRECEDENCE - 1)
-class RestTemplateObservationInterceptor() : ClientHttpRequestInterceptor, Logging {
+class RestTemplateObservationInterceptor : ClientHttpRequestInterceptor, Logging {
 
     private val log = logger()
 

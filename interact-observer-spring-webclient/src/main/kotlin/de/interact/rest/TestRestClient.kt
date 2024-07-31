@@ -1,11 +1,9 @@
 package de.interact.rest
 
 import de.interact.domain.rest.RestMessage
-import de.interact.domain.serialization.SerializationConstants
 import de.interact.utils.MultiMap
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.client.WebClient
 
 class TestRestClient(private val client: WebClient) {

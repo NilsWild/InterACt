@@ -15,7 +15,6 @@ import org.springframework.data.neo4j.repository.query.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.util.*
-import kotlin.collections.Collection
 
 @Repository
 interface ValidationPlansRepository :
@@ -205,7 +204,7 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
         }
 
         mappedInteractions[current.id] = map(current)
-        interactionGraph.adjacencyMap[current]?.forEach() {
+        interactionGraph.adjacencyMap[current]?.forEach {
             if(mappedInteractions.keys.containsAll(interactionGraph.reverseAdjacencyMap[it]!!.map { it.id })) {
                 interactionsToMap.add(it)
             }

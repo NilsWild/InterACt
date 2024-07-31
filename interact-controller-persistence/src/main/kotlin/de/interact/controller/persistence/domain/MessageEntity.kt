@@ -19,7 +19,7 @@ const val REACTION_TO_RELATIONSHIP_LABEL = "REACTION_TO"
 
 
 @Node(MESSAGE_NODE_LABEL)
-sealed class MessageEntity() : Entity(), Comparable<MessageEntity> {
+sealed class MessageEntity : Entity(), Comparable<MessageEntity> {
 
     lateinit var payload: String
     var order: Int = 0
@@ -95,8 +95,7 @@ class EnvironmentResponseEntity : ReceivedMessageEntity() {
     lateinit var reactionTo: ComponentResponseEntity
 }
 
-interface MessageReferenceProjection: EntityReferenceWithLabelsProjection {
-}
+interface MessageReferenceProjection: EntityReferenceWithLabelsProjection
 
 fun MessageReferenceProjection.toEntityReference(): EntityReference<MessageId> {
     return when {

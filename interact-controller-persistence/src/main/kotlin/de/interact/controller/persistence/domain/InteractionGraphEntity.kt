@@ -2,8 +2,6 @@ package de.interact.controller.persistence.domain
 
 import de.interact.domain.shared.EntityReferenceProjection
 import de.interact.domain.shared.InteractionGraphId
-import org.springframework.data.annotation.Version
-import org.springframework.data.neo4j.core.schema.Id
 import org.springframework.data.neo4j.core.schema.Node
 import org.springframework.data.neo4j.core.schema.Relationship
 import java.util.*

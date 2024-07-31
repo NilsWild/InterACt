@@ -2,7 +2,6 @@ package de.interact.controller.observations.repository
 
 import de.interact.controller.persistence.domain.*
 import de.interact.domain.shared.*
-import de.interact.domain.shared.TestState
 import de.interact.domain.testtwin.Version
 import de.interact.domain.testtwin.VersionIdentifier
 import de.interact.domain.testtwin.abstracttest.AbstractTestCase

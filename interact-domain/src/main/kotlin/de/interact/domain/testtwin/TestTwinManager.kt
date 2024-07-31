@@ -1,6 +1,7 @@
 package de.interact.domain.testtwin
 
-import de.interact.domain.shared.*
+import de.interact.domain.shared.ComponentId
+import de.interact.domain.shared.EntityReference
 import de.interact.domain.testtwin.abstracttest.concretetest.InteractionTest
 import de.interact.domain.testtwin.abstracttest.concretetest.UnitTest
 import de.interact.domain.testtwin.api.ObservationHandler
@@ -9,8 +10,8 @@ import de.interact.domain.testtwin.api.event.IncomingInterfaceAddedToVersionEven
 import de.interact.domain.testtwin.api.event.InteractionTestAddedEvent
 import de.interact.domain.testtwin.api.event.OutgoingInterfaceAddedToVersionEvent
 import de.interact.domain.testtwin.api.event.UnitTestAddedEvent
-import de.interact.domain.testtwin.componentinterface.IncomingInterface
 import de.interact.domain.testtwin.componentinterface.ComponentInterface
+import de.interact.domain.testtwin.componentinterface.IncomingInterface
 import de.interact.domain.testtwin.componentinterface.OutgoingInterface
 import de.interact.domain.testtwin.spi.*
 

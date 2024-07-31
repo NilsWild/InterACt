@@ -1,8 +1,8 @@
 package de.interact.junit.jupiter.systemexpectations
 
+import de.interact.domain.expectations.execution.result.SystemPropertyExpectationsCollectionReference
 import de.interact.domain.expectations.specification.collection.ExpectationsCollectionName
 import de.interact.domain.expectations.specification.collection.ExpectationsCollectionVersion
-import de.interact.domain.expectations.execution.result.SystemPropertyExpectationsCollectionReference
 import de.interact.domain.testobservation.model.AbstractTestCaseName
 import de.interact.domain.testobservation.model.AbstractTestCaseSource
 import de.interact.junit.jupiter.ExtensionContextToTestInfoMapper

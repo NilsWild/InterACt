@@ -16,7 +16,7 @@ sealed class ComponentInterface: Entity<InterfaceId>() {
     abstract val protocol: Protocol
     abstract val protocolData: ProtocolData
 
-    companion object {}
+    companion object
 }
 
 @optics
@@ -26,7 +26,7 @@ data class IncomingInterface(
     override val protocolData: ProtocolData,
     override val version: Long? = null
 ) : ComponentInterface() {
-    companion object {}
+    companion object
 }
 
 @optics
@@ -36,5 +36,5 @@ data class OutgoingInterface(
     override val protocolData: ProtocolData,
     override val version: Long? = null
 ) : ComponentInterface() {
-    companion object {}
+    companion object
 }

@@ -1,6 +1,5 @@
 package de.interact.domain.serialization
 
-import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.interact.domain.rest.RestMessage
 import de.interact.domain.shared.Message

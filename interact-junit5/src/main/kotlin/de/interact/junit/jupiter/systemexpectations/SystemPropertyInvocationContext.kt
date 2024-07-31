@@ -1,9 +1,9 @@
 package de.interact.junit.jupiter.systemexpectations
 
-import de.interact.domain.shared.SystemPropertyExpectationIdentifier
 import de.interact.domain.expectations.execution.result.SystemPropertyExpectationRecord
 import de.interact.domain.expectations.execution.result.SystemPropertyExpectationsCollectionReference
 import de.interact.domain.expectations.execution.systemexpectation.SystemExpectationBuilder
+import de.interact.domain.shared.SystemPropertyExpectationIdentifier
 import de.interact.domain.specification.config.Configuration
 import de.interact.domain.testobservation.model.AbstractTestCaseName
 import de.interact.domain.testobservation.model.AbstractTestCaseSource

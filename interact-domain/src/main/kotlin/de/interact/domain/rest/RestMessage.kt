@@ -9,7 +9,7 @@ import de.interact.domain.shared.Message
 @JsonDeserialize(using = RestMessageDeserializer::class)
 @optics
 sealed interface RestMessage<T>: Message<T> {
-    companion object {}
+    companion object
 
     val path: String
     val parameters: Map<String, String>
@@ -22,7 +22,7 @@ sealed interface RestMessage<T>: Message<T> {
         override val parameters: Map<String, String>,
         override val headers: Map<String, String>,
         override val body: T?
-    ) : RestMessage<T> {companion object{}}
+    ) : RestMessage<T> {companion object }
 
     @optics
     data class Response<T>(
@@ -31,5 +31,5 @@ sealed interface RestMessage<T>: Message<T> {
         override val headers: Map<String, String>,
         override val body: T?,
         val statusCode: Int
-    ) : RestMessage<T>{companion object{}}
+    ) : RestMessage<T>{companion object }
 }

@@ -1,6 +1,5 @@
 package de.interact.domain.expectations.derivation.interactionexpectation
 
-import com.fasterxml.uuid.Generators
 import de.interact.domain.shared.*
 import java.util.*
 

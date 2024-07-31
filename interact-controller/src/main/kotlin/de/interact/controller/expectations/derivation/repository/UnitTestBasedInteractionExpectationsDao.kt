@@ -6,8 +6,6 @@ import de.interact.domain.expectations.derivation.spi.UnitTestBasedInteractionEx
 import de.interact.domain.shared.InteractionExpectationStatus
 import de.interact.domain.shared.UnitTestBasedInteractionExpectationId
 import org.springframework.data.neo4j.core.Neo4jTemplate
-import org.springframework.data.repository.NoRepositoryBean
-import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.util.*
 

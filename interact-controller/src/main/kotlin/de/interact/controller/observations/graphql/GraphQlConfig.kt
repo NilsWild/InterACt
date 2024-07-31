@@ -1,6 +1,5 @@
 package de.interact.controller.observations.graphql
 
-import graphql.GraphQL
 import org.springframework.boot.autoconfigure.graphql.GraphQlSourceBuilderCustomizer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

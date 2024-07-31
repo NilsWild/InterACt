@@ -2,11 +2,8 @@ package de.interact.controller.persistence.domain
 
 import de.interact.domain.shared.*
 import org.springframework.data.annotation.Transient
-import org.springframework.data.annotation.Version
-import org.springframework.data.neo4j.core.schema.Id
 import org.springframework.data.neo4j.core.schema.Node
 import org.springframework.data.neo4j.core.schema.Relationship
-import java.util.*
 
 const val INTERACTION_EXPECTATION_NODE_LABEL = "InteractionExpectation"
 const val UNIT_TEST_BASED_INTERACTION_EXPECTATION_NODE_LABEL = "UnitTestBasedInteractionExpectation"

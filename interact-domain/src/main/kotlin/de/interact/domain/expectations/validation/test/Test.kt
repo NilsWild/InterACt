@@ -4,7 +4,6 @@ import de.interact.domain.expectations.TestParameter
 import de.interact.domain.expectations.shared.MessageValue
 import de.interact.domain.expectations.validation.plan.TestCase
 import de.interact.domain.shared.*
-import java.lang.Runtime.Version
 import java.util.*
 
 data class Test(

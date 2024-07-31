@@ -10,11 +10,12 @@ import de.interact.domain.serialization.SerializationConstants
 import de.interact.domain.shared.Protocol
 import de.interact.domain.shared.ProtocolData
 import de.interact.domain.testobservation.config.Configuration
-import de.interact.domain.testobservation.model.*
+import de.interact.domain.testobservation.model.IncomingInterface
+import de.interact.domain.testobservation.model.MessageValue
+import de.interact.domain.testobservation.model.OutgoingInterface
 import org.springframework.amqp.core.Message
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import java.net.URL
-import java.nio.charset.StandardCharsets
 
 class SpringAMQPInterACtObserverService(rabbitUrl: String, rabbitUser: String, rabbitPassword: String) {
 

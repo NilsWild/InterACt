@@ -1,7 +1,10 @@
 package de.interact.repository
 
 import de.interact.domain.rest.*
-import de.interact.domain.shared.*
+import de.interact.domain.shared.IncomingInterfaceId
+import de.interact.domain.shared.IndirectIncomingInterfaceExpectationId
+import de.interact.domain.shared.IndirectOutgoingInterfaceExpectationId
+import de.interact.domain.shared.OutgoingInterfaceId
 import java.util.*
 
 interface RestInterfaceProjection {

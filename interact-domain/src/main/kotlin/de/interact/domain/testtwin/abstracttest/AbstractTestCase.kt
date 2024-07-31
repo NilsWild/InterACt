@@ -12,7 +12,7 @@ data class AbstractTestCase(
     var templateFor: Set<ConcreteTestCase> = emptySet(),
     override val version: Long? = null
 ): Entity<AbstractTestId>(){
-    companion object {}
+    companion object
 }
 
 @JvmInline

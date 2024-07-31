@@ -1,6 +1,6 @@
 package de.interact.domain.shared
 
-import java.util.UUID
+import java.util.*
 
 @JvmInline
 value class ReplacementId(val value: UUID) {

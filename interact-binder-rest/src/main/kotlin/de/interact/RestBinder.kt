@@ -5,8 +5,6 @@ import de.interact.domain.testtwin.api.event.InterfaceAddedToVersionEvent
 import de.interact.domain.testtwin.api.event.OutgoingInterfaceAddedToVersionEvent
 import de.interact.repository.RestInterfaceDao
 import de.interact.utbi.InterfaceBinder
-import de.interact.utbi.InterfaceBinderName
-import de.interact.utbi.InterfaceBinderVersion
 import org.springframework.data.neo4j.core.Neo4jClient
 import org.springframework.stereotype.Component
 

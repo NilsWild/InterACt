@@ -1,9 +1,8 @@
 package de.interact.domain.testtwin
 
-import arrow.core.foldMap
 import arrow.optics.Every
 import arrow.typeclasses.Monoid
-import java.util.SortedSet
+import java.util.*
 
 object MyEvery {
     @JvmStatic
@@ -13,7 +12,7 @@ object MyEvery {
                 source.map(map).toSet()
 
             override fun <R> foldMap(M: Monoid<R>, source: Set<A>, map: (focus: A) -> R): R =
-                source.foldMap(M, map)
+                source.fold(initial) { acc, a -> combine(acc, map(a)) }
         }
 
     @JvmStatic
@@ -23,6 +22,6 @@ object MyEvery {
                 source.map(map).toSortedSet()
 
             override fun <R> foldMap(M: Monoid<R>, source: SortedSet<A>, map: (focus: A) -> R): R =
-                source.foldMap(M, map)
+                source.fold(initial) { acc, a -> combine(acc, map(a)) }
         }
 }

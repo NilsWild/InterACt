@@ -1,7 +1,6 @@
 package de.interact.domain.expectations.validation.systempropertyexpectation
 
 import com.fasterxml.uuid.Generators
-import de.interact.domain.expectations.validation.interactionexpectation.InteractionExpectation
 import de.interact.domain.shared.SystemInteractionExpectationId
 import de.interact.domain.shared.SystemPropertyExpectationId
 import de.interact.domain.shared.SystemPropertyExpectationIdentifier

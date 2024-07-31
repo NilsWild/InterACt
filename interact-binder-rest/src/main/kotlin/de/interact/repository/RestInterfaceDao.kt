@@ -1,6 +1,5 @@
 package de.interact.repository
 
-import de.interact.RestBinder
 import de.interact.controller.persistence.domain.*
 import de.interact.domain.rest.IncomingRestInterface
 import de.interact.domain.rest.OutgoingRestInterface

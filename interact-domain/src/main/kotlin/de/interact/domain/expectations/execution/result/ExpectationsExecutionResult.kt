@@ -13,7 +13,7 @@ fun ExpectationsExecutionResult.addSystemPropertyExpectation(
     collectionReference: SystemPropertyExpectationsCollectionReference,
     expectation: SystemPropertyExpectationRecord
 ): Either<ExpectationsExecutionResultError, ExpectationsExecutionResult> {
-    var added = false;
+    var added = false
     var newCollection = systemPropertyExpectationsCollections.map { collection ->
         if (collectionReference.references(collection)) {
             added = true

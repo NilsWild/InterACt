@@ -1,6 +1,5 @@
 package de.interact.controller.persistence.domain
 
-import de.interact.domain.shared.EntityReference
 import de.interact.domain.shared.EntityReferenceWithLabelsProjection
 import de.interact.domain.shared.InteractionId
 import org.springframework.data.neo4j.core.schema.DynamicLabels
