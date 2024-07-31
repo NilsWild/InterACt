@@ -85,7 +85,7 @@ class RestTemplateObservationInterceptor() : ClientHttpRequestInterceptor, Loggi
                 ProtocolData(mapOf(
                     "method" to request.method.toString(),
                     "path" to request.uri.path,
-                    "request" to "true"
+                    "request" to "false"
                 ))
             )
         )
