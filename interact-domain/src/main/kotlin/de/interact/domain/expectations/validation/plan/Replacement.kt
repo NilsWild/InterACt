@@ -9,4 +9,8 @@ data class Replacement(
     val replacement: ReplacementIdentifier,
     override val id: ReplacementId = ReplacementId(UUID.randomUUID()),
     override val version: Long? = null
-): Entity<ReplacementId>()
+): Entity<ReplacementId>() {
+    fun clone(): Replacement {
+        return this.copy(id = ReplacementId(UUID.randomUUID()))
+    }
+}

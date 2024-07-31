@@ -1,6 +1,7 @@
 package de.interact.domain.serialization
 
 import com.fasterxml.jackson.databind.JavaType
+import de.interact.domain.expectations.validation.plan.InteractionGraph
 import de.interact.domain.rest.RestMessage
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -71,5 +72,12 @@ class SerializationTest {
         } else {
             SerializationConstants.mapper.typeFactory.constructType(type)
         }
+    }
+
+    @Test
+    fun test() {
+        val i = InteractionGraph()
+        val copy = i.copy()
+        i shouldBe copy
     }
 }

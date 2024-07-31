@@ -23,6 +23,7 @@ val InteractionGraph.sinks: Set<Interaction> get() = interactions.filter { adjac
 val InteractionGraph.source: Interaction? get() = interactions.firstOrNull() { reverseAdjacencyMap[it]!!.isEmpty() }
 
 private fun InteractionGraph.hash(interaction: Interaction) : String {
+    //TODO switch to testcase hash
     return if(adjacencyMap[interaction]!!.isEmpty()) {
         hashedSha256(interaction.from.sortedBy { it.id.value }, interaction.to.sortedBy { it.id.value })
     } else {

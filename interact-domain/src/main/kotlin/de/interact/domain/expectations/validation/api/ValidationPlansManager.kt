@@ -18,6 +18,9 @@ import de.interact.domain.testtwin.api.event.UnitTestAddedEvent
 import de.interact.domain.testtwin.spi.InteractionTestAddedEventListener
 import de.interact.domain.testtwin.spi.UnitTestAddedEventListener
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentHashMap.KeySetView
+import java.util.concurrent.locks.Lock
 
 class ValidationPlansManager(
     private val tests: Tests,
@@ -25,6 +28,9 @@ class ValidationPlansManager(
     private val unitTestBasedInteractionExpectations: UnitTestBasedInteractionExpectations,
     private val interfaces: Interfaces
 ): UnitTestAddedEventListener, InteractionTestAddedEventListener, UnitTestBasedInteractionExpectationAddedEventListener {
+
+    private val interactionExpectationLocks: KeySetView<InteractionExpectationId, Boolean> = ConcurrentHashMap.newKeySet()
+
     override fun onUnitTestCaseAdded(event: UnitTestAddedEvent) {
         val potentiallyDependantInteractionExpectations = unitTestBasedInteractionExpectations.findInteractionExpectationsPotentiallyDependantOn(event.test)
         potentiallyDependantInteractionExpectations.forEach { deriveValidationPlansForUnitTestBaseInteractionExpectation(it) }
@@ -58,50 +64,62 @@ class ValidationPlansManager(
     }
 
     private fun deriveValidationPlansForUnitTestBaseInteractionExpectation(interactionExpectationReference: EntityReference<UnitTestBasedInteractionExpectationId>) {
-        val interactionExpectation = unitTestBasedInteractionExpectations.find(interactionExpectationReference.id)!!
-        val derivedFromTest = tests.find(interactionExpectation.derivedFrom.id)!!
-        val interactionGraphs = mutableSetOf<InteractionGraph>()
-        val interactionGraphsToExpand = LinkedList<InteractionGraph>()
+        try {
+            interactionExpectationLocks.add(interactionExpectationReference.id)
 
-        interactionGraphsToExpand.add(
-            InteractionGraph().addInteraction(
-                Interaction.Finished.Validated(
-                    EntityReference(UnitTestId(derivedFromTest.id.value), derivedFromTest.version),
-                    TestCase.CompleteTestCase.Succeeded(
-                        derivedFromTest.derivedFrom,
-                        emptySet(),
-                        derivedFromTest.parameters,
-                        interactionExpectation.derivedFrom
-                    ),
-                    derivedFromTest.triggeredMessages.filterIsInstance<StimulusMessage>().firstOrNull()?.let { setOf(it.receivedBy)} ?: emptySet(),
-                    setOf(
-                        derivedFromTest.triggeredMessages
-                            .filterIsInstance<ComponentResponseMessage>()
-                            .first{interactionExpectation.expectFrom.id == it.id}.sentBy
+            val interactionExpectation = unitTestBasedInteractionExpectations.find(interactionExpectationReference.id)!!
+            val derivedFromTest = tests.find(interactionExpectation.derivedFrom.id)!!
+            val interactionGraphs = mutableSetOf<InteractionGraph>()
+            val interactionGraphsToExpand = LinkedList<InteractionGraph>()
+
+            interactionGraphsToExpand.add(
+                InteractionGraph().addInteraction(
+                    Interaction.Finished.Validated(
+                        EntityReference(UnitTestId(derivedFromTest.id.value), derivedFromTest.version),
+                        TestCase.CompleteTestCase.Succeeded(
+                            derivedFromTest.derivedFrom,
+                            emptySet(),
+                            derivedFromTest.parameters,
+                            interactionExpectation.derivedFrom
+                        ),
+                        derivedFromTest.triggeredMessages.filterIsInstance<StimulusMessage>().firstOrNull()?.let { setOf(it.receivedBy)} ?: emptySet(),
+                        setOf(
+                            derivedFromTest.triggeredMessages
+                                .filterIsInstance<ComponentResponseMessage>()
+                                .first{interactionExpectation.expectFrom.id == it.id}.sentBy
+                        )
                     )
                 )
             )
-        )
 
-        while (interactionGraphsToExpand.isNotEmpty()) {
-            val interactionGraphToExpand = interactionGraphsToExpand.poll()
-            val expandedInteractionGraphs = expandInteractionGraph(interactionGraphToExpand)
-            expandedInteractionGraphs.forEach { interactionGraph ->
-                if (interactionGraph.leadsTo(interactionExpectation.expectTo.map { it.id }.toSet())) {
-                    interactionGraphs.add(interactionGraph.removeUnnecessaryInteractionsToReach(interactionExpectation.expectTo.map { it.id }.toSet()))
-                } else if (interactionGraph != interactionGraphToExpand) {
-                    interactionGraphsToExpand.offer(interactionGraph)
+            while (interactionGraphsToExpand.isNotEmpty()) {
+                val interactionGraphToExpand = interactionGraphsToExpand.poll()
+                val expandedInteractionGraphs = expandInteractionGraph(interactionGraphToExpand)
+                expandedInteractionGraphs.forEach { interactionGraph ->
+                    if (interactionGraph.leadsTo(interactionExpectation.expectTo.map { it.id }.toSet())) {
+                        interactionGraphs.add(interactionGraph.removeUnnecessaryInteractionsToReach(interactionExpectation.expectTo.map { it.id }.toSet()))
+                    } else if (interactionGraph != interactionGraphToExpand) {
+                        interactionGraphsToExpand.offer(interactionGraph)
+                    }
                 }
             }
-        }
 
-        interactionGraphs.forEach { interactionGraph ->
-            val validationPlan = ValidationPlan.PendingValidationPlan(
-                interactionExpectationReference,
-                interactionGraph
+            val existingValidationPlans = validationPlans.findByInteractionExpectationId(interactionExpectationReference.id)
+            existingValidationPlans.map { it.interactionGraph.id }.forEach { exiting -> interactionGraphs.filter { it.id == exiting }.forEach { interactionGraphs.remove(it) }}
+
+            val validationPlansToStore = interactionGraphs.map { interactionGraph ->
+                val validationPlan = ValidationPlan.PendingValidationPlan(
+                    interactionExpectationReference,
+                    interactionGraph
+                )
+                progressValidationPlan(validationPlan)
+            }
+
+            validationPlans.save(
+                validationPlansToStore
             )
-            val validationPlanToStore = progressValidationPlan(validationPlan)
-            validationPlans.save(validationPlanToStore)
+        } finally {
+            interactionExpectationLocks.remove(interactionExpectationReference.id)
         }
     }
 
@@ -152,7 +170,7 @@ class ValidationPlansManager(
                         groupSegments.forEach { segment ->
                             updatedGraph = updatedGraph.addInteraction(segment, setOf(sink))
                         }
-                        updatedGraph
+                        updatedGraph.replaceInteractions(updatedGraph.interactions.map { it to it.clone() }.toMap())
                     }
                 }
             }
@@ -303,7 +321,7 @@ class ValidationPlansManager(
             val replacementMessage = testToCopyFrom.triggeredMessages.filterIsInstance<ComponentResponseMessage>().first {
                 it.sentBy == replacement.replacement.interfaceToCopyFrom
             }
-            replacement.messageToReplace.interfaceReference to  replacementMessage
+            replacement.messageToReplace.interfaceReference to replacementMessage
         }.toMap()
     }
 }

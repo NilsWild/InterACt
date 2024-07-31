@@ -10,6 +10,15 @@ sealed class Interaction: Entity<InteractionId>() {
     abstract val from: Set<EntityReference<IncomingInterfaceId>>
     abstract val to: Set<EntityReference<OutgoingInterfaceId>>
 
+    fun clone(): Interaction {
+        return when(this) {
+            is Pending -> this.copy(id = InteractionId(UUID.randomUUID()), testCase = this.testCase.clone() as TestCase.IncompleteTestCase)
+            is Executable -> this.copy(id = InteractionId(UUID.randomUUID()), testCase = this.testCase.clone() as TestCase.ExecutableTestCase)
+            is Finished.Validated -> this.copy(id = InteractionId(UUID.randomUUID()), testCase = this.testCase.clone() as TestCase.CompleteTestCase.Succeeded)
+            is Finished.Failed -> this.copy(id = InteractionId(UUID.randomUUID()), testCase = this.testCase.clone() as TestCase.CompleteTestCase.Failed)
+        }
+    }
+
     data class Pending (
         override val derivedFrom: EntityReference<UnitTestId>,
         override val testCase: TestCase.IncompleteTestCase,

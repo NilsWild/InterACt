@@ -9,6 +9,15 @@ sealed class TestCase: Entity<TestDefinitionId>() {
     abstract val derivedFrom: EntityReference<AbstractTestId>
     abstract val replacements: Set<Replacement>
 
+    fun clone(): TestCase {
+        return when(this) {
+            is IncompleteTestCase -> this.copy(id = TestDefinitionId(UUID.randomUUID()), replacements = this.replacements.map { it.clone() }.toSet())
+            is ExecutableTestCase -> this.copy(id = TestDefinitionId(UUID.randomUUID()), replacements = this.replacements.map { it.clone() }.toSet())
+            is CompleteTestCase.Failed -> this.copy(id = TestDefinitionId(UUID.randomUUID()), replacements = this.replacements.map { it.clone() }.toSet())
+            is CompleteTestCase.Succeeded -> this.copy(id = TestDefinitionId(UUID.randomUUID()), replacements = this.replacements.map { it.clone() }.toSet())
+        }
+    }
+
     data class IncompleteTestCase(
         override val derivedFrom: EntityReference<AbstractTestId>,
         override val replacements: Set<Replacement>,

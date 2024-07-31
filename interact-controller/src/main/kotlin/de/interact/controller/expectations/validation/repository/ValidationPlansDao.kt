@@ -15,6 +15,7 @@ import org.springframework.data.neo4j.repository.query.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.util.*
+import kotlin.collections.Collection
 
 @Repository
 interface ValidationPlansRepository :
@@ -54,6 +55,14 @@ class ValidationPlansDao(
     override fun save(validationPlan: ValidationPlan): ValidationPlan {
         return neo4jTemplate.saveAs(validationPlan.toEntity(), ValidationPlanProjection::class.java).toDomain().also {
             applicationEventPublisher.publishEvent(ValidationPlanUpdatedEvent(it.id))
+        }
+    }
+
+    override fun save(validationPlans: Collection<ValidationPlan>): Collection<ValidationPlan> {
+        return neo4jTemplate.saveAllAs(validationPlans.map { it.toEntity() }, ValidationPlanProjection::class.java).map{
+            it.toDomain().also {
+                applicationEventPublisher.publishEvent(ValidationPlanUpdatedEvent(it.id))
+            }
         }
     }
 

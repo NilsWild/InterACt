@@ -9,5 +9,6 @@ interface ValidationPlans {
     fun find(id: ValidationPlanId): ValidationPlan?
     fun waitingFor(test: Test): Set<ValidationPlan.PendingValidationPlan>
     fun save(validationPlan: ValidationPlan): ValidationPlan
+    fun save(validationPlans: Collection<ValidationPlan>): Collection<ValidationPlan>
     fun findByInteractionExpectationId(id: UnitTestBasedInteractionExpectationId): List<ValidationPlan>
 }
