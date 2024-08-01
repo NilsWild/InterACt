@@ -19,13 +19,15 @@ class InteractionExpectationDerivationService(
 ): UnitTestAddedEventListener {
     override fun onUnitTestCaseAdded(event: UnitTestAddedEvent) {
         val interactions = interactions.findForTest(event.test.id)
-        interactions.forEach { interaction ->
-            var newExpectation = InteractionExpectation.UnitTestBasedInteractionExpectation(
+        val interactionsExpectations = interactions.map { interaction ->
+            InteractionExpectation.UnitTestBasedInteractionExpectation(
                 event.test,
                 interaction.stimulus.message,
                 interaction.reactions.map { it.interfaceId }.toSet()
             )
-            newExpectation = unitTestBasedInteractionExpectations.save(newExpectation)
+        }
+        val storedExpectations = unitTestBasedInteractionExpectations.save(interactionsExpectations)
+        storedExpectations.forEach { newExpectation ->
             eventPublisher.publish(InteractionExpectationAddedEvent.UnitTestBasedInteractionExpectationAddedEvent(
                 EntityReference(newExpectation.id, newExpectation.version)))
         }

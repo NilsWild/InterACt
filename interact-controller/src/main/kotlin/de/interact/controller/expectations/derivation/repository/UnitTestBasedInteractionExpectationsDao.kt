@@ -22,6 +22,10 @@ class UnitTestBasedInteractionExpectationsDao(
         return neo4jTemplate.saveAs(expectation.toEntity(), UnitTestBasedInteractionExpectationProjection::class.java).toDomain()
     }
 
+    override fun save(expectations: Collection<InteractionExpectation.UnitTestBasedInteractionExpectation>): Collection<InteractionExpectation.UnitTestBasedInteractionExpectation> {
+        return neo4jTemplate.saveAllAs(expectations.map { it.toEntity()}, UnitTestBasedInteractionExpectationProjection::class.java).map { it.toDomain() }
+    }
+
     override fun find(expectationId: UnitTestBasedInteractionExpectationId): InteractionExpectation.UnitTestBasedInteractionExpectation? {
         return repository.findById(expectationId.value)?.toDomain()
     }

@@ -6,6 +6,7 @@ import de.interact.domain.shared.UnitTestBasedInteractionExpectationId
 
 interface UnitTestBasedInteractionExpectations {
     fun save(expectation: InteractionExpectation.UnitTestBasedInteractionExpectation): InteractionExpectation.UnitTestBasedInteractionExpectation
+    fun save(expectations: Collection<InteractionExpectation.UnitTestBasedInteractionExpectation>): Collection<InteractionExpectation.UnitTestBasedInteractionExpectation>
     fun find(expectationId: UnitTestBasedInteractionExpectationId): InteractionExpectation.UnitTestBasedInteractionExpectation?
 }
 
