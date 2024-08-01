@@ -1,5 +1,10 @@
 package de.interact.junit.jupiter
 
+import de.interact.domain.shared.TestState
+import de.interact.domain.testobservation.config.Configuration
+import de.interact.domain.testobservation.model.ConcreteTestCaseName
+import de.interact.domain.testobservation.model.TestCaseParameter
+import de.interact.domain.testobservation.model.TypeIdentifier
 import de.interact.junit.jupiter.annotation.InterACtTest
 import de.interact.junit.jupiter.annotation.Offset
 import org.junit.jupiter.api.Named
@@ -53,7 +58,26 @@ class InterACtTestParameterResolver(
                 methodContext.resolve(parameterContext, extractPayloads(args), invocationIndex)
             }
 
-            TestMode.INTERACTION -> resolveInteractionMessage(parameterContext, extractPayloads(arguments))
+            TestMode.INTERACTION -> try {
+                resolveInteractionMessage(parameterContext, extractPayloads(arguments))
+            } catch (ex: Exception) {
+                val compInfo = ExtensionContextToTestInfoMapper.componentInformationLoader(extensionContext)
+                val abstractTestCase = Configuration.observationManager!!.observation.addObservedComponent(
+                    compInfo.getComponentName(),
+                    compInfo.getComponentVersion()
+                ).addAbstractTestCase(
+                    ExtensionContextToTestInfoMapper.abstractTestCaseSource(extensionContext),
+                    ExtensionContextToTestInfoMapper.abstractTestCaseName(extensionContext),
+                    extensionContext.testMethod.get().parameterTypes.map { TypeIdentifier(it.canonicalName) }
+                )
+                val concreteTestCase =
+                    abstractTestCase.addInteractionTest(
+                        ConcreteTestCaseName(extensionContext.displayName),
+                        extractPayloads(arguments).map { TestCaseParameter(it.toString()) }
+                    )
+                concreteTestCase.executionFinished(TestState.TestFinishedState.Failed.ExceptionFailed)
+                throw ex
+            }
         }
     }
 

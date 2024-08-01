@@ -18,7 +18,6 @@ object ParameterTypeResolver {
         } else if (parameterContext.parameter.type.isPrimitive) {
             DefaultArgumentConverter.INSTANCE.convert(argument, parameterContext)
         } else {
-            //TODO use mapper
             SerializationConstants.mapper.readValue(argument.toString(), resolveTypeReference(parameterContext.parameter.parameterizedType))
         }
     }
