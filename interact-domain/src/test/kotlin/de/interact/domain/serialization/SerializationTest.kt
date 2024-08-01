@@ -61,6 +61,63 @@ class SerializationTest {
         deserialized shouldBe req
     }
 
+    @Test
+    fun serialize2_2() {
+        val req = mapOf("body" to "value")
+        val serialized = SerializationConstants.mapper.writeValueAsString(
+            req
+        )
+        val deserialized: Map<String, String> = SerializationConstants.mapper.readValue(
+            serialized,
+            SerializationConstants.mapper.typeFactory.constructType(
+                Map::class.java
+            )
+        )
+        deserialized shouldBe req
+    }
+
+    @Test
+    fun serialize3() {
+        val req = RestMessage.Request(
+            path = "/path/1",
+            parameters = mapOf("param" to "value"),
+            headers = mapOf("header" to "value"),
+            body = ""
+        )
+        val serialized = SerializationConstants.mapper.writeValueAsString(
+            req
+        )
+        val deserialized: RestMessage.Request<Map<String, String>> = SerializationConstants.mapper.readValue(
+            serialized,
+            SerializationConstants.mapper.typeFactory.constructParametricType(
+                RestMessage.Request::class.java,
+                String::class.java
+            )
+        )
+        deserialized shouldBe req
+    }
+
+    @Test
+    fun serialize4() {
+        val req = RestMessage.Request(
+            path = "/path/1",
+            parameters = mapOf("param" to "value"),
+            headers = mapOf("header" to "value"),
+            body = null
+        )
+        val serialized = SerializationConstants.mapper.writeValueAsString(
+            req
+        )
+        val deserialized: RestMessage.Request<Map<String, String>> = SerializationConstants.mapper.readValue(
+            serialized,
+            SerializationConstants.mapper.typeFactory.constructParametricType(
+                RestMessage.Request::class.java,
+                String::class.java
+            )
+        )
+        deserialized shouldBe req
+    }
+
     private fun resolveTypeReference(type: Type): JavaType {
         return if (type is ParameterizedType) {
             val genericTypes =

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import de.interact.domain.serialization.SerializationConstants
 
 class AmqpMessageDeserializer: StdDeserializer<AmqpMessage<*>>(AmqpMessage::class.java), ContextualDeserializer {
@@ -17,12 +18,12 @@ class AmqpMessageDeserializer: StdDeserializer<AmqpMessage<*>>(AmqpMessage::clas
 
     override fun deserialize(parser: JsonParser, context: DeserializationContext): AmqpMessage<*> {
         val root = parser.codec.readTree<TreeNode>(parser)
-        val body = root.get("body")
+        val body = root.get("body") as TextNode
         val r = AmqpMessage(
             headers = (root.get("headers") as ObjectNode).fields().asSequence().map { it.key to it.value.asText() }.toMap(),
-            body = body.toString()
+            body = body.asText()
         )
-        val deserializedBody  = SerializationConstants.getMessageDeserializer(r).readBody(r, bodyType!!.containedType(0))
+        val deserializedBody  = SerializationConstants.getMessageDeserializer(r).readBody(r, bodyType!!.containedType(0))!!
         return AmqpMessage(
             headers = r.headers,
             body = deserializedBody

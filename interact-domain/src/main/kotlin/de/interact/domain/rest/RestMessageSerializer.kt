@@ -11,9 +11,8 @@ class RestMessageSerializer: StdSerializer<RestMessage<*>>(RestMessage::class.ja
         gen.writeStringField("path", value.path)
         gen.writeObjectField("parameters", value.parameters)
         gen.writeObjectField("headers", value.headers)
-        gen.writeFieldName("body")
-        val body = SerializationConstants.getMessageSerializer(value).writeBodyAsJsonString(value)
-        gen.writeRawValue(body)
+        val body = SerializationConstants.getMessageSerializer(value).writeBodyAsString(value)
+        gen.writeStringField("body", body)
         if(value is RestMessage.Response) {
             gen.writeNumberField("statusCode", value.statusCode)
         }

@@ -10,7 +10,7 @@ class AmqpMessageSerializer: StdSerializer<AmqpMessage<*>>(AmqpMessage::class.ja
         gen.writeStartObject()
         gen.writeObjectField("headers", value.headers)
         gen.writeFieldName("body")
-        val body = SerializationConstants.getMessageSerializer(value).writeBodyAsJsonString(value)
+        val body = SerializationConstants.getMessageSerializer(value).writeBodyAsString(value)
         gen.writeRawValue(body)
         gen.writeEndObject()
     }
