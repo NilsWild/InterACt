@@ -1,6 +1,7 @@
 package de.interact.domain.expectations.derivation.api
 
 import de.interact.domain.expectations.derivation.interaction.Interaction
+import de.interact.domain.expectations.derivation.interactionexpectation.InteractionExpectation
 import de.interact.domain.expectations.derivation.spi.EventPublisher
 import de.interact.domain.expectations.derivation.spi.Interactions
 import de.interact.domain.expectations.derivation.spi.SystemInteractionExpectations
@@ -37,7 +38,7 @@ class InteractionExpectationDerivationServiceTest {
     fun `handleNewUnitTestCase should save new unit test based interaction expectations for that test`() {
         val event = Instancio.create(UnitTestAddedEvent::class.java)
         every {
-            unitTestBasedInteractionExpectations.save(any())
+            unitTestBasedInteractionExpectations.save(any<Collection<InteractionExpectation.UnitTestBasedInteractionExpectation>>())
         } returnsArgument 0
         every {
             interactions.findForTest(event.test.id)
@@ -46,8 +47,8 @@ class InteractionExpectationDerivationServiceTest {
         service.onUnitTestCaseAdded(event)
         verify {
             unitTestBasedInteractionExpectations.save(
-                match {
-                    it.derivedFrom == event.test
+                match<Collection<InteractionExpectation.UnitTestBasedInteractionExpectation>> {
+                    it.all {  it.derivedFrom == event.test}
                 }
             )
         }
