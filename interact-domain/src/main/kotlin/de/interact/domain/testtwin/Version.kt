@@ -1,13 +1,11 @@
 package de.interact.domain.testtwin
 
 import arrow.optics.optics
-import de.interact.domain.shared.ComponentId
-import de.interact.domain.shared.Entity
-import de.interact.domain.shared.EntityReference
-import de.interact.domain.shared.VersionId
+import de.interact.domain.shared.*
 import de.interact.domain.testtwin.abstracttest.AbstractTestCase
 import de.interact.domain.testtwin.abstracttest.concretetest.ConcreteTestCase
 import de.interact.domain.testtwin.abstracttest.concretetest.message.*
+import de.interact.domain.testtwin.abstracttest.concretetest.message.Message
 import de.interact.domain.testtwin.abstracttest.concretetest.triggeredMessages
 import de.interact.domain.testtwin.abstracttest.templateFor
 import de.interact.domain.testtwin.componentinterface.IncomingInterface
@@ -37,20 +35,29 @@ data class Version(
         mergedVersion = lens.modify(mergedVersion) { inter ->  inter.copy(version = listeningTo.firstOrNull{it.id == inter.id}?.version) }
         mergedVersion = lens2.modify(mergedVersion) { inter ->  inter.copy(version = sendingTo.firstOrNull{it.id == inter.id}?.version) }
 
-        mergeConcreteTestCasesForExistingAbstractTestCases(mergedVersion)
-
         return this.copy(
             listeningTo = (listeningTo + version.listeningTo).distinctBy { it.id }.toSet(),
-            sendingTo = (sendingTo + version.sendingTo).distinctBy { it.id }.toSet()
+            sendingTo = (sendingTo + version.sendingTo).distinctBy { it.id }.toSet(),
+            testedBy = mergeConcreteTestCasesForExistingAbstractTestCases(mergedVersion.testedBy)
         )
     }
 
-    private fun mergeConcreteTestCasesForExistingAbstractTestCases(version: Version) {
+    private fun mergeConcreteTestCasesForExistingAbstractTestCases(observedAbstractTestCases: Set<AbstractTestCase>): Set<AbstractTestCase> {
         val originalTestMap = testedBy.associateBy { it.id }
-        val addedTestMap = version.testedBy.associateBy { it.id }
-        originalTestMap.keys.intersect(addedTestMap.keys).forEach {
-            originalTestMap[it]!!.templateFor = (originalTestMap[it]!!.templateFor + addedTestMap[it]!!.templateFor).distinctBy { it.id }.toSet()
+        val addedTestMap = observedAbstractTestCases.associateBy { it.id }
+        val newTestedBy = originalTestMap.values.toMutableSet()
+
+        originalTestMap.minus(addedTestMap.keys).forEach {
+            newTestedBy += it.value
         }
+        originalTestMap.keys.intersect(addedTestMap.keys).forEach {
+            newTestedBy += originalTestMap[it]!!.copy(templateFor = (originalTestMap[it]!!.templateFor + addedTestMap[it]!!.templateFor).distinctBy { it.id }.toSet())
+        }
+
+        addedTestMap.minus(originalTestMap.keys).forEach {
+            newTestedBy += it.value
+        }
+        return newTestedBy
     }
 }
 

@@ -3,7 +3,6 @@ package de.interact.domain.amqp
 sealed interface AmqpProtocolData
 
 class IncomingAmqpProtocolData(
-    val queueName: QueueName,
     val queueBindings: List<QueueBinding>
 ) : AmqpProtocolData
 

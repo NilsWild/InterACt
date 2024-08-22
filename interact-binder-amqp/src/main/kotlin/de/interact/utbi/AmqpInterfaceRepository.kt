@@ -47,7 +47,6 @@ class AmqpInterfaceRepository(private val neo4jClient: Neo4jClient) {
             IncomingAmqpInterface(
                 UUID.fromString(record.get("id").asString()),
                 IncomingAmqpProtocolData(
-                    QueueName(record.get("queueName").asString()),
                     SerializationConstants.mapper.readValue(
                         record.get("queueBindings").asString().replace("\'", "\""),
                         SerializationConstants.mapper.typeFactory.constructCollectionType(
@@ -74,7 +73,6 @@ class AmqpInterfaceRepository(private val neo4jClient: Neo4jClient) {
                 IncomingAmqpInterface(
                     UUID.fromString(incomingInterface.get("id").asString()),
                     IncomingAmqpProtocolData(
-                        QueueName(incomingInterface.get("protocolData.queueName").asString()),
                         SerializationConstants.mapper.readValue(
                             incomingInterface.get("protocolData.queueBindings").asString().replace("\'", "\""),
                             SerializationConstants.mapper.typeFactory.constructCollectionType(
