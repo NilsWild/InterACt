@@ -86,6 +86,7 @@ class ValidationPlansManager(
                             derivedFromTest.triggeredMessages
                                 .filterIsInstance<ComponentResponseMessage>()
                                 .first{interactionExpectation.expectFrom.id == it.id}.sentBy
+                            //TODO expectFrom message is crucial for next replacement
                         )
                     )
                 )
@@ -188,6 +189,9 @@ class ValidationPlansManager(
             val boundInterfaces = interfaces.findIncomingInterfacesBoundToOutgoingInterface(startInterface.id)
             boundInterfaces.forEach { nextInterface ->
                 val unitTests = tests.findUnitTestsReceivingBy(nextInterface)
+                val interfaceCount = interactionGraph.findAllInteractionTraversingReverseAdjacencyMap(sink) {
+                    it.testCase.replacements.any { it.messageToReplace.interfaceReference.id == nextInterface.id }
+                }.count()
                 val nextSegments = unitTests.filter { nextTestCandidate ->
                     interactionGraph.findFirstInteractionTraversingReverseAdjacencyMap(sink) {
                     // we can continue if the next interaction is derived from the same concrete test case if
@@ -205,8 +209,7 @@ class ValidationPlansManager(
                                 //TODO multiple replacements
                                 Replacement(
                                     MessageToReplaceIdentifier(
-                                        unitTest.triggeredMessages.filterIsInstance<Message.ReceivedMessage>()
-                                            .first { it.receivedBy.id == nextInterface.id }.toEntityReference(),
+                                        unitTest.triggeredMessages.filterIsInstance<Message.ReceivedMessage>()[interfaceCount].toEntityReference(),
                                         nextInterface.toEntityReference()
                                     ),
                                     ReplacementIdentifier(
@@ -223,6 +226,7 @@ class ValidationPlansManager(
                                         .first { it.receivedBy.id == nextInterface.id }.id
                                 )
                             }.map { it.sentBy }.toSet()
+                        //TODO same thing different shit, ändern das message gespeichert wird und in der graphql api mappen auf interface
                     )
                 }
                 result[nextInterface.id] = nextSegments

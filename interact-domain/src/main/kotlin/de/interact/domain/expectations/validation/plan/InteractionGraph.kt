@@ -111,6 +111,20 @@ fun InteractionGraph.findFirstInteractionTraversingReverseAdjacencyMap(start: In
     return null
 }
 
+fun InteractionGraph.findAllInteractionTraversingReverseAdjacencyMap(start: Interaction, predicate: Predicate<Interaction>): Set<Interaction>{
+    val toTraverse: Queue<Interaction> = LinkedList()
+    val result = mutableSetOf<Interaction>()
+    toTraverse.add(start)
+    while(toTraverse.isNotEmpty()) {
+        val current = toTraverse.remove()
+        if(predicate.test(current)) {
+            result.add(current)
+        }
+        toTraverse.addAll(reverseAdjacencyMap[current]!!)
+    }
+    return result
+}
+
 fun InteractionGraph.addInteraction(newInteraction: Interaction, prevInteractions: Set<Interaction> = emptySet()): InteractionGraph {
     val newInteractions = interactions + newInteraction
     val newAdjacencyMap = adjacencyMap +
