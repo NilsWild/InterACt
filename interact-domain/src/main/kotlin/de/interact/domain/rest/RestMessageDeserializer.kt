@@ -22,7 +22,7 @@ class RestMessageDeserializer : StdDeserializer<RestMessage<*>>(RestMessage::cla
         val root = parser.codec.readTree<TreeNode>(parser)
         val type = bodyType!!.rawClass.simpleName
         val body = root.get("body")
-        if (body is NullNode) {
+        if (body is NullNode || body is TextNode && body.asText() == "null") {
             return when (type) {
                 RestMessage.Request::class.simpleName -> {
                     RestMessage.Request(

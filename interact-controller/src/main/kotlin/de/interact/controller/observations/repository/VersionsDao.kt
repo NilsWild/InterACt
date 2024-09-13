@@ -54,7 +54,6 @@ class VersionsDao(
             ),
             version.version
         ).apply {
-            val versionEntity = this
             listeningTo = version.listeningTo.map {
                 val receivedBy = incomingInterfaceEntity(
                     it.id,

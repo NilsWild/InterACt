@@ -23,7 +23,7 @@ class AmqpMessageDeserializer: StdDeserializer<AmqpMessage<*>>(AmqpMessage::clas
             headers = (root.get("headers") as ObjectNode).fields().asSequence().map { it.key to it.value.asText() }.toMap(),
             body = body.asText()
         )
-        val deserializedBody  = SerializationConstants.getMessageDeserializer(r).readBody(r, bodyType!!.containedType(0))!!
+        val deserializedBody  = SerializationConstants.getMessageDeserializer(r).readBody(r, bodyType!!.containedType(0))
         return AmqpMessage(
             headers = r.headers,
             body = deserializedBody

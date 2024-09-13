@@ -14,10 +14,10 @@ abstract class Entity<out ID:Any>{
 data class EntityReference<out ID:Any>(val id: ID, val version: Long?) {
     constructor(entity: Entity<ID>): this(entity.id, entity.version)
 
-    override fun equals(entity: Any?): Boolean {
-        return when(entity) {
-            is EntityReference<*> -> id == entity.id
-            is Entity<*> -> id == entity.id
+    override fun equals(other: Any?): Boolean {
+        return when(other) {
+            is EntityReference<*> -> id == other.id
+            is Entity<*> -> id == other.id
             else -> false
         }
     }

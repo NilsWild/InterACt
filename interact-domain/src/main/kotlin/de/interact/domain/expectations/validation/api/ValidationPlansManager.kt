@@ -206,10 +206,11 @@ class ValidationPlansManager(
                         TestCase.IncompleteTestCase(
                             unitTest.derivedFrom,
                             setOf(
-                                //TODO multiple replacements
+                                //TODO multiple replacements so received message needs to be filtered by interface
                                 Replacement(
                                     MessageToReplaceIdentifier(
-                                        unitTest.triggeredMessages.filterIsInstance<Message.ReceivedMessage>()[interfaceCount].toEntityReference(),
+                                        unitTest.triggeredMessages.filterIsInstance<Message.ReceivedMessage>()
+                                            .filter { it.receivedBy.id == nextInterface.id }[interfaceCount].toEntityReference(),
                                         nextInterface.toEntityReference()
                                     ),
                                     ReplacementIdentifier(

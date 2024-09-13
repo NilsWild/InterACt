@@ -45,7 +45,7 @@ data class Version(
     private fun mergeConcreteTestCasesForExistingAbstractTestCases(observedAbstractTestCases: Set<AbstractTestCase>): Set<AbstractTestCase> {
         val originalTestMap = testedBy.associateBy { it.id }
         val addedTestMap = observedAbstractTestCases.associateBy { it.id }
-        val newTestedBy = originalTestMap.values.toMutableSet()
+        val newTestedBy = mutableSetOf<AbstractTestCase>()
 
         originalTestMap.minus(addedTestMap.keys).forEach {
             newTestedBy += it.value
