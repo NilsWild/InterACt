@@ -40,7 +40,7 @@ class IncomingInterfaceEntity : InterfaceEntity() {
     @Relationship(type = BOUNT_TO_RELATIONSHIP_LABEL, direction = Relationship.Direction.INCOMING)
     var boundTo: Set<OutgoingInterfaceEntity> = emptySet()
 
-    @Relationship(type = RECEIVED_BY_RELATIONSHIP_LABEL)
+    @Relationship(type = RECEIVED_BY_RELATIONSHIP_LABEL, direction = Relationship.Direction.INCOMING)
     var receivedMessages: Set<ReceivedMessageEntity> = emptySet()
 }
 
@@ -54,7 +54,7 @@ class OutgoingInterfaceEntity : InterfaceEntity() {
     @Relationship(type = BOUNT_TO_RELATIONSHIP_LABEL)
     var boundTo: Set<IncomingInterfaceEntity> = emptySet()
 
-    @Relationship(type = SENT_BY_RELATIONSHIP_LABEL)
+    @Relationship(type = SENT_BY_RELATIONSHIP_LABEL, direction = Relationship.Direction.INCOMING)
     var sentMessages: Set<SentMessageEntity> = emptySet()
 }
 

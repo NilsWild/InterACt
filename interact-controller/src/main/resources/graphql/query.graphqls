@@ -14,8 +14,8 @@ type Version {
     id: ID!
     identifier: String!
     versionOf: Component!
-    listeningTo: [Interface]!
-    sendingTo: [Interface]!
+    listeningTo: [IncomingInterface]!
+    sendingTo: [OutgoingInterface]!
     testedBy: [AbstractTestCase]!
 }
 
