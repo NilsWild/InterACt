@@ -2,6 +2,7 @@ package de.interact.controller.persistence.domain
 
 import de.interact.domain.shared.EntityReferenceWithLabelsProjection
 import de.interact.domain.shared.InteractionId
+import de.interact.domain.shared.ReceivedMessageId
 import org.springframework.data.neo4j.core.schema.DynamicLabels
 import org.springframework.data.neo4j.core.schema.Node
 import org.springframework.data.neo4j.core.schema.Relationship
@@ -32,10 +33,10 @@ class InteractionEntity: Entity(), Comparable<InteractionEntity> {
     lateinit var derivedFrom: UnitTestEntity
 
     @Relationship(type = FROM_RELATIONSHIP_LABEL)
-    lateinit var from: Set<IncomingInterfaceEntity>
+    lateinit var from: Set<ReceivedMessageEntity>
 
     @Relationship(type = TO_RELATIONSHIP_LABEL)
-    lateinit var to: Set<OutgoingInterfaceEntity>
+    lateinit var to: Set<SentMessageEntity>
 
     @Relationship(type = VALIDATED_BY_RELATIONSHIP_LABEL)
     lateinit var testCase: TestCaseEntity
@@ -59,7 +60,7 @@ fun interactionEntityReference(id: InteractionId, order: Int, version: Long?): I
     }
 }
 
-fun pendingInteractionEntity(id: InteractionId, order:Int, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
+fun pendingInteractionEntity(id: InteractionId, order:Int, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<ReceivedMessageEntity>, to: Set<SentMessageEntity>, testCase: TestCaseEntity): InteractionEntity {
     return interactionEntityReference(id, order, version).also {
         it.previous = previous
         it.derivedFrom = derivedFrom
@@ -70,7 +71,7 @@ fun pendingInteractionEntity(id: InteractionId, order:Int, version: Long?, previ
     }
 }
 
-fun executableInteractionEntity(id: InteractionId, order:Int, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
+fun executableInteractionEntity(id: InteractionId, order:Int, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<ReceivedMessageEntity>, to: Set<SentMessageEntity>, testCase: TestCaseEntity): InteractionEntity {
     return interactionEntityReference(id, order, version).also {
         it.previous = previous
         it.derivedFrom = derivedFrom
@@ -81,7 +82,7 @@ fun executableInteractionEntity(id: InteractionId, order:Int, version: Long?, pr
     }
 }
 
-fun validatedInteractionEntity(id: InteractionId, order: Int, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
+fun validatedInteractionEntity(id: InteractionId, order: Int, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<ReceivedMessageEntity>, to: Set<SentMessageEntity>, testCase: TestCaseEntity): InteractionEntity {
     return interactionEntityReference(id, order, version).also {
         it.previous = previous
         it.derivedFrom = derivedFrom
@@ -92,7 +93,7 @@ fun validatedInteractionEntity(id: InteractionId, order: Int, version: Long?, pr
     }
 }
 
-fun failedInteractionEntity(id: InteractionId, order: Int, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<IncomingInterfaceEntity>, to: Set<OutgoingInterfaceEntity>, testCase: TestCaseEntity): InteractionEntity {
+fun failedInteractionEntity(id: InteractionId, order: Int, version: Long?, previous: Set<InteractionEntity>, derivedFrom: UnitTestEntity, from: Set<ReceivedMessageEntity>, to: Set<SentMessageEntity>, testCase: TestCaseEntity): InteractionEntity {
     return interactionEntityReference(id, order, version).also {
         it.previous = previous
         it.derivedFrom = derivedFrom

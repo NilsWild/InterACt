@@ -168,8 +168,8 @@ type Interaction {
     next: [Interaction]!
     previous: [Interaction]!
     derivedFrom: UnitTest!
-    from: [IncomingInterface]!
-    to: [OutgoingInterface]!
+    from: [ReceivedMessage]!
+    to: [SentMessage]!
     testCase: TestCase!
     order: Int!
     labels: [String]!

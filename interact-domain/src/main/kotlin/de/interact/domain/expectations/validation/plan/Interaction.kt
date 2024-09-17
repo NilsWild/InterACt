@@ -7,8 +7,8 @@ import java.util.*
 sealed class Interaction: Entity<InteractionId>() {
     abstract val derivedFrom: EntityReference<UnitTestId>
     abstract val testCase: TestCase
-    abstract val from: Set<EntityReference<IncomingInterfaceId>>
-    abstract val to: Set<EntityReference<OutgoingInterfaceId>>
+    abstract val from: Set<Pair<EntityReference<IncomingInterfaceId>,EntityReference<ReceivedMessageId>>>
+    abstract val to: Set<Pair<EntityReference<OutgoingInterfaceId>,EntityReference<SentMessageId>>>
 
     fun clone(): Interaction {
         return when(this) {
@@ -22,8 +22,8 @@ sealed class Interaction: Entity<InteractionId>() {
     data class Pending (
         override val derivedFrom: EntityReference<UnitTestId>,
         override val testCase: TestCase.IncompleteTestCase,
-        override val from: Set<EntityReference<IncomingInterfaceId>>,
-        override val to: Set<EntityReference<OutgoingInterfaceId>>,
+        override val from: Set<Pair<EntityReference<IncomingInterfaceId>,EntityReference<ReceivedMessageId>>>,
+        override val to: Set<Pair<EntityReference<OutgoingInterfaceId>,EntityReference<SentMessageId>>>,
         override val id: InteractionId = InteractionId(UUID.randomUUID()),
         override val version: Long? = null
     ): Interaction()
@@ -31,8 +31,8 @@ sealed class Interaction: Entity<InteractionId>() {
     data class Executable (
         override val derivedFrom: EntityReference<UnitTestId>,
         override val testCase: TestCase.ExecutableTestCase,
-        override val from: Set<EntityReference<IncomingInterfaceId>>,
-        override val to: Set<EntityReference<OutgoingInterfaceId>>,
+        override val from: Set<Pair<EntityReference<IncomingInterfaceId>,EntityReference<ReceivedMessageId>>>,
+        override val to: Set<Pair<EntityReference<OutgoingInterfaceId>,EntityReference<SentMessageId>>>,
         override val id: InteractionId = InteractionId(UUID.randomUUID()),
         override val version: Long? = null
     ): Interaction()
@@ -42,8 +42,8 @@ sealed class Interaction: Entity<InteractionId>() {
         data class Validated(
             override val derivedFrom: EntityReference<UnitTestId>,
             override val testCase: TestCase.CompleteTestCase.Succeeded,
-            override val from: Set<EntityReference<IncomingInterfaceId>>,
-            override val to: Set<EntityReference<OutgoingInterfaceId>>,
+            override val from: Set<Pair<EntityReference<IncomingInterfaceId>,EntityReference<ReceivedMessageId>>>,
+            override val to: Set<Pair<EntityReference<OutgoingInterfaceId>,EntityReference<SentMessageId>>>,
             override val id: InteractionId = InteractionId(UUID.randomUUID()),
             override val version: Long? = null
         ): Finished()
@@ -51,8 +51,8 @@ sealed class Interaction: Entity<InteractionId>() {
         data class Failed(
             override val derivedFrom: EntityReference<UnitTestId>,
             override val testCase: TestCase.CompleteTestCase.Failed,
-            override val from: Set<EntityReference<IncomingInterfaceId>>,
-            override val to: Set<EntityReference<OutgoingInterfaceId>>,
+            override val from: Set<Pair<EntityReference<IncomingInterfaceId>,EntityReference<ReceivedMessageId>>>,
+            override val to: Set<Pair<EntityReference<OutgoingInterfaceId>,EntityReference<SentMessageId>>>,
             override val id: InteractionId = InteractionId(UUID.randomUUID()),
             override val version: Long? = null
         ): Finished()

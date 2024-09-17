@@ -81,12 +81,11 @@ class ValidationPlansManager(
                             derivedFromTest.parameters,
                             interactionExpectation.derivedFrom
                         ),
-                        derivedFromTest.triggeredMessages.filterIsInstance<StimulusMessage>().firstOrNull()?.let { setOf(it.receivedBy)} ?: emptySet(),
+                        derivedFromTest.triggeredMessages.filterIsInstance<StimulusMessage>().firstOrNull()?.let { setOf(it.receivedBy to it.toEntityReference())} ?: emptySet(),
                         setOf(
                             derivedFromTest.triggeredMessages
                                 .filterIsInstance<ComponentResponseMessage>()
-                                .first{interactionExpectation.expectFrom.id == it.id}.sentBy
-                            //TODO expectFrom message is crucial for next replacement
+                                .first{interactionExpectation.expectFrom.id == it.id}.let { it.sentBy to it.toEntityReference() }
                         )
                     )
                 )
@@ -170,7 +169,7 @@ class ValidationPlansManager(
                         groupSegments.forEach { segment ->
                             updatedGraph = updatedGraph.addInteraction(segment, setOf(sink))
                         }
-                        updatedGraph.replaceInteractions(updatedGraph.interactions.map { it to it.clone() }.toMap())
+                        updatedGraph.replaceInteractions(updatedGraph.interactions.associateWith { it.clone() })
                     }
                 }
             }
@@ -185,7 +184,8 @@ class ValidationPlansManager(
 
         val result = mutableMapOf<IncomingInterfaceId, List<Interaction>>()
 
-        sink.to.forEach { startInterface ->
+        sink.to.forEach { start ->
+            val startInterface = start.first
             val boundInterfaces = interfaces.findIncomingInterfacesBoundToOutgoingInterface(startInterface.id)
             boundInterfaces.forEach { nextInterface ->
                 val unitTests = tests.findUnitTestsReceivingBy(nextInterface)
@@ -214,19 +214,23 @@ class ValidationPlansManager(
                                         nextInterface.toEntityReference()
                                     ),
                                     ReplacementIdentifier(
-                                        startInterface
+                                        start.second,
+                                        start.first
                                     )
                                 )
                             )
                         ),
-                        setOf(nextInterface.toEntityReference()),
+                        setOf(
+                            unitTest.triggeredMessages.filterIsInstance<Message.ReceivedMessage>()
+                                .filter { it.receivedBy.id == nextInterface.id }[interfaceCount].let {  it.receivedBy to it.toEntityReference() }
+                        ),
                         unitTest.triggeredMessages.filterIsInstance<ComponentResponseMessage>()
                             .filter {
                                 it.dependsOn.map { it.id }.contains(
                                     unitTest.triggeredMessages.filterIsInstance<Message.ReceivedMessage>()
                                         .first { it.receivedBy.id == nextInterface.id }.id
                                 )
-                            }.map { it.sentBy }.toSet()
+                            }.map { it.sentBy to it.toEntityReference() }.toSet()
                         //TODO same thing different shit, ändern das message gespeichert wird und in der graphql api mappen auf interface
                     )
                 }
@@ -320,7 +324,7 @@ class ValidationPlansManager(
 
     private fun extractReplacements(interactions: Set<Interaction.Finished.Validated>, replacements: Set<Replacement>): Map<EntityReference<IncomingInterfaceId>, ComponentResponseMessage> {
         return replacements.map { replacement ->
-            val testCaseToCopyFrom = interactions.first { it.to.contains(replacement.replacement.interfaceToCopyFrom) }.testCase.actualTest
+            val testCaseToCopyFrom = interactions.first { it.to.map { it.first }.contains(replacement.replacement.interfaceToCopyFrom) }.testCase.actualTest
             val testToCopyFrom = tests.find(testCaseToCopyFrom.id)!!
             val replacementMessage = testToCopyFrom.triggeredMessages.filterIsInstance<ComponentResponseMessage>().first {
                 it.sentBy == replacement.replacement.interfaceToCopyFrom

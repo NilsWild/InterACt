@@ -28,9 +28,9 @@ val InteractionGraph.source: Interaction? get() = interactions.firstOrNull { rev
 private fun InteractionGraph.hash(interaction: Interaction) : String {
     //TODO switch to testcase hash
     return if(adjacencyMap[interaction]!!.isEmpty()) {
-        hashedSha256(interaction.from.sortedBy { it.id.value }, interaction.to.sortedBy { it.id.value })
+        hashedSha256(interaction.from.sortedBy { it.second.id.value }, interaction.to.sortedBy { it.second.id.value })
     } else {
-        hashedSha256(interaction.from.sortedBy { it.id.value }, interaction.to.sortedBy { it.id.value }, adjacencyMap[interaction]!!.map { hash(it) }.sorted())
+        hashedSha256(interaction.from.sortedBy { it.second.id.value }, interaction.to.sortedBy { it.second.id.value }, adjacencyMap[interaction]!!.map { hash(it) }.sorted())
     }
 }
 
@@ -48,7 +48,7 @@ private fun InteractionGraph.findInteractionsThatLeadTo(interfaceIds: Set<Interf
     val interactionsThatLeadTo = mutableSetOf<Interaction>()
     while (toTraverse.isNotEmpty()) {
         val current = toTraverse.poll()
-        if (current.from.map { it.id }.containsAll(interfaceIds) || current.to.map { it.id }.containsAll(interfaceIds)) {
+        if (current.from.map { it.first.id }.containsAll(interfaceIds) || current.to.map { it.first.id }.containsAll(interfaceIds)) {
             interactionsThatLeadTo.add(current)
         }
         toTraverse.addAll(reverseAdjacencyMap[current]!!)
@@ -128,8 +128,7 @@ fun InteractionGraph.findAllInteractionTraversingReverseAdjacencyMap(start: Inte
 fun InteractionGraph.addInteraction(newInteraction: Interaction, prevInteractions: Set<Interaction> = emptySet()): InteractionGraph {
     val newInteractions = interactions + newInteraction
     val newAdjacencyMap = adjacencyMap +
-        prevInteractions.map { it to (adjacencyMap[it] ?: emptySet()) + newInteraction }
-            .toMap() + (newInteraction to emptySet())
+            prevInteractions.associateWith { (adjacencyMap[it] ?: emptySet()) + newInteraction } + (newInteraction to emptySet())
     val newReverseAdjacencyMap = mapOf(newInteraction to prevInteractions) + newAdjacencyMap.entries.fold(reverseAdjacencyMap) { acc, (k, v) ->
         v.fold(acc) { acc2, it ->
             acc2 + (it to (acc[it] ?: emptySet()) + k)

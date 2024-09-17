@@ -10,6 +10,8 @@ import org.springframework.data.neo4j.core.schema.Relationship
 const val ABSTRACT_TEST_CASE_NODE_LABEL = "AbstractTestCase"
 const val TEMPLATE_FOR_RELATIONSHIP_LABEL = "TEMPLATE_FOR"
 
+
+
 @Node(ABSTRACT_TEST_CASE_NODE_LABEL)
 class AbstractTestCaseEntity: Entity()  {
     var identifier: String? = null

@@ -81,8 +81,8 @@ interface ValidationPlanProjection: ValidationPlanReferenceProjection {
         interface InteractionProjection: InteractionReferenceProjection {
             val previous: Set<EntityReferenceProjection>
             val derivedFrom: UnitTestReferenceProjection
-            val from: Set<IncomingInterfaceReferenceProjection>
-            val to: Set<OutgoingInterfaceReferenceProjection>
+            val from: Set<ReceivedMessageProjection>
+            val to: Set<SentMessageProjection>
             val order: Int
             val testCase: TestCaseProjection
 
@@ -95,12 +95,16 @@ interface ValidationPlanProjection: ValidationPlanReferenceProjection {
 
                 interface ReplacementProjection: ReplacementReferenceProjection{
                     val messageToReplace: ReceivedMessageProjection
-                    val replaceWithMessageFrom: OutgoingInterfaceReferenceProjection
-
-                    interface ReceivedMessageProjection : ReceivedMessageReferenceProjection {
-                        val receivedBy: IncomingInterfaceReferenceProjection
-                    }
+                    val replaceWithMessage: SentMessageProjection
                 }
+            }
+
+            interface ReceivedMessageProjection : ReceivedMessageReferenceProjection {
+                val receivedBy: IncomingInterfaceReferenceProjection
+            }
+
+            interface SentMessageProjection : SentMessageReferenceProjection {
+                val sentBy: OutgoingInterfaceReferenceProjection
             }
         }
     }
@@ -128,8 +132,8 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
                 interaction.version,
                 interactionGraph.reverseAdjacencyMap[interaction]!!.map { mappedInteractions[it.id]!! }.toSet(),
                 interaction.derivedFrom.toEntity(),
-                interaction.from.map { it.toEntity() }.toSet(),
-                interaction.to.map { it.toEntity() }.toSet(),
+                interaction.from.map { it.second.toEntity().apply { receivedBy = it.first.toEntity() } }.toSet(),
+                interaction.to.map { it.second.toEntity().apply { sentBy = it.first.toEntity() } }.toSet(),
                 when (interaction.testCase) {
                     is TestCase.IncompleteTestCase -> incompleteTestCaseEntity(
                         interaction.testCase.id,
@@ -141,8 +145,11 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
                                 it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
                                     m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
                                 },
-                                it.replacement.interfaceToCopyFrom.toEntity()
-                            )
+                                it.replacement.messageInOriginalUnitTest.toEntity()
+                            ).apply {
+                                messageToReplace.receivedBy = it.messageToReplace.interfaceReference.toEntity()
+                                replaceWithMessage.sentBy = it.replacement.interfaceToCopyFrom.toEntity()
+                            }
                         }.toSet(),
                         (interaction.testCase as TestCase.IncompleteTestCase).derivedFrom.toEntity()
                     )
@@ -157,8 +164,11 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
                                 it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
                                     m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
                                 },
-                                it.replacement.interfaceToCopyFrom.toEntity()
-                            )
+                                it.replacement.messageInOriginalUnitTest.toEntity()
+                            ).apply {
+                                messageToReplace.receivedBy = it.messageToReplace.interfaceReference.toEntity()
+                                replaceWithMessage.sentBy = it.replacement.interfaceToCopyFrom.toEntity()
+                            }
                         }.toSet(),
                         (interaction.testCase as TestCase.ExecutableTestCase).derivedFrom.toEntity(),
                         (interaction.testCase as TestCase.ExecutableTestCase).parameters.map { it.toString() }
@@ -174,8 +184,11 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
                                 it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
                                     m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
                                 },
-                                it.replacement.interfaceToCopyFrom.toEntity()
-                            )
+                                it.replacement.messageInOriginalUnitTest.toEntity()
+                            ).apply {
+                                messageToReplace.receivedBy = it.messageToReplace.interfaceReference.toEntity()
+                                replaceWithMessage.sentBy = it.replacement.interfaceToCopyFrom.toEntity()
+                            }
                         }.toSet(),
                         (interaction.testCase as TestCase.CompleteTestCase.Succeeded).derivedFrom.toEntity(),
                         (interaction.testCase as TestCase.CompleteTestCase.Succeeded).parameters.map { it.toString() },
@@ -192,8 +205,11 @@ private fun ValidationPlan.toEntity(): InteractionExpectationValidationPlanEntit
                                 it.messageToReplace.messageInOriginalUnitTest.toEntity().also { m ->
                                     m.receivedBy = it.messageToReplace.interfaceReference.toEntity()
                                 },
-                                it.replacement.interfaceToCopyFrom.toEntity()
-                            )
+                                it.replacement.messageInOriginalUnitTest.toEntity()
+                            ).apply {
+                                messageToReplace.receivedBy = it.messageToReplace.interfaceReference.toEntity()
+                                replaceWithMessage.sentBy = it.replacement.interfaceToCopyFrom.toEntity()
+                            }
                         }.toSet(),
                         (interaction.testCase as TestCase.CompleteTestCase.Failed).derivedFrom.toEntity(),
                         (interaction.testCase as TestCase.CompleteTestCase.Failed).parameters.map { it.toString() },
@@ -245,7 +261,8 @@ private fun ValidationPlanProjection.toDomain(): ValidationPlan {
                                     it.messageToReplace.receivedBy.toEntityReference()
                                 ),
                                 ReplacementIdentifier(
-                                    it.replaceWithMessageFrom.toEntityReference()
+                                    it.replaceWithMessage.toEntityReference(),
+                                    it.replaceWithMessage.sentBy.toEntityReference()
                                 ),
                                 ReplacementId(it.id),
                                 it.version
@@ -257,8 +274,12 @@ private fun ValidationPlanProjection.toDomain(): ValidationPlan {
 
                     else -> throw IllegalArgumentException("Unknown test case type: ${interaction.testCase.labels}")
                 },
-                interaction.from.map { it.toEntityReference() }.toSet(),
-                interaction.to.map { it.toEntityReference() }.toSet(),
+                interaction.from.map {
+                    it.receivedBy.toEntityReference() to it.toEntityReference()
+                }.toSet(),
+                interaction.to.map {
+                    it.sentBy.toEntityReference() to it.toEntityReference()
+                }.toSet(),
                 InteractionId(interaction.id),
                 interaction.version
             )
@@ -275,7 +296,8 @@ private fun ValidationPlanProjection.toDomain(): ValidationPlan {
                                     it.messageToReplace.receivedBy.toEntityReference()
                                 ),
                                 ReplacementIdentifier(
-                                    it.replaceWithMessageFrom.toEntityReference()
+                                    it.replaceWithMessage.toEntityReference(),
+                                    it.replaceWithMessage.sentBy.toEntityReference()
                                 ),
                                 ReplacementId(it.id),
                                 it.version
@@ -288,8 +310,12 @@ private fun ValidationPlanProjection.toDomain(): ValidationPlan {
 
                     else -> throw IllegalArgumentException("Unknown test case type: ${interaction.testCase.labels}")
                 },
-                interaction.from.map { it.toEntityReference() }.toSet(),
-                interaction.to.map { it.toEntityReference() }.toSet(),
+                interaction.from.map {
+                    it.receivedBy.toEntityReference() to it.toEntityReference()
+                }.toSet(),
+                interaction.to.map {
+                    it.sentBy.toEntityReference() to it.toEntityReference()
+                }.toSet(),
                 InteractionId(interaction.id),
                 interaction.version
             )
@@ -306,7 +332,8 @@ private fun ValidationPlanProjection.toDomain(): ValidationPlan {
                                     it.messageToReplace.receivedBy.toEntityReference()
                                 ),
                                 ReplacementIdentifier(
-                                    it.replaceWithMessageFrom.toEntityReference()
+                                    it.replaceWithMessage.toEntityReference(),
+                                    it.replaceWithMessage.sentBy.toEntityReference()
                                 ),
                                 ReplacementId(it.id),
                                 it.version
@@ -320,8 +347,12 @@ private fun ValidationPlanProjection.toDomain(): ValidationPlan {
 
                     else -> throw IllegalArgumentException("Unknown test case type: ${interaction.testCase.labels}")
                 },
-                interaction.from.map { it.toEntityReference() }.toSet(),
-                interaction.to.map { it.toEntityReference() }.toSet(),
+                interaction.from.map {
+                    it.receivedBy.toEntityReference() to it.toEntityReference()
+                }.toSet(),
+                interaction.to.map {
+                    it.sentBy.toEntityReference() to it.toEntityReference()
+                }.toSet(),
                 InteractionId(interaction.id),
                 interaction.version
             )
@@ -338,7 +369,8 @@ private fun ValidationPlanProjection.toDomain(): ValidationPlan {
                                     it.messageToReplace.receivedBy.toEntityReference()
                                 ),
                                 ReplacementIdentifier(
-                                    it.replaceWithMessageFrom.toEntityReference()
+                                    it.replaceWithMessage.toEntityReference(),
+                                    it.replaceWithMessage.sentBy.toEntityReference()
                                 ),
                                 ReplacementId(it.id),
                                 it.version
@@ -352,8 +384,12 @@ private fun ValidationPlanProjection.toDomain(): ValidationPlan {
 
                     else -> throw IllegalArgumentException("Unknown test case type: ${interaction.testCase.labels}")
                 },
-                interaction.from.map { it.toEntityReference() }.toSet(),
-                interaction.to.map { it.toEntityReference() }.toSet(),
+                interaction.from.map {
+                    it.receivedBy.toEntityReference() to it.toEntityReference()
+                }.toSet(),
+                interaction.to.map {
+                    it.sentBy.toEntityReference() to it.toEntityReference()
+                }.toSet(),
                 InteractionId(interaction.id),
                 interaction.version
             )

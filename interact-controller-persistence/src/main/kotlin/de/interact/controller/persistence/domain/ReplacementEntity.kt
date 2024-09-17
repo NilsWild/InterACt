@@ -14,7 +14,7 @@ class ReplacementEntity: Entity() {
     lateinit var messageToReplace: ReceivedMessageEntity
 
     @Relationship
-    lateinit var replaceWithMessageFrom: OutgoingInterfaceEntity
+    lateinit var replaceWithMessage: SentMessageEntity
 
 }
 
@@ -25,10 +25,10 @@ fun replacementEntityReference(id: ReplacementId, version: Long?): ReplacementEn
     }
 }
 
-fun replacementEntity(id: ReplacementId, version: Long?, messageToReplace: ReceivedMessageEntity, replaceWithMessageFrom: OutgoingInterfaceEntity): ReplacementEntity {
+fun replacementEntity(id: ReplacementId, version: Long?, messageToReplace: ReceivedMessageEntity, replaceWithMessage: SentMessageEntity): ReplacementEntity {
     return replacementEntityReference(id,version).also {
         it.messageToReplace = messageToReplace
-        it.replaceWithMessageFrom = replaceWithMessageFrom
+        it.replaceWithMessage = replaceWithMessage
     }
 }
 
