@@ -241,13 +241,13 @@ class ValidationPlansManager(
     }
 
     private fun getSegmentSubsets(segments: List<Interaction>): List<List<Interaction>> {
-        val groupedSegments = segments.groupingBy { it.from }
+        val groupedSegments = segments.groupingBy { it.from.map { it.first } }
         if (!groupedSegments.eachCount().any { it.value > 1 }) {
             return listOf(segments)
         }
         var subsets = listOf(segments)
         groupedSegments.eachCount().filter { it.value > 1 }.forEach { (from, _) ->
-            val segmentsForTestId = segments.filter { it.from == from }
+            val segmentsForTestId = segments.filter { it.from.map { it.first } == from }
             subsets = subsets.flatMap { set ->
                 segmentsForTestId.map { segment ->
                     listOf(segment, *set.filter { !segmentsForTestId.contains(it) }.toTypedArray())
