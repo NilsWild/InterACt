@@ -19,7 +19,7 @@ class NoBodyInterceptor(private val loggingService: ObservationService) : Handle
         handler: Any
     ): Boolean {
         if (DispatcherType.REQUEST.name
-                 == request.dispatcherType.name && (request.method == HttpMethod.GET.name() || request.contentLength == -1)
+                 == request.dispatcherType.name && (request.method == HttpMethod.GET.name() || request.contentLength <= 0)
         ) {
             loggingService.logRequest(request, null)
         }

@@ -26,15 +26,17 @@ import org.springframework.web.util.UriComponentsBuilder
 import reactor.core.publisher.Mono
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 import kotlin.jvm.optionals.getOrElse
 
 class WebClientObserver : MessageObserver, ExchangeFilterFunction {
 
     override fun filter(request: ClientRequest, next: ExchangeFunction): Mono<ClientResponse> {
-        val interfaceUrlTemplate = request
+        val interfaceUrlTemplate = extractPath(request
             .attribute("org.springframework.web.reactive.function.client.WebClient.uriTemplate").getOrElse {
                 request.url().path
-            }.toString()
+            }.toString())
         val interfaceUrl = request.url().path
 
         val queryParameters = UriComponentsBuilder.fromUri(request.url()).build().queryParams.toMap().mapValues { it.value.joinToString(",") }
@@ -59,7 +61,7 @@ class WebClientObserver : MessageObserver, ExchangeFilterFunction {
             .build()
         val result = next.exchange(loggingClientRequest)
             .flatMap { clientResponse: ClientResponse ->
-                clientResponse.bodyToMono(String::class.java).flatMap { body ->
+                clientResponse.bodyToMono(String::class.java).defaultIfEmpty("").flatMap { body ->
                     RestObservationHelper.recordResponse(
                         interfaceUrlTemplate,
                         queryParameters,
@@ -73,6 +75,17 @@ class WebClientObserver : MessageObserver, ExchangeFilterFunction {
                 }
             }
         return result
+    }
+
+    private fun extractPath(url: String): String {
+        val regex = "(?:https?://)?(?:[^/]+)?(/.*)?"
+        val pattern: Pattern = Pattern.compile(regex)
+        val matcher: Matcher = pattern.matcher(url)
+
+        if (matcher.find() && matcher.group(1) != null) {
+            return matcher.group(1)
+        }
+        return ""
     }
 
     private class RequestObserverDecorator(
