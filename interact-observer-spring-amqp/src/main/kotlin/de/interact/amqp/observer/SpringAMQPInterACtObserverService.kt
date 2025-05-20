@@ -60,7 +60,7 @@ class SpringAMQPInterACtObserverService(rabbitUrl: String, rabbitUser: String, r
         }
         val payload = AmqpMessage(
             messageHeaders,
-            message.body
+            message.body.toString(Charsets.UTF_8)
         )
 
         Configuration.observationManager!!.getCurrentTestCase().observedBehavior.addComponentResponse(
@@ -92,7 +92,7 @@ class SpringAMQPInterACtObserverService(rabbitUrl: String, rabbitUser: String, r
         messageHeaders.remove("interact.sender.type")
         val payload = AmqpMessage(
             messageHeaders,
-            message.body
+            message.body.toString(Charsets.UTF_8)
         )
         val bindings = arrayListOf<QueueBinding>()
         for (bindingInfo in rabbitClient.getQueueBindings("/", queue).filter { it.source != "" }) {

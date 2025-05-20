@@ -17,6 +17,8 @@ import de.interact.domain.testtwin.api.event.InteractionTestAddedEvent
 import de.interact.domain.testtwin.api.event.UnitTestAddedEvent
 import de.interact.domain.testtwin.spi.InteractionTestAddedEventListener
 import de.interact.domain.testtwin.spi.UnitTestAddedEventListener
+import de.interact.utils.Logging
+import de.interact.utils.logger
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentHashMap.KeySetView
@@ -26,8 +28,9 @@ class ValidationPlansManager(
     private val validationPlans: ValidationPlans,
     private val unitTestBasedInteractionExpectations: UnitTestBasedInteractionExpectations,
     private val interfaces: Interfaces
-): UnitTestAddedEventListener, InteractionTestAddedEventListener, UnitTestBasedInteractionExpectationAddedEventListener {
+): UnitTestAddedEventListener, InteractionTestAddedEventListener, UnitTestBasedInteractionExpectationAddedEventListener, Logging {
 
+    private val log = logger()
     private val interactionExpectationLocks: KeySetView<InteractionExpectationId, Boolean> = ConcurrentHashMap.newKeySet()
 
     override fun onUnitTestCaseAdded(event: UnitTestAddedEvent) {
@@ -53,7 +56,8 @@ class ValidationPlansManager(
         updatedValidationPlans = updatedValidationPlans.map { plan ->
             progressValidationPlan(plan)
         }
-        updatedValidationPlans.forEach(validationPlans::save)
+        log.info("Updated ${updatedValidationPlans.size} validation plans for test ${testReference.id}: ${updatedValidationPlans.map { it.id }}")
+        validationPlans.save(updatedValidationPlans)
     }
 
     override fun onUnitTestBasedInteractionExpectationAdded(
@@ -155,25 +159,30 @@ class ValidationPlansManager(
 
 
     private fun expandInteractionGraph(interactionGraph: InteractionGraph): List<InteractionGraph> {
-        val expansions = interactionGraph.sinks.map { sink ->
-            val sinkExpansions = expandFromSink(interactionGraph, sink)
-            sink to sinkExpansions
-        }
         var expandedInteractionGraphs = listOf(interactionGraph)
-        expansions.forEach { (sink, interfaceExpansions) ->
-            interfaceExpansions.forEach { (_, segments) ->
-                val nextSegmentGroups = getSegmentSubsets(segments)
-                expandedInteractionGraphs = nextSegmentGroups.flatMap { groupSegments ->
-                    expandedInteractionGraphs.map { graph ->
+
+        interactionGraph.sinks.forEach { sink ->
+            val sinkExpansions = expandFromSink(interactionGraph, sink)
+            val allNewGraphs = mutableListOf<InteractionGraph>()
+
+            for ((_, segments) in sinkExpansions) {
+                val segmentGroups = getSegmentSubsets(segments)
+
+                for (segmentGroup in segmentGroups) {
+                    for (graph in expandedInteractionGraphs) {
                         var updatedGraph = graph
-                        groupSegments.forEach { segment ->
+                        segmentGroup.forEach { segment ->
                             updatedGraph = updatedGraph.addInteraction(segment, setOf(sink))
                         }
-                        updatedGraph.replaceInteractions(updatedGraph.interactions.associateWith { it.clone() })
+                        // This is safe now — updatedGraph was freshly built
+                        allNewGraphs += updatedGraph.replaceInteractions(updatedGraph.interactions.associateWith { it.clone() })
                     }
                 }
             }
+
+            expandedInteractionGraphs = allNewGraphs
         }
+
         return expandedInteractionGraphs
     }
 
@@ -322,14 +331,29 @@ class ValidationPlansManager(
         }.toList()
     }
 
-    private fun extractReplacements(interactions: Set<Interaction.Finished.Validated>, replacements: Set<Replacement>): Map<EntityReference<IncomingInterfaceId>, ComponentResponseMessage> {
-        return replacements.map { replacement ->
-            val testCaseToCopyFrom = interactions.first { it.to.map { it.first }.contains(replacement.replacement.interfaceToCopyFrom) }.testCase.actualTest
-            val testToCopyFrom = tests.find(testCaseToCopyFrom.id)!!
-            val replacementMessage = testToCopyFrom.triggeredMessages.filterIsInstance<ComponentResponseMessage>().first {
-                it.sentBy == replacement.replacement.interfaceToCopyFrom
+    private fun extractReplacements(
+        interactions: Set<Interaction.Finished.Validated>,
+        replacements: Set<Replacement>
+    ): Map<EntityReference<IncomingInterfaceId>, ComponentResponseMessage> {
+        return replacements.mapNotNull { replacement ->
+            val validInteraction = interactions.find { validated ->
+                // Check if any of its triggered messages actually came from the required interface
+                val testCaseId = validated.testCase.actualTest.id
+                val test = tests.find(testCaseId) ?: return@find false
+                test.triggeredMessages.filterIsInstance<ComponentResponseMessage>().any {
+                    it.sentBy == replacement.replacement.interfaceToCopyFrom
+                }
             }
-            replacement.messageToReplace.interfaceReference to replacementMessage
+
+            if (validInteraction != null) {
+                val test = tests.find(validInteraction.testCase.actualTest.id)!!
+                val replacementMessage = test.triggeredMessages.filterIsInstance<ComponentResponseMessage>().first {
+                    it.sentBy == replacement.replacement.interfaceToCopyFrom
+                }
+                replacement.messageToReplace.interfaceReference to replacementMessage
+            } else {
+                null  // Do not include if no valid data source is found
+            }
         }.toMap()
     }
 }

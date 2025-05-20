@@ -65,10 +65,21 @@ fun InteractionGraph.removeUnnecessaryInteractionsToReach(interfaceIds: Set<Inte
         interactionsToKeep.add(current)
         toTraverse.addAll(reverseAdjacencyMap[current]!!)
     }
+    val completeAdjacencyMap = buildMap<Interaction, Set<Interaction>> {
+        for (i in interactionsToKeep) {
+            put(i, adjacencyMap[i]?.filter { it in interactionsToKeep }?.toSet() ?: emptySet())
+        }
+    }
+    val completeReverseAdjacencyMap = buildMap<Interaction, Set<Interaction>> {
+        for (i in interactionsToKeep) {
+            put(i, reverseAdjacencyMap[i]?.filter { it in interactionsToKeep }?.toSet() ?: emptySet())
+        }
+    }
+
     return this.copy(
         interactions = interactionsToKeep,
-        adjacencyMap = adjacencyMap.filterKeys { interactionsToKeep.contains(it) }.mapValues { (_,v) -> v.filter{interactionsToKeep.contains(it)}.toSet()},
-        reverseAdjacencyMap = reverseAdjacencyMap.filterKeys { interactionsToKeep.contains(it) }.mapValues { (_, v) -> v.filter{interactionsToKeep.contains(it)}.toSet() }
+        adjacencyMap = completeAdjacencyMap,
+        reverseAdjacencyMap = completeReverseAdjacencyMap
     )
 }
 
@@ -87,9 +98,33 @@ internal fun InteractionGraph.handle(test: Test): InteractionGraph {
 }
 
 fun InteractionGraph.replaceInteractions(replacements: Map<Interaction, Interaction>): InteractionGraph {
+    require(replacements.keys.containsAll(interactions)) {
+        "All interactions must have a replacement"
+    }
+
     val newInteractions = interactions.map { replacements[it]!! }.toSet()
-    val newAdjacencyMap = adjacencyMap.map { (k, v) -> replacements[k]!! to v.map { replacements[it]!! }.toSet() }.toMap()
-    val newReverseAdjacencyMap = reverseAdjacencyMap.map { (k, v) -> replacements[k]!! to v.map { replacements[it]!! }.toSet() }.toMap()
+
+    val newAdjacencyMap = buildMap<Interaction, Set<Interaction>> {
+        for ((k, v) in adjacencyMap) {
+            val newK = replacements[k]!!
+            val newV = v.map { replacements[it]!! }.toSet()
+            put(newK, getOrDefault(newK, emptySet()) + newV)
+        }
+        for (i in newInteractions) {
+            putIfAbsent(i, emptySet())
+        }
+    }
+
+    val newReverseAdjacencyMap = buildMap<Interaction, Set<Interaction>> {
+        for ((from, tos) in newAdjacencyMap) {
+            for (to in tos) {
+                put(to, getOrDefault(to, emptySet()) + from)
+            }
+        }
+        for (i in newInteractions) {
+            putIfAbsent(i, emptySet())
+        }
+    }
 
     return this.copy(
         interactions = newInteractions,
@@ -127,16 +162,37 @@ fun InteractionGraph.findAllInteractionTraversingReverseAdjacencyMap(start: Inte
 
 fun InteractionGraph.addInteraction(newInteraction: Interaction, prevInteractions: Set<Interaction> = emptySet()): InteractionGraph {
     val newInteractions = interactions + newInteraction
-    val newAdjacencyMap = adjacencyMap +
-            prevInteractions.associateWith { (adjacencyMap[it] ?: emptySet()) + newInteraction } + (newInteraction to emptySet())
-    val newReverseAdjacencyMap = mapOf(newInteraction to prevInteractions) + newAdjacencyMap.entries.fold(reverseAdjacencyMap) { acc, (k, v) ->
-        v.fold(acc) { acc2, it ->
-            acc2 + (it to (acc[it] ?: emptySet()) + k)
+
+    val newAdjacencyMap = buildMap<Interaction, Set<Interaction>> {
+        // Start with existing adjacency
+        putAll(adjacencyMap)
+        // Ensure all interactions are keys (even if no successors)
+        for (i in newInteractions) putIfAbsent(i, adjacencyMap[i] ?: emptySet())
+        // Add edges from previous interactions to the new one
+        for (prev in prevInteractions) {
+            put(prev, (get(prev) ?: emptySet()) + newInteraction)
+        }
+        // Ensure the newInteraction has an empty entry
+        putIfAbsent(newInteraction, get(newInteraction) ?: emptySet())
+    }
+
+    val newReverseAdjacencyMap = buildMap<Interaction, Set<Interaction>> {
+        // Invert the adjacencyMap
+        for ((from, tos) in newAdjacencyMap) {
+            for (to in tos) {
+                put(to, (get(to) ?: emptySet()) + from)
+            }
+        }
+        // Ensure every interaction is present
+        for (i in newInteractions) {
+            putIfAbsent(i, get(i) ?: emptySet())
         }
     }
+
     return this.copy(
         interactions = newInteractions,
         adjacencyMap = newAdjacencyMap,
         reverseAdjacencyMap = newReverseAdjacencyMap
     )
 }
+

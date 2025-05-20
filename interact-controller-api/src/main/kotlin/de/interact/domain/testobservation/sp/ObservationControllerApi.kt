@@ -50,7 +50,7 @@ class ObservationControllerApi(private val url: String, vertx: Vertx) :
         val body = SerializationConstants.mapper.writeValueAsBytes(partialModel)
         log.info("Storing observations")
         client.postAbs("$url/api/observations")
-            .putHeader("Content-Type", "application/json")
+            .putHeader("Content-Type", "application/json").timeout(30000)
             .sendBuffer(Buffer.buffer(body))
             .onSuccess {
                 if (it.statusCode() != 200) {

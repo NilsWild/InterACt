@@ -36,6 +36,6 @@ class TestExecutionRequestsDao(
                 AbstractTestId(it.derivedFrom.id),
                 it.parameters.map { TestCaseParameter(it) }
             )
-        }
+        }.distinct()
     }
 }

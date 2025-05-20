@@ -22,7 +22,7 @@ class IntegrationControllerApi(private val url: String, private val mapper: Obje
     }
 
     fun getIntegrationsForComponent(name: String, version: String): Future<List<TestInvocationDescriptor>> {
-        return client.getAbs("$url/api/integrations/$name/$version").send()
+        return client.getAbs("$url/api/integrations/$name/$version").timeout(30000).send()
             .map { response ->
                 if (response.statusCode() != 200) {
                     log.error("Could not get integrations. Error: ${response.bodyAsString()}")
